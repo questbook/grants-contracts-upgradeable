@@ -31,7 +31,7 @@ $ yarn typechain
 
 ### Prettify Solidity
 
-Lint the Solidity code:
+Prettify the Solidity code:
 
 ```sh
 $ yarn prettier:sol
@@ -47,7 +47,7 @@ $ yarn lint:sol
 
 ### Prettify Typescript
 
-Lint the Solidity code:
+Prettify the Typescript code:
 
 ```sh
 $ yarn prettier:ts
