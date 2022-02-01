@@ -10,4 +10,5 @@ export interface Signers {
   admin: SignerWithAddress;
   nonAdmin: SignerWithAddress;
   applicantAdmin: SignerWithAddress;
+  erc20: SignerWithAddress;
 }

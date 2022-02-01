@@ -2,11 +2,11 @@ import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
+import type { Grant } from "../../src/types/Grant";
 import type { ApplicationRegistry } from "../../src/types/ApplicationRegistry";
 import type { WorkspaceRegistry } from "../../src/types/WorkspaceRegistry";
-import type { Grant } from "../../src/types/Grant";
 import { Signers } from "../types";
-import { shouldBehaveLikeApplicationRegistry } from "./ApplicationRegistry.behavior";
+import { shouldBehaveLikeGrant } from "./Grant.behavior";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -15,12 +15,13 @@ describe("Unit tests", function () {
     const signers: SignerWithAddress[] = await ethers.getSigners();
     this.signers.admin = signers[0];
     this.signers.nonAdmin = signers[1];
-    this.signers.applicantAdmin = signers[2];
+    this.signers.erc20 = signers[2];
   });
 
-  describe("ApplicationRegistry", function () {
+  describe("Grant", function () {
     beforeEach(async function () {
       const workspaceRegistryArtifact: Artifact = await artifacts.readArtifact("WorkspaceRegistry");
+      // this.mockWorkspaceRegistry = await waffle.deployMockContract(this.signers.admin, workspaceRegistryArtifact.abi);
       this.workspaceRegistry = <WorkspaceRegistry>(
         await waffle.deployContract(this.signers.admin, workspaceRegistryArtifact, [])
       );
@@ -28,6 +29,7 @@ describe("Unit tests", function () {
       await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
 
       const applicationRegistryArtifact: Artifact = await artifacts.readArtifact("ApplicationRegistry");
+      // this.mockApplicationRegistry = await waffle.deployMockContract(this.signers.admin, applicationRegistryArtifact.abi);
       this.applicationRegistry = <ApplicationRegistry>(
         await waffle.deployContract(this.signers.admin, applicationRegistryArtifact, [])
       );
@@ -44,9 +46,10 @@ describe("Unit tests", function () {
         ])
       );
 
-      this.mockGrant = await waffle.deployMockContract(this.signers.admin, grantArtifact.abi);
+      const erc20Artifact: Artifact = await artifacts.readArtifact("IERC20");
+      this.mockERC20 = await waffle.deployMockContract(this.signers.admin, erc20Artifact.abi);
     });
 
-    shouldBehaveLikeApplicationRegistry();
+    shouldBehaveLikeGrant();
   });
 });

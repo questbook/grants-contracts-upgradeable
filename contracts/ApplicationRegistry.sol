@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
-import "hardhat/console.sol";
 
 interface IWorkspaceRegistry {
     function isWorkspaceAdmin(uint96 _id, address _member) external view returns (bool);
@@ -43,6 +42,11 @@ contract ApplicationRegistry {
         Resubmit,
         Approved,
         Rejected
+    }
+
+    enum DisbursalType {
+        LockedAmount,
+        P2P
     }
 
     /// @notice structure holding each application data
@@ -220,7 +224,7 @@ contract ApplicationRegistry {
         Application memory application = applications[_id];
         require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
-        require(_id < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
+        require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         require(
             applicationMilestones[_id][_milestoneId] == MilestoneState.Submitted,
             "MilestoneStateUpdate: Invalid state transition"
@@ -234,7 +238,7 @@ contract ApplicationRegistry {
      * @param _id target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
      * @param _metadataHash updated milestone metadata pointer to IPFS file
-     * @param _disbursalType 1 if disbursal from locked amount, 2 if P2P disbursal
+     * @param _disbursalType 0 if disbursal from locked amount, 1 if P2P disbursal
      * @param _disbursalAsset address of erc20 asset for disbursal
      * @param _disbursalAmount amount to be disbursed
      */
@@ -242,13 +246,13 @@ contract ApplicationRegistry {
         uint96 _id,
         uint48 _milestoneId,
         string memory _metadataHash,
-        uint256 _disbursalType,
+        DisbursalType _disbursalType,
         address _disbursalAsset,
         uint256 _disbursalAmount
     ) external {
         Application memory application = applications[_id];
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
-        require(_id < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
+        require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         require(
             workspaceReg.isWorkspaceAdmin(application.workspaceId, msg.sender),
             "MilestoneStateUpdate: Unauthorised"
@@ -266,10 +270,12 @@ contract ApplicationRegistry {
         /// @notice disburse reward
         if (_disbursalAmount > 0) {
             IGrant grantRef = IGrant(application.grant);
-            if (_disbursalType == 1) {
+            if (_disbursalType == DisbursalType.LockedAmount) {
                 grantRef.disburseReward(_id, _milestoneId, _disbursalAsset, _disbursalAmount);
-            } else if (_disbursalType == 2) {
+            } else if (_disbursalType == DisbursalType.P2P) {
                 grantRef.disburseRewardP2P(_id, _milestoneId, _disbursalAsset, _disbursalAmount);
+            } else {
+                revert("MilestoneStateUpdate: Invalid disbursal type");
             }
         }
 
