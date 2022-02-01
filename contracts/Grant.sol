@@ -20,9 +20,6 @@ contract Grant {
     /// @notice grant metadata pointer to IPFS hash
     string public metadataHash;
 
-    /// @notice grant creator address
-    address public owner;
-
     /// @notice denotes if grant is receiving applications
     bool public active;
 
