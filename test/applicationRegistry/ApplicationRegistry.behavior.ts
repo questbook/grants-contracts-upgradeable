@@ -47,7 +47,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
     });
@@ -56,7 +56,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
     });
@@ -65,7 +65,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(3);
     });
@@ -74,8 +74,9 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1);
-      expect(this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1)).to.be.reverted;
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
+      expect(this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash")).to.be
+        .reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
     });
@@ -84,7 +85,9 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      expect(this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 2)).to.be.reverted;
+      expect(
+        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 2, "reasonIpfsHash"),
+      ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(0);
     });
@@ -93,7 +96,9 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      expect(this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 3)).to.be.reverted;
+      expect(
+        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 3, "reasonIpfsHash"),
+      ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(0);
     });
@@ -102,7 +107,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1);
@@ -115,7 +120,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.metadataHash).to.equal("dummyApplicationIpfsHash");
       expect(application.state).to.equal(1);
@@ -144,7 +149,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -159,7 +164,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3, "reasonIpfsHash");
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -210,7 +215,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         await this.applicationRegistry
           .connect(this.signers.applicantAdmin)
           .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-        await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2);
+        await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
       });
 
       it("Milestone can not be requested for approval if its not in submitted state", async function () {
@@ -303,7 +308,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2);
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseReward.returns();
           await this.applicationRegistry
             .connect(this.signers.admin)
@@ -317,7 +322,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2);
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseRewardP2P.returns();
           await this.applicationRegistry
             .connect(this.signers.admin)
@@ -332,7 +337,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2);
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseRewardP2P.returns();
           expect(
             this.applicationRegistry

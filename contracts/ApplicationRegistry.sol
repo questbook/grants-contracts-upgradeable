@@ -180,8 +180,13 @@ contract ApplicationRegistry {
      * @notice Update application state
      * @param _id target applicationId for which state needs to be updated
      * @param _state updated state
+     * @param _reasonMetadataHash metadata file hash with state change reason
      */
-    function updateApplicationState(uint96 _id, ApplicationState _state) external {
+    function updateApplicationState(
+        uint96 _id,
+        ApplicationState _state,
+        string memory _reasonMetadataHash
+    ) external {
         Application storage application = applications[_id];
         require(
             workspaceReg.isWorkspaceAdmin(application.workspaceId, msg.sender),
@@ -203,7 +208,7 @@ contract ApplicationRegistry {
         emit ApplicationUpdated(
             _id,
             msg.sender,
-            application.metadataHash,
+            _reasonMetadataHash,
             _state,
             application.milestoneCount,
             block.timestamp
@@ -214,12 +219,12 @@ contract ApplicationRegistry {
      * @notice Update application milestone state
      * @param _id target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
-     * @param _metadataHash updated milestone metadata pointer to IPFS file
+     * @param _reasonMetadataHash metadata file hash with state change reason
      */
     function requestMilestoneApproval(
         uint96 _id,
         uint48 _milestoneId,
-        string memory _metadataHash
+        string memory _reasonMetadataHash
     ) external {
         Application memory application = applications[_id];
         require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
@@ -230,14 +235,14 @@ contract ApplicationRegistry {
             "MilestoneStateUpdate: Invalid state transition"
         );
         applicationMilestones[_id][_milestoneId] = MilestoneState.Requested;
-        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Requested, _metadataHash, block.timestamp);
+        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Requested, _reasonMetadataHash, block.timestamp);
     }
 
     /**
      * @notice Update application milestone state
      * @param _id target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
-     * @param _metadataHash updated milestone metadata pointer to IPFS file
+     * @param _reasonMetadataHash metadata file hash with state change reason
      * @param _disbursalType 0 if disbursal from locked amount, 1 if P2P disbursal
      * @param _disbursalAsset address of erc20 asset for disbursal
      * @param _disbursalAmount amount to be disbursed
@@ -245,7 +250,7 @@ contract ApplicationRegistry {
     function approveMilestone(
         uint96 _id,
         uint48 _milestoneId,
-        string memory _metadataHash,
+        string memory _reasonMetadataHash,
         DisbursalType _disbursalType,
         address _disbursalAsset,
         uint256 _disbursalAmount
@@ -279,7 +284,7 @@ contract ApplicationRegistry {
             }
         }
 
-        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Approved, _metadataHash, block.timestamp);
+        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Approved, _reasonMetadataHash, block.timestamp);
     }
 
     /**
