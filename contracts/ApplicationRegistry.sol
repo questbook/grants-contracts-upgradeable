@@ -14,14 +14,16 @@ interface IGrant {
         uint96 _applicationId,
         uint96 _milestoneId,
         address _asset,
-        uint256 _amount
+        uint256 _amount,
+        address _sender
     ) external payable;
 
     function disburseRewardP2P(
         uint96 _applicationId,
         uint96 _milestoneId,
         address _asset,
-        uint256 _amount
+        uint256 _amount,
+        address _sender
     ) external payable;
 }
 
@@ -276,9 +278,9 @@ contract ApplicationRegistry {
         if (_disbursalAmount > 0) {
             IGrant grantRef = IGrant(application.grant);
             if (_disbursalType == DisbursalType.LockedAmount) {
-                grantRef.disburseReward(_id, _milestoneId, _disbursalAsset, _disbursalAmount);
+                grantRef.disburseReward(_id, _milestoneId, _disbursalAsset, _disbursalAmount, msg.sender);
             } else if (_disbursalType == DisbursalType.P2P) {
-                grantRef.disburseRewardP2P(_id, _milestoneId, _disbursalAsset, _disbursalAmount);
+                grantRef.disburseRewardP2P(_id, _milestoneId, _disbursalAsset, _disbursalAmount, msg.sender);
             } else {
                 revert("MilestoneStateUpdate: Invalid disbursal type");
             }

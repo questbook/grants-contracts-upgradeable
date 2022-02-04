@@ -126,19 +126,21 @@ contract Grant {
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _asset asset address in which rewards are disbursed
      * @param _amount amount disbursed
+     * @param _sender address of person trasferring reward
      */
     function disburseReward(
         uint96 _applicationId,
         uint96 _milestoneId,
         address _asset,
-        uint256 _amount
+        uint256 _amount,
+        address _sender
     ) external payable {
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "GrantRewardDisbursal: Unauthorised");
+        require(msg.sender == address(applicationReg), "GrantRewardDisbursal: Unauthorised");
         require(
-            IERC20(_asset).transferFrom(address(this), applicationReg.getApplicationOwner(_applicationId), _amount),
+            IERC20(_asset).transfer(applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, _asset, msg.sender, _amount, block.timestamp);
+        emit DisburseReward(_applicationId, _milestoneId, _asset, _sender, _amount, block.timestamp);
     }
 
     /**
@@ -147,23 +149,21 @@ contract Grant {
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _asset asset address in which rewards are disbursed
      * @param _amount amount disbursed
+     * @param _sender address of person trasferring reward
      */
     function disburseRewardP2P(
         uint96 _applicationId,
         uint96 _milestoneId,
         address _asset,
-        uint256 _amount
+        uint256 _amount,
+        address _sender
     ) external payable {
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "GrantRewardDisbursal: Unauthorised");
+        require(msg.sender == address(applicationReg), "GrantRewardDisbursal: Unauthorised");
         IERC20 erc20Interface = IERC20(_asset);
-        if (_amount > erc20Interface.allowance(msg.sender, address(this))) {
-            emit DisburseRewardFailed(_applicationId, _milestoneId, _asset, msg.sender, _amount, block.timestamp);
-            revert("Please approve funds before transfer");
-        }
         require(
-            erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+            erc20Interface.transferFrom(_sender, applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, _asset, msg.sender, _amount, block.timestamp);
+        emit DisburseReward(_applicationId, _milestoneId, _asset, _sender, _amount, block.timestamp);
     }
 }
