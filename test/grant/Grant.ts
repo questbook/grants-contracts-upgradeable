@@ -21,7 +21,6 @@ describe("Unit tests", function () {
   describe("Grant", function () {
     beforeEach(async function () {
       const workspaceRegistryArtifact: Artifact = await artifacts.readArtifact("WorkspaceRegistry");
-      // this.mockWorkspaceRegistry = await waffle.deployMockContract(this.signers.admin, workspaceRegistryArtifact.abi);
       this.workspaceRegistry = <WorkspaceRegistry>(
         await waffle.deployContract(this.signers.admin, workspaceRegistryArtifact, [])
       );
@@ -29,7 +28,6 @@ describe("Unit tests", function () {
       await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
 
       const applicationRegistryArtifact: Artifact = await artifacts.readArtifact("ApplicationRegistry");
-      // this.mockApplicationRegistry = await waffle.deployMockContract(this.signers.admin, applicationRegistryArtifact.abi);
       this.applicationRegistry = <ApplicationRegistry>(
         await waffle.deployContract(this.signers.admin, applicationRegistryArtifact, [])
       );
@@ -46,7 +44,9 @@ describe("Unit tests", function () {
         ])
       );
 
-      const erc20Artifact: Artifact = await artifacts.readArtifact("IERC20");
+      const erc20Artifact: Artifact = await artifacts.readArtifact(
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20",
+      );
       this.mockERC20 = await waffle.deployMockContract(this.signers.admin, erc20Artifact.abi);
     });
 
