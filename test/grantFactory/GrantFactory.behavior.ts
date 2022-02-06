@@ -2,6 +2,37 @@ import { expect } from "chai";
 import { waffle, ethers } from "hardhat";
 
 export function shouldBehaveLikeGrantFactory(): void {
+  it("deployer can pause the contract", async function () {
+    await this.grantFactory.connect(this.signers.admin).pause();
+    expect(await this.grantFactory.paused()).to.equal(true);
+  });
+
+  it("non deployer can not pause the contract", async function () {
+    expect(this.grantFactory.connect(this.signers.nonAdmin).pause()).to.be.reverted;
+  });
+
+  it("deployer can unpause the contract", async function () {
+    await this.grantFactory.connect(this.signers.admin).pause();
+    expect(await this.grantFactory.paused()).to.equal(true);
+    await this.grantFactory.connect(this.signers.admin).unpause();
+    expect(await this.grantFactory.paused()).to.equal(false);
+  });
+
+  it("non deployer can not unpause the contract", async function () {
+    await this.grantFactory.connect(this.signers.admin).pause();
+    expect(await this.grantFactory.paused()).to.equal(true);
+    expect(this.grantFactory.connect(this.signers.nonAdmin).unpause()).to.be.reverted;
+  });
+
+  it("new grant creation not possible if contract is paused", async function () {
+    await this.grantFactory.connect(this.signers.admin).pause();
+    expect(
+      this.grantFactory
+        .connect(this.signers.admin)
+        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address),
+    ).to.be.revertedWith("Pausable: paused");
+  });
+
   it("workspace admin should be able to create new grant", async function () {
     const nonce = await waffle.provider.getTransactionCount(this.grantFactory.address);
     const transaction = {

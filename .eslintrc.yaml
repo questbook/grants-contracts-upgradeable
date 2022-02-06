@@ -19,3 +19,8 @@ rules:
     - error
     - argsIgnorePattern: "_"
       varsIgnorePattern: "_"
+overrides:
+  - files:
+      - "test/**/*.ts"
+    rules:
+      "@typescript-eslint/no-floating-promises": "off"

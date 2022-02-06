@@ -47,7 +47,7 @@ describe("Integration tests", function () {
     await this.applicationRegistry
       .connect(this.signers.applicantAdmin)
       .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-    await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
+    await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
 
     const erc20Artifact: Artifact = await artifacts.readArtifact("MyToken");
     this.myToken = await waffle.deployContract(this.signers.erc20, erc20Artifact, []);
@@ -77,7 +77,7 @@ describe("Integration tests", function () {
       expect(
         this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
+          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
       ).to.be.reverted;
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
     });
@@ -86,7 +86,7 @@ describe("Integration tests", function () {
       await this.myToken.connect(this.signers.erc20).mint(this.grant.address, 10000);
       await this.applicationRegistry
         .connect(this.signers.admin)
-        .approveMilestone(0, 0, "reasonIpfsHash", 0, this.myToken.address, 1000);
+        .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(9000);
     });
@@ -99,7 +99,7 @@ describe("Integration tests", function () {
       expect(
         this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
+          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
       ).to.be.reverted;
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
@@ -109,7 +109,7 @@ describe("Integration tests", function () {
       expect(
         this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
+          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
       ).to.be.reverted;
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
@@ -121,7 +121,7 @@ describe("Integration tests", function () {
       await this.myToken.connect(this.signers.admin).approve(this.grant.address, 10000);
       await this.applicationRegistry
         .connect(this.signers.admin)
-        .approveMilestone(0, 0, "reasonIpfsHash", 1, this.myToken.address, 1000);
+        .approveMilestone(0, 0, 0, "reasonIpfsHash", 1, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(9000);
     });

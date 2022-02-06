@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity 0.8.10;
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 interface IWorkspaceRegistry {
@@ -15,7 +15,7 @@ contract Grant {
     uint96 public workspaceId;
 
     /// @notice number of submitted applicantions
-    uint48 public numApplicants;
+    uint96 public numApplicants;
 
     /// @notice grant metadata pointer to IPFS hash
     string public metadataHash;
@@ -23,8 +23,10 @@ contract Grant {
     /// @notice denotes if grant is receiving applications
     bool public active;
 
-    /// @notice interfaces for using external functionalities like fetching application owner, checking workspace admin
+    /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
+
+    /// @notice workspaceRegistry interface used for fetching fetching workspace admin
     IWorkspaceRegistry public workspaceReg;
 
     /// @notice Emitted when a grant is updated
@@ -56,114 +58,118 @@ contract Grant {
         uint256 time
     );
 
+    modifier onlyWorkspaceAdmin() {
+        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "Unauthorised: Not an admin");
+        _;
+    }
+
+    modifier onlyApplicationRegistry() {
+        require(msg.sender == address(applicationReg), "Unauthorised: Not applicationRegistry");
+        _;
+    }
+
     /**
      * @notice Set grant details on contract deployment
      * @param _workspaceId workspace id to which the grant belong
      * @param _metadataHash metadata pointer
-     * @param _workspaceRegAddr workspace registry contract
-     * @param _applicationRegAddr application registry contract
+     * @param _workspaceReg workspace registry interface
+     * @param _applicationReg application registry interface
      */
     constructor(
         uint96 _workspaceId,
         string memory _metadataHash,
-        address _workspaceRegAddr,
-        address _applicationRegAddr
+        IWorkspaceRegistry _workspaceReg,
+        IApplicationRegistry _applicationReg
     ) {
         workspaceId = _workspaceId;
         active = true;
         metadataHash = _metadataHash;
-        applicationReg = IApplicationRegistry(_applicationRegAddr);
-        workspaceReg = IWorkspaceRegistry(_workspaceRegAddr);
+        applicationReg = _applicationReg;
+        workspaceReg = _workspaceReg;
     }
 
     /**
-     * @notice Update number of applications on grant
+     * @notice Update number of applications on grant, can be called by applicationRegistry contract
      */
-    function incrementApplicant() external {
-        require(msg.sender == address(applicationReg), "GrantUpdate: Unauthorised");
+    function incrementApplicant() external onlyApplicationRegistry {
+        assert(numApplicants + 1 > numApplicants);
         numApplicants += 1;
     }
 
     /**
-     * @notice Update the metadata pointer of a grant
+     * @notice Update the metadata pointer of a grant, can be called by workspace admins
      * @param _metadataHash New URL that points to grant metadata
      */
-    function updateGrant(string memory _metadataHash) external {
+    function updateGrant(string memory _metadataHash) external onlyWorkspaceAdmin {
         require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "GrantUpdate: Unauthorised");
         metadataHash = _metadataHash;
         emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
     }
 
     /**
-     * @notice Update grant accessibility
+     * @notice Update grant accessibility, can be called by workspace admins
      * @param _canAcceptApplication set to false for disabling grant from receiving new applications
      */
-    function updateGrantAccessibility(bool _canAcceptApplication) external {
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "GrantUpdate: Unauthorised");
+    function updateGrantAccessibility(bool _canAcceptApplication) external onlyWorkspaceAdmin {
         active = _canAcceptApplication;
         emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }
 
     /**
-     * @notice Deposit funds to a workspace
-     * @param _asset Asset to be deposited
+     * @notice Deposit funds to a workspace, can be called by anyone
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount Amount to be deposited for a given asset
      */
-    function depositFunds(address _asset, uint256 _amount) external payable {
-        IERC20 erc20Interface = IERC20(_asset);
-        if (_amount > erc20Interface.allowance(msg.sender, address(this))) {
-            emit FundsDepositFailed(_asset, _amount, block.timestamp);
+    function depositFunds(IERC20 _erc20Interface, uint256 _amount) external payable {
+        if (_amount > _erc20Interface.allowance(msg.sender, address(this))) {
+            emit FundsDepositFailed(address(_erc20Interface), _amount, block.timestamp);
             revert("Please approve funds before transfer");
         }
-        require(erc20Interface.transferFrom(msg.sender, address(this), _amount), "Failed to transfer funds");
-        emit FundsDeposited(_asset, _amount, block.timestamp);
+        require(_erc20Interface.transferFrom(msg.sender, address(this), _amount), "Failed to transfer funds");
+        emit FundsDeposited(address(_erc20Interface), _amount, block.timestamp);
     }
 
     /**
-     * @notice Disburses grant reward
+     * @notice Disburses grant reward, can be called by applicationRegistry contract
      * @param _applicationId application id for which the funds are disbursed
      * @param _milestoneId milestone id for which the funds are disbursed
-     * @param _asset asset address in which rewards are disbursed
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
      * @param _sender address of person trasferring reward
      */
     function disburseReward(
         uint96 _applicationId,
         uint96 _milestoneId,
-        address _asset,
+        IERC20 _erc20Interface,
         uint256 _amount,
         address _sender
-    ) external payable {
-        require(msg.sender == address(applicationReg), "GrantRewardDisbursal: Unauthorised");
+    ) external payable onlyApplicationRegistry {
         require(
-            IERC20(_asset).transfer(applicationReg.getApplicationOwner(_applicationId), _amount),
+            _erc20Interface.transfer(applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, _asset, _sender, _amount, block.timestamp);
+        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
     }
 
     /**
-     * @notice Disburses grant reward
+     * @notice Disburses grant reward, can be called by applicationRegistry contract
      * @param _applicationId application id for which the funds are disbursed
      * @param _milestoneId milestone id for which the funds are disbursed
-     * @param _asset asset address in which rewards are disbursed
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
      * @param _sender address of person trasferring reward
      */
     function disburseRewardP2P(
         uint96 _applicationId,
         uint96 _milestoneId,
-        address _asset,
+        IERC20 _erc20Interface,
         uint256 _amount,
         address _sender
-    ) external payable {
-        require(msg.sender == address(applicationReg), "GrantRewardDisbursal: Unauthorised");
-        IERC20 erc20Interface = IERC20(_asset);
+    ) external payable onlyApplicationRegistry {
         require(
-            erc20Interface.transferFrom(_sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+            _erc20Interface.transferFrom(_sender, applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, _asset, _sender, _amount, block.timestamp);
+        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
     }
 }

@@ -1,6 +1,32 @@
 import { expect } from "chai";
 
 export function shouldBehaveLikeApplicationRegistry(): void {
+  it("deployer can pause the contract", async function () {
+    await this.applicationRegistry.connect(this.signers.admin).pause();
+    expect(await this.applicationRegistry.paused()).to.equal(true);
+  });
+
+  it("non deployer can not pause the contract", async function () {
+    expect(this.applicationRegistry.connect(this.signers.nonAdmin).pause()).to.be.reverted;
+  });
+
+  it("deployer can unpause the contract", async function () {
+    await this.applicationRegistry.connect(this.signers.admin).pause();
+    expect(await this.applicationRegistry.paused()).to.equal(true);
+    await this.applicationRegistry.connect(this.signers.admin).unpause();
+    expect(await this.applicationRegistry.paused()).to.equal(false);
+  });
+
+  it("non deployer can not unpause the contract", async function () {
+    await this.applicationRegistry.connect(this.signers.admin).pause();
+    expect(await this.applicationRegistry.paused()).to.equal(true);
+    expect(this.applicationRegistry.connect(this.signers.nonAdmin).unpause()).to.be.reverted;
+  });
+
+  it("non deployer cannot set workspaceRegistry", async function () {
+    expect(this.applicationRegistry.connect(this.signers.nonAdmin).setWorkspaceReg("dummyAddress")).to.be.reverted;
+  });
+
   it("non deployer cannot set workspaceRegistry", async function () {
     expect(this.applicationRegistry.connect(this.signers.nonAdmin).setWorkspaceReg("dummyAddress")).to.be.reverted;
   });
@@ -42,12 +68,56 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
   });
 
+  describe("If contract is paused", function () {
+    beforeEach(async function () {
+      await this.applicationRegistry.connect(this.signers.admin).pause();
+    });
+
+    it("Applicaion submission wont work", async function () {
+      expect(
+        this.applicationRegistry
+          .connect(this.signers.applicantAdmin)
+          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1),
+      ).to.be.revertedWith("Pausable: paused");
+    });
+
+    it("Applicaion updation wont work", async function () {
+      expect(
+        this.applicationRegistry
+          .connect(this.signers.applicantAdmin)
+          .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1),
+      ).to.be.revertedWith("Pausable: paused");
+    });
+
+    it("Applicaion state updation wont work", async function () {
+      expect(
+        this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash"),
+      ).to.be.revertedWith("Pausable: paused");
+    });
+
+    it("Milestone request for approval wont work", async function () {
+      expect(
+        this.applicationRegistry
+          .connect(this.signers.applicantAdmin)
+          .requestMilestoneApproval(0, 3, "dummyApplicationIpfsHash"),
+      ).to.be.revertedWith("Pausable: paused");
+    });
+
+    it("Milestone approval wont work", async function () {
+      expect(
+        this.applicationRegistry
+          .connect(this.signers.admin)
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+      ).to.be.revertedWith("Pausable: paused");
+    });
+  });
+
   describe("Application state change", function () {
     it("grant manager can ask for application resubmission if application is in submitred state", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
     });
@@ -56,7 +126,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
     });
@@ -65,7 +135,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(3);
     });
@@ -74,9 +144,9 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
-      expect(this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash")).to.be
-        .reverted;
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
+      expect(this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash")).to
+        .be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
     });
@@ -86,7 +156,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
       expect(
-        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 2, "reasonIpfsHash"),
+        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 2, "reasonIpfsHash"),
       ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(0);
@@ -97,7 +167,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
       expect(
-        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 3, "reasonIpfsHash"),
+        this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
       ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(0);
@@ -107,7 +177,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1);
@@ -120,7 +190,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 1, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.metadataHash).to.equal("dummyApplicationIpfsHash");
       expect(application.state).to.equal(1);
@@ -149,7 +219,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -164,7 +234,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 3, "reasonIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -206,7 +276,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(
         this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
       ).to.be.reverted;
     });
 
@@ -215,7 +285,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         await this.applicationRegistry
           .connect(this.signers.applicantAdmin)
           .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-        await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 2, "reasonIpfsHash");
+        await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       });
 
       it("Milestone can not be requested for approval if its not in submitted state", async function () {
@@ -247,7 +317,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       it("Milestone state can be updated from submitted to approved by grant manager", async function () {
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });
 
@@ -255,18 +325,18 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         expect(
           this.applicationRegistry
             .connect(this.signers.admin)
-            .approveMilestone(0, 2, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+            .approveMilestone(0, 2, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
         ).to.be.reverted;
       });
 
       it("Milestone state can not reapproved by grant manager", async function () {
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
         expect(
           this.applicationRegistry
             .connect(this.signers.admin)
-            .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
         ).to.be.reverted;
       });
 
@@ -276,7 +346,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           .requestMilestoneApproval(0, 0, "dummyApplicationIpfsHash");
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });
 
@@ -284,7 +354,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         expect(
           this.applicationRegistry
             .connect(this.signers.nonAdmin)
-            .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
         ).to.be.reverted;
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(0);
       });
@@ -296,7 +366,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         expect(
           this.applicationRegistry
             .connect(this.signers.nonAdmin)
-            .approveMilestone(0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
         ).to.be.reverted;
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(1);
       });
@@ -308,11 +378,19 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseReward.returns();
           await this.applicationRegistry
             .connect(this.signers.admin)
-            .approveMilestone(1, 0, "dummyApplicationIpfsHash", 0, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 1000);
+            .approveMilestone(
+              1,
+              0,
+              0,
+              "dummyApplicationIpfsHash",
+              0,
+              "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0",
+              1000,
+            );
           expect(await this.applicationRegistry.applicationMilestones(1, 0)).to.equal(2);
         });
 
@@ -322,11 +400,19 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseRewardP2P.returns();
           await this.applicationRegistry
             .connect(this.signers.admin)
-            .approveMilestone(1, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 1000);
+            .approveMilestone(
+              1,
+              0,
+              0,
+              "dummyApplicationIpfsHash",
+              1,
+              "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0",
+              1000,
+            );
 
           expect(await this.applicationRegistry.applicationMilestones(1, 0)).to.equal(2);
         });
@@ -337,13 +423,14 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           await this.applicationRegistry
             .connect(this.signers.applicantAdmin)
             .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 2, "reasonIpfsHash");
+          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
           await this.mockGrant.mock.disburseRewardP2P.returns();
           expect(
             this.applicationRegistry
               .connect(this.signers.admin)
               .approveMilestone(
                 1,
+                0,
                 0,
                 "dummyApplicationIpfsHash",
                 2,
@@ -365,14 +452,14 @@ export function shouldBehaveLikeApplicationRegistry(): void {
 
     it("deployer can set new deployer address", async function () {
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.admin.address);
-      await this.applicationRegistry.connect(this.signers.admin).setContractOwner(this.signers.nonAdmin.address);
+      await this.applicationRegistry.connect(this.signers.admin).transferOwnership(this.signers.nonAdmin.address);
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.nonAdmin.address);
     });
 
     it("non deployer cannot set new deployer address", async function () {
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.admin.address);
-      expect(this.applicationRegistry.connect(this.signers.nonAdmin).setContractOwner(this.signers.nonAdmin.address)).to
-        .be.reverted;
+      expect(this.applicationRegistry.connect(this.signers.nonAdmin).transferOwnership(this.signers.nonAdmin.address))
+        .to.be.reverted;
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.admin.address);
     });
   });

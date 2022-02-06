@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity 0.8.10;
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 interface IWorkspaceRegistry {
     function isWorkspaceAdmin(uint96 _id, address _member) external view returns (bool);
@@ -27,7 +30,8 @@ interface IGrant {
     ) external payable;
 }
 
-contract ApplicationRegistry {
+/// @title Registry for all the grant applications
+contract ApplicationRegistry is Ownable, Pausable {
     /// @notice Number of applications submitted
     uint96 public applicationCount;
 
@@ -46,6 +50,7 @@ contract ApplicationRegistry {
         Rejected
     }
 
+    /// @notice types of reward disbursals
     enum DisbursalType {
         LockedAmount,
         P2P
@@ -66,13 +71,12 @@ contract ApplicationRegistry {
     mapping(uint96 => Application) public applications;
 
     /// @notice mapping to store application owner along with grant address
+    /// ex: for application id - 0, grant addr - 0x0
+    /// applicantGrant[0][0x0] will be = true, this is used to prevent duplicate entry
     mapping(address => mapping(address => bool)) private applicantGrant;
 
     /// @notice mapping to store applicationId along with milestones
     mapping(uint96 => mapping(uint48 => MilestoneState)) public applicationMilestones;
-
-    /// @notice contract deployer
-    address public owner;
 
     /// @notice interface for using external functionalities like checking workspace admin
     IWorkspaceRegistry public workspaceReg;
@@ -101,17 +105,17 @@ contract ApplicationRegistry {
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
-    constructor() {
-        owner = msg.sender;
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
+        require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
+        _;
     }
 
     /**
      * @notice sets workspace registry contract interface
-     * @param _workspaceRegAddr WorkspaceRegistry contract address
+     * @param _workspaceReg WorkspaceRegistry interface
      */
-    function setWorkspaceReg(address _workspaceRegAddr) external {
-        require(msg.sender == owner, "Not authorised");
-        workspaceReg = IWorkspaceRegistry(_workspaceRegAddr);
+    function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner whenNotPaused {
+        workspaceReg = _workspaceReg;
     }
 
     /**
@@ -126,12 +130,13 @@ contract ApplicationRegistry {
         uint96 _workspaceId,
         string memory _metadataHash,
         uint48 _milestoneCount
-    ) external {
+    ) external whenNotPaused {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
         require(grantRef.active(), "ApplicationSubmit: Invalid grant");
         uint96 _id = applicationCount;
-        grantRef.incrementApplicant();
+        assert(applicationCount + 1 > applicationCount);
+        applicationCount += 1;
         applications[_id] = Application(
             _id,
             _workspaceId,
@@ -142,34 +147,32 @@ contract ApplicationRegistry {
             ApplicationState.Submitted
         );
         applicantGrant[msg.sender][_grant] = true;
-        for (uint48 i = 0; i < _milestoneCount; i++) {
-            applicationMilestones[_id][i] = MilestoneState.Submitted;
-        }
+        grantRef.incrementApplicant();
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
-        applicationCount += 1;
     }
 
     /**
      * @notice Update application
-     * @param _id target applicationId which needs to be updated
+     * @param _applicationId target applicationId which needs to be updated
      * @param _metadataHash updated application metadata pointer to IPFS file
      */
     function updateApplicationMetadata(
-        uint96 _id,
+        uint96 _applicationId,
         string memory _metadataHash,
         uint48 _milestoneCount
-    ) external {
-        Application storage application = applications[_id];
+    ) external whenNotPaused {
+        Application storage application = applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
         require(application.state == ApplicationState.Resubmit, "ApplicationUpdate: Invalid state");
-        for (uint48 i = 0; i < _milestoneCount; i++) {
-            applicationMilestones[_id][i] = MilestoneState.Submitted;
+        /// @dev we need to reset milestone state of all the milestones set previously
+        for (uint48 i = 0; i < application.milestoneCount; i++) {
+            applicationMilestones[_applicationId][i] = MilestoneState.Submitted;
         }
         application.milestoneCount = _milestoneCount;
         application.metadataHash = _metadataHash;
         application.state = ApplicationState.Submitted;
         emit ApplicationUpdated(
-            _id,
+            _applicationId,
             msg.sender,
             _metadataHash,
             ApplicationState.Submitted,
@@ -180,20 +183,18 @@ contract ApplicationRegistry {
 
     /**
      * @notice Update application state
-     * @param _id target applicationId for which state needs to be updated
+     * @param _applicationId target applicationId for which state needs to be updated
+     * @param _workspaceId workspace id of application's grant
      * @param _state updated state
      * @param _reasonMetadataHash metadata file hash with state change reason
      */
     function updateApplicationState(
-        uint96 _id,
+        uint96 _applicationId,
+        uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external {
-        Application storage application = applications[_id];
-        require(
-            workspaceReg.isWorkspaceAdmin(application.workspaceId, msg.sender),
-            "ApplicationStateUpdate: Unauthorised"
-        );
+    ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
+        Application storage application = applications[_applicationId];
         /// @notice grant creator can only make below transitions
         /// @notice Submitted => Resubmit
         /// @notice Submitted => Approved
@@ -208,7 +209,7 @@ contract ApplicationRegistry {
             revert("ApplicationStateUpdate: Invalid state transition");
         }
         emit ApplicationUpdated(
-            _id,
+            _applicationId,
             msg.sender,
             _reasonMetadataHash,
             _state,
@@ -219,57 +220,61 @@ contract ApplicationRegistry {
 
     /**
      * @notice Update application milestone state
-     * @param _id target applicationId for which milestone needs to be updated
+     * @param _applicationId target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
      * @param _reasonMetadataHash metadata file hash with state change reason
      */
     function requestMilestoneApproval(
-        uint96 _id,
+        uint96 _applicationId,
         uint48 _milestoneId,
         string memory _reasonMetadataHash
-    ) external {
-        Application memory application = applications[_id];
+    ) external whenNotPaused {
+        Application memory application = applications[_applicationId];
         require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         require(
-            applicationMilestones[_id][_milestoneId] == MilestoneState.Submitted,
+            applicationMilestones[_applicationId][_milestoneId] == MilestoneState.Submitted,
             "MilestoneStateUpdate: Invalid state transition"
         );
-        applicationMilestones[_id][_milestoneId] = MilestoneState.Requested;
-        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Requested, _reasonMetadataHash, block.timestamp);
+        applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Requested;
+        emit MilestoneUpdated(
+            _applicationId,
+            _milestoneId,
+            MilestoneState.Requested,
+            _reasonMetadataHash,
+            block.timestamp
+        );
     }
 
     /**
      * @notice Update application milestone state
-     * @param _id target applicationId for which milestone needs to be updated
+     * @param _applicationId target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
+     * @param _workspaceId workspace id of application's grant
      * @param _reasonMetadataHash metadata file hash with state change reason
      * @param _disbursalType 0 if disbursal from locked amount, 1 if P2P disbursal
      * @param _disbursalAsset address of erc20 asset for disbursal
      * @param _disbursalAmount amount to be disbursed
      */
     function approveMilestone(
-        uint96 _id,
+        uint96 _applicationId,
         uint48 _milestoneId,
+        uint96 _workspaceId,
         string memory _reasonMetadataHash,
         DisbursalType _disbursalType,
-        address _disbursalAsset,
+        IERC20 _disbursalAsset,
         uint256 _disbursalAmount
-    ) external {
-        Application memory application = applications[_id];
+    ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
+        Application memory application = applications[_applicationId];
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
-        require(
-            workspaceReg.isWorkspaceAdmin(application.workspaceId, msg.sender),
-            "MilestoneStateUpdate: Unauthorised"
-        );
-        MilestoneState currentState = applicationMilestones[_id][_milestoneId];
+        MilestoneState currentState = applicationMilestones[_applicationId][_milestoneId];
         /// @notice grant creator can only make below transitions
         /// @notice Submitted => Approved
         /// @notice Requested => Approved
         if (currentState == MilestoneState.Submitted || currentState == MilestoneState.Requested) {
-            applicationMilestones[_id][_milestoneId] = MilestoneState.Approved;
+            applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Approved;
         } else {
             revert("MilestoneStateUpdate: Invalid state transition");
         }
@@ -278,32 +283,50 @@ contract ApplicationRegistry {
         if (_disbursalAmount > 0) {
             IGrant grantRef = IGrant(application.grant);
             if (_disbursalType == DisbursalType.LockedAmount) {
-                grantRef.disburseReward(_id, _milestoneId, _disbursalAsset, _disbursalAmount, msg.sender);
+                grantRef.disburseReward(
+                    _applicationId,
+                    _milestoneId,
+                    address(_disbursalAsset),
+                    _disbursalAmount,
+                    msg.sender
+                );
             } else if (_disbursalType == DisbursalType.P2P) {
-                grantRef.disburseRewardP2P(_id, _milestoneId, _disbursalAsset, _disbursalAmount, msg.sender);
+                grantRef.disburseRewardP2P(
+                    _applicationId,
+                    _milestoneId,
+                    address(_disbursalAsset),
+                    _disbursalAmount,
+                    msg.sender
+                );
             } else {
                 revert("MilestoneStateUpdate: Invalid disbursal type");
             }
         }
 
-        emit MilestoneUpdated(_id, _milestoneId, MilestoneState.Approved, _reasonMetadataHash, block.timestamp);
+        emit MilestoneUpdated(
+            _applicationId,
+            _milestoneId,
+            MilestoneState.Approved,
+            _reasonMetadataHash,
+            block.timestamp
+        );
     }
 
     /**
      * @notice returns application owner
      * @param _applicationId applicationId for which owner is required
+     * @return address of application owner
      */
     function getApplicationOwner(uint96 _applicationId) external view returns (address) {
         Application memory application = applications[_applicationId];
         return application.owner;
     }
 
-    /**
-     * @notice update owner of contract
-     * @param _newOwner address of new owner
-     */
-    function setContractOwner(address _newOwner) external {
-        require(msg.sender == owner, "Not authorised");
-        owner = _newOwner;
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }
