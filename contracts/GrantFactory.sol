@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.7;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Grant.sol";
@@ -23,7 +23,7 @@ contract GrantFactory is Ownable, Pausable {
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg
-    ) public whenNotPaused returns (address) {
+    ) external whenNotPaused returns (address) {
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantCreate: Unauthorised");
         address _grantAddress = address(new Grant(_workspaceId, _metadataHash, _workspaceReg, _applicationReg));
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);

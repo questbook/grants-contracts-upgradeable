@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-
-interface IWorkspaceRegistry {
-    function isWorkspaceAdmin(uint96 _id, address _member) external view returns (bool);
-}
-
-interface IApplicationRegistry {
-    function getApplicationOwner(uint96 _applicationId) external view returns (address);
-}
+pragma solidity 0.8.7;
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IWorkspaceRegistry.sol";
+import "./interfaces/IApplicationRegistry.sol";
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
 contract Grant {
@@ -121,13 +115,13 @@ contract Grant {
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount Amount to be deposited for a given asset
      */
-    function depositFunds(IERC20 _erc20Interface, uint256 _amount) external payable {
+    function depositFunds(IERC20 _erc20Interface, uint256 _amount) external {
+        emit FundsDeposited(address(_erc20Interface), _amount, block.timestamp);
         if (_amount > _erc20Interface.allowance(msg.sender, address(this))) {
             emit FundsDepositFailed(address(_erc20Interface), _amount, block.timestamp);
             revert("Please approve funds before transfer");
         }
         require(_erc20Interface.transferFrom(msg.sender, address(this), _amount), "Failed to transfer funds");
-        emit FundsDeposited(address(_erc20Interface), _amount, block.timestamp);
     }
 
     /**
@@ -144,12 +138,12 @@ contract Grant {
         IERC20 _erc20Interface,
         uint256 _amount,
         address _sender
-    ) external payable onlyApplicationRegistry {
+    ) external onlyApplicationRegistry {
+        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
         require(
             _erc20Interface.transfer(applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
     }
 
     /**
@@ -166,11 +160,11 @@ contract Grant {
         IERC20 _erc20Interface,
         uint256 _amount,
         address _sender
-    ) external payable onlyApplicationRegistry {
+    ) external onlyApplicationRegistry {
+        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
         require(
             _erc20Interface.transferFrom(_sender, applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
-        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
     }
 }

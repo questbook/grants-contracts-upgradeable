@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.7;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IWorkspaceRegistry.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
-contract WorkspaceRegistry is Ownable, Pausable {
+contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
@@ -115,7 +116,7 @@ contract WorkspaceRegistry is Ownable, Pausable {
      * @param _address Address to validate role
      * @return true if specified address is admin of provided workspace id, else false
      */
-    function isWorkspaceAdmin(uint96 _id, address _address) external view returns (bool) {
+    function isWorkspaceAdmin(uint96 _id, address _address) external view override returns (bool) {
         return workspaceAdmins[_id][_address];
     }
 

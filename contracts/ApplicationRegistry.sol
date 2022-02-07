@@ -1,38 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.7;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-
-interface IWorkspaceRegistry {
-    function isWorkspaceAdmin(uint96 _id, address _member) external view returns (bool);
-}
-
-interface IGrant {
-    function active() external view returns (bool);
-
-    function incrementApplicant() external;
-
-    function disburseReward(
-        uint96 _applicationId,
-        uint96 _milestoneId,
-        address _asset,
-        uint256 _amount,
-        address _sender
-    ) external payable;
-
-    function disburseRewardP2P(
-        uint96 _applicationId,
-        uint96 _milestoneId,
-        address _asset,
-        uint256 _amount,
-        address _sender
-    ) external payable;
-}
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IWorkspaceRegistry.sol";
+import "./interfaces/IGrant.sol";
+import "./interfaces/IApplicationRegistry.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
-contract ApplicationRegistry is Ownable, Pausable {
+contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
     /// @notice Number of applications submitted
     uint96 public applicationCount;
 
@@ -71,7 +48,7 @@ contract ApplicationRegistry is Ownable, Pausable {
     /// @notice mapping to store applicationId along with application
     mapping(uint96 => Application) public applications;
 
-    /// @notice mapping to store application owner along with grant address
+    /// @dev mapping to store application owner along with grant address
     /// ex: for application id - 0, grant addr - 0x0
     /// applicantGrant[0][0x0] will be = true, this is used to prevent duplicate entry
     mapping(address => mapping(address => bool)) private applicantGrant;
@@ -148,8 +125,8 @@ contract ApplicationRegistry is Ownable, Pausable {
             ApplicationState.Submitted
         );
         applicantGrant[msg.sender][_grant] = true;
-        grantRef.incrementApplicant();
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
+        grantRef.incrementApplicant();
     }
 
     /**
@@ -280,6 +257,14 @@ contract ApplicationRegistry is Ownable, Pausable {
             revert("MilestoneStateUpdate: Invalid state transition");
         }
 
+        emit MilestoneUpdated(
+            _applicationId,
+            _milestoneId,
+            MilestoneState.Approved,
+            _reasonMetadataHash,
+            block.timestamp
+        );
+
         /// @notice disburse reward
         if (_disbursalAmount > 0) {
             IGrant grantRef = IGrant(application.grant);
@@ -303,14 +288,6 @@ contract ApplicationRegistry is Ownable, Pausable {
                 revert("MilestoneStateUpdate: Invalid disbursal type");
             }
         }
-
-        emit MilestoneUpdated(
-            _applicationId,
-            _milestoneId,
-            MilestoneState.Approved,
-            _reasonMetadataHash,
-            block.timestamp
-        );
     }
 
     /**
@@ -318,7 +295,7 @@ contract ApplicationRegistry is Ownable, Pausable {
      * @param _applicationId applicationId for which owner is required
      * @return address of application owner
      */
-    function getApplicationOwner(uint96 _applicationId) external view returns (address) {
+    function getApplicationOwner(uint96 _applicationId) external view override returns (address) {
         Application memory application = applications[_applicationId];
         return application.owner;
     }
