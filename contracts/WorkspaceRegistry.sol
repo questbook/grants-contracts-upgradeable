@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @title Registry for all the workspaces used to create and update workspaces
 contract WorkspaceRegistry is Ownable, Pausable {
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;

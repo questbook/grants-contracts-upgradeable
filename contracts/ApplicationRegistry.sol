@@ -30,7 +30,8 @@ interface IGrant {
     ) external payable;
 }
 
-/// @title Registry for all the grant applications
+/// @title Registry for all the grant applications used for updates on application
+/// and requesting funds/milestone approvals
 contract ApplicationRegistry is Ownable, Pausable {
     /// @notice Number of applications submitted
     uint96 public applicationCount;

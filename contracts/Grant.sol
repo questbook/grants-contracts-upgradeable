@@ -10,6 +10,7 @@ interface IApplicationRegistry {
     function getApplicationOwner(uint96 _applicationId) external view returns (address);
 }
 
+/// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
 contract Grant {
     /// @notice workspaceId to which the grant belongs
     uint96 public workspaceId;

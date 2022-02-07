@@ -4,6 +4,8 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Grant.sol";
 
+/// @title Factory contract used to create new grants,
+/// each grant is a new contract deployed using this factory
 contract GrantFactory is Ownable, Pausable {
     /// @notice Emitted when a new grant contract is deployed
     event GrantCreated(address grantAddress, uint96 workspaceId, string metadataHash, uint256 time);
