@@ -71,6 +71,33 @@ describe("Integration tests", function () {
     });
   });
 
+  describe("Withdraw funds", function () {
+    it("Should not work if invoker is non admin", async function () {
+      expect(
+        this.grant
+          .connect(this.signers.nonAdmin)
+          .withdrawFunds(this.myToken.address, 1000, this.signers.nonAdmin.address),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+    });
+
+    it("Should not work if grant does not have balance", async function () {
+      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
+      expect(
+        this.grant.connect(this.signers.admin).withdrawFunds(this.myToken.address, 1000, this.signers.admin.address),
+      ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+    });
+
+    it("Should work if grant has balance and invoked by workspace admin", async function () {
+      await this.myToken.connect(this.signers.admin).approve(this.grant.address, 1000);
+      await this.grant.connect(this.signers.admin).depositFunds(this.myToken.address, 1000);
+      await this.grant
+        .connect(this.signers.admin)
+        .withdrawFunds(this.myToken.address, 1000, this.signers.admin.address);
+      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
+      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
+    });
+  });
+
   describe("Withdraw rewards from locked funds", function () {
     it("Should not work if no balance on grant contract", async function () {
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
