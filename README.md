@@ -1,6 +1,6 @@
 # Questbook v0
 
-This repository contains the core smart contracts for the Questbook Grants Orchestrator tool.
+This repository contains the core smart contracts for the Decentralised Grants Orchestrator tool.
 
 Any protocol can visit the tool and create a DAO or Workspace which can then be used to create and list grants on the tool. On the other hand developers can visit the platform and apply for grant of their liking.
 
