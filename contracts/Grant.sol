@@ -27,8 +27,11 @@ contract Grant {
     /// @notice Emitted when a grant is updated
     event GrantUpdated(uint96 indexed workspaceId, string metadataHash, bool active, uint256 time);
 
-    /// @notice Emitted when funds is deposited is updated
+    /// @notice Emitted when funds are deposited
     event FundsDeposited(address asset, uint256 amount, uint256 time);
+
+    /// @notice Emitted when funds are withdrawn
+    event FundsWithdrawn(address asset, uint256 amount, address recipient, uint256 time);
 
     /// @notice Emitted when fund deposit fails
     event FundsDepositFailed(address asset, uint256 amount, uint256 time);
@@ -122,6 +125,21 @@ contract Grant {
             revert("Please approve funds before transfer");
         }
         require(_erc20Interface.transferFrom(msg.sender, address(this), _amount), "Failed to transfer funds");
+    }
+
+    /**
+     * @notice Withdraws funds from a grant to specified recipient, can be called only by workspace admin
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param _amount Amount to be withdrawn for a given asset
+     * @param _recipient address of wallet where the funds should be withdrawn to
+     */
+    function withdrawFunds(
+        IERC20 _erc20Interface,
+        uint256 _amount,
+        address _recipient
+    ) external onlyWorkspaceAdmin {
+        emit FundsWithdrawn(address(_erc20Interface), _amount, _recipient, block.timestamp);
+        require(_erc20Interface.transfer(_recipient, _amount), "Failed to transfer funds");
     }
 
     /**
