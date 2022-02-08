@@ -1,4 +1,20 @@
-# Scaffolded from - [Solidity Template](https://github.com/PaulRBerg/solidity-template)
+# Questbook v0
+
+This repository contains the core smart contracts for the Questbook Grants Orchestrator tool.
+
+Any protocol can visit the tool and create a DAO or Workspace which can then be used to create and list grants on the tool. On the other hand developers can visit the platform and apply for grant of their liking.
+
+There are 4 contracts involved with self explanatory names:
+
+- [Workspace Registry](https://github.com/questbook/contracts/blob/main/contracts/WorkspaceRegistry.sol) - Responsible for workspace related operations
+- [Grant Factory](https://github.com/questbook/contracts/blob/main/contracts/GrantFactory.sol) - Factory contract which is responsible for creating grants as seperate contracts
+- [Grant](https://github.com/questbook/contracts/blob/main/contracts/Grant.sol) - Implementation of grant related operations
+- [Application Registry](https://github.com/questbook/contracts/blob/main/contracts/ApplicationRegistry.sol) - Responsible for application related operations
+
+For more details about the product flow, check out below sitemap
+![Sitemap](https://github.com/questbook/contracts/blob/main/docs/assets/sitemap.png)
+
+## Scaffolded from - [Solidity Template](https://github.com/PaulRBerg/solidity-template)
 
 ## Usage
 
