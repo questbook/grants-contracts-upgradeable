@@ -1,0 +1,107 @@
+Different versions of Solidity is used:
+	- Version used: ['0.8.7', '^0.8.0']
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/access/Ownable.sol#4)
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/security/Pausable.sol#4)
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#4)
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol#4)
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol#4)
+	- ^0.8.0 (node_modules/@openzeppelin/contracts/utils/Context.sol#4)
+	- 0.8.7 (contracts/ApplicationRegistry.sol#2)
+	- 0.8.7 (contracts/Grant.sol#2)
+	- 0.8.7 (contracts/GrantFactory.sol#2)
+	- 0.8.7 (contracts/WorkspaceRegistry.sol#2)
+	- 0.8.7 (contracts/interfaces/IApplicationRegistry.sol#2)
+	- 0.8.7 (contracts/interfaces/IGrant.sol#2)
+	- 0.8.7 (contracts/interfaces/IWorkspaceRegistry.sol#2)
+	- 0.8.7 (contracts/test-helpers/MyToken.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/access/Ownable.sol#4) allows old versions
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/security/Pausable.sol#4) allows old versions
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#4) allows old versions
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol#4) allows old versions
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol#4) allows old versions
+Pragma version^0.8.0 (node_modules/@openzeppelin/contracts/utils/Context.sol#4) allows old versions
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter ApplicationRegistry.setWorkspaceReg(IWorkspaceRegistry)._workspaceReg (contracts/ApplicationRegistry.sol#95) is not in mixedCase
+Parameter ApplicationRegistry.submitApplication(address,uint96,string,uint48)._grant (contracts/ApplicationRegistry.sol#107) is not in mixedCase
+Parameter ApplicationRegistry.submitApplication(address,uint96,string,uint48)._workspaceId (contracts/ApplicationRegistry.sol#108) is not in mixedCase
+Parameter ApplicationRegistry.submitApplication(address,uint96,string,uint48)._metadataHash (contracts/ApplicationRegistry.sol#109) is not in mixedCase
+Parameter ApplicationRegistry.submitApplication(address,uint96,string,uint48)._milestoneCount (contracts/ApplicationRegistry.sol#110) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationMetadata(uint96,string,uint48)._applicationId (contracts/ApplicationRegistry.sol#138) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationMetadata(uint96,string,uint48)._metadataHash (contracts/ApplicationRegistry.sol#139) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationMetadata(uint96,string,uint48)._milestoneCount (contracts/ApplicationRegistry.sol#140) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationState(uint96,uint96,ApplicationRegistry.ApplicationState,string)._applicationId (contracts/ApplicationRegistry.sol#170) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationState(uint96,uint96,ApplicationRegistry.ApplicationState,string)._workspaceId (contracts/ApplicationRegistry.sol#171) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationState(uint96,uint96,ApplicationRegistry.ApplicationState,string)._state (contracts/ApplicationRegistry.sol#172) is not in mixedCase
+Parameter ApplicationRegistry.updateApplicationState(uint96,uint96,ApplicationRegistry.ApplicationState,string)._reasonMetadataHash (contracts/ApplicationRegistry.sol#173) is not in mixedCase
+Parameter ApplicationRegistry.requestMilestoneApproval(uint96,uint48,string)._applicationId (contracts/ApplicationRegistry.sol#206) is not in mixedCase
+Parameter ApplicationRegistry.requestMilestoneApproval(uint96,uint48,string)._milestoneId (contracts/ApplicationRegistry.sol#207) is not in mixedCase
+Parameter ApplicationRegistry.requestMilestoneApproval(uint96,uint48,string)._reasonMetadataHash (contracts/ApplicationRegistry.sol#208) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._applicationId (contracts/ApplicationRegistry.sol#239) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._milestoneId (contracts/ApplicationRegistry.sol#240) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._workspaceId (contracts/ApplicationRegistry.sol#241) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._reasonMetadataHash (contracts/ApplicationRegistry.sol#242) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._disbursalType (contracts/ApplicationRegistry.sol#243) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._disbursalAsset (contracts/ApplicationRegistry.sol#244) is not in mixedCase
+Parameter ApplicationRegistry.approveMilestone(uint96,uint48,uint96,string,ApplicationRegistry.DisbursalType,IERC20,uint256)._disbursalAmount (contracts/ApplicationRegistry.sol#245) is not in mixedCase
+Parameter ApplicationRegistry.getApplicationOwner(uint96)._applicationId (contracts/ApplicationRegistry.sol#298) is not in mixedCase
+Parameter Grant.updateGrant(string)._metadataHash (contracts/Grant.sol#98) is not in mixedCase
+Parameter Grant.updateGrantAccessibility(bool)._canAcceptApplication (contracts/Grant.sol#108) is not in mixedCase
+Parameter Grant.depositFunds(IERC20,uint256)._erc20Interface (contracts/Grant.sol#118) is not in mixedCase
+Parameter Grant.depositFunds(IERC20,uint256)._amount (contracts/Grant.sol#118) is not in mixedCase
+Parameter Grant.disburseReward(uint96,uint96,IERC20,uint256,address)._applicationId (contracts/Grant.sol#136) is not in mixedCase
+Parameter Grant.disburseReward(uint96,uint96,IERC20,uint256,address)._milestoneId (contracts/Grant.sol#137) is not in mixedCase
+Parameter Grant.disburseReward(uint96,uint96,IERC20,uint256,address)._erc20Interface (contracts/Grant.sol#138) is not in mixedCase
+Parameter Grant.disburseReward(uint96,uint96,IERC20,uint256,address)._amount (contracts/Grant.sol#139) is not in mixedCase
+Parameter Grant.disburseReward(uint96,uint96,IERC20,uint256,address)._sender (contracts/Grant.sol#140) is not in mixedCase
+Parameter Grant.disburseRewardP2P(uint96,uint96,IERC20,uint256,address)._applicationId (contracts/Grant.sol#158) is not in mixedCase
+Parameter Grant.disburseRewardP2P(uint96,uint96,IERC20,uint256,address)._milestoneId (contracts/Grant.sol#159) is not in mixedCase
+Parameter Grant.disburseRewardP2P(uint96,uint96,IERC20,uint256,address)._erc20Interface (contracts/Grant.sol#160) is not in mixedCase
+Parameter Grant.disburseRewardP2P(uint96,uint96,IERC20,uint256,address)._amount (contracts/Grant.sol#161) is not in mixedCase
+Parameter Grant.disburseRewardP2P(uint96,uint96,IERC20,uint256,address)._sender (contracts/Grant.sol#162) is not in mixedCase
+Parameter GrantFactory.createGrant(uint96,string,IWorkspaceRegistry,IApplicationRegistry)._workspaceId (contracts/GrantFactory.sol#22) is not in mixedCase
+Parameter GrantFactory.createGrant(uint96,string,IWorkspaceRegistry,IApplicationRegistry)._metadataHash (contracts/GrantFactory.sol#23) is not in mixedCase
+Parameter GrantFactory.createGrant(uint96,string,IWorkspaceRegistry,IApplicationRegistry)._workspaceReg (contracts/GrantFactory.sol#24) is not in mixedCase
+Parameter GrantFactory.createGrant(uint96,string,IWorkspaceRegistry,IApplicationRegistry)._applicationReg (contracts/GrantFactory.sol#25) is not in mixedCase
+Parameter WorkspaceRegistry.createWorkspace(string)._metadataHash (contracts/WorkspaceRegistry.sol#53) is not in mixedCase
+Parameter WorkspaceRegistry.updateWorkspaceMetadata(uint96,string)._id (contracts/WorkspaceRegistry.sol#67) is not in mixedCase
+Parameter WorkspaceRegistry.updateWorkspaceMetadata(uint96,string)._metadataHash (contracts/WorkspaceRegistry.sol#67) is not in mixedCase
+Parameter WorkspaceRegistry.addWorkspaceAdmins(uint96,address[],string[])._id (contracts/WorkspaceRegistry.sol#84) is not in mixedCase
+Parameter WorkspaceRegistry.addWorkspaceAdmins(uint96,address[],string[])._admins (contracts/WorkspaceRegistry.sol#85) is not in mixedCase
+Parameter WorkspaceRegistry.addWorkspaceAdmins(uint96,address[],string[])._emails (contracts/WorkspaceRegistry.sol#86) is not in mixedCase
+Parameter WorkspaceRegistry.removeWorkspaceAdmins(uint96,address[])._id (contracts/WorkspaceRegistry.sol#100) is not in mixedCase
+Parameter WorkspaceRegistry.removeWorkspaceAdmins(uint96,address[])._admins (contracts/WorkspaceRegistry.sol#100) is not in mixedCase
+Parameter WorkspaceRegistry.isWorkspaceAdmin(uint96,address)._id (contracts/WorkspaceRegistry.sol#119) is not in mixedCase
+Parameter WorkspaceRegistry.isWorkspaceAdmin(uint96,address)._address (contracts/WorkspaceRegistry.sol#119) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+renounceOwnership() should be declared external:
+	- Ownable.renounceOwnership() (node_modules/@openzeppelin/contracts/access/Ownable.sol#54-56)
+transferOwnership(address) should be declared external:
+	- Ownable.transferOwnership(address) (node_modules/@openzeppelin/contracts/access/Ownable.sol#62-65)
+name() should be declared external:
+	- ERC20.name() (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#62-64)
+symbol() should be declared external:
+	- ERC20.symbol() (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#70-72)
+decimals() should be declared external:
+	- ERC20.decimals() (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#87-89)
+totalSupply() should be declared external:
+	- ERC20.totalSupply() (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#94-96)
+balanceOf(address) should be declared external:
+	- ERC20.balanceOf(address) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#101-103)
+transfer(address,uint256) should be declared external:
+	- ERC20.transfer(address,uint256) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#113-116)
+allowance(address,address) should be declared external:
+	- ERC20.allowance(address,address) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#121-123)
+approve(address,uint256) should be declared external:
+	- ERC20.approve(address,uint256) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#132-135)
+transferFrom(address,address,uint256) should be declared external:
+	- ERC20.transferFrom(address,address,uint256) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#150-164)
+increaseAllowance(address,uint256) should be declared external:
+	- ERC20.increaseAllowance(address,uint256) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#178-181)
+decreaseAllowance(address,uint256) should be declared external:
+	- ERC20.decreaseAllowance(address,uint256) (node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol#197-205)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+. analyzed (14 contracts with 77 detectors), 71 result(s) found
