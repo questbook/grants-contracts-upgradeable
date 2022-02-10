@@ -244,6 +244,37 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(application.metadataHash).to.equal("dummyApplicationIpfsHash");
       expect(application.state).to.equal(3);
     });
+
+    it("workspace admin can mark application as complete if all milestones are approved", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.admin)
+        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+      await this.applicationRegistry
+        .connect(this.signers.admin)
+        .approveMilestone(0, 1, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+      await this.applicationRegistry.connect(this.signers.admin).completeApplication(0, 0, "reasonIpfsHash");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(4);
+    });
+
+    it("workspace admin can not mark application as complete if all milestones are not approved", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.admin)
+        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+      expect(
+        this.applicationRegistry.connect(this.signers.admin).completeApplication(0, 0, "reasonIpfsHash"),
+      ).to.be.revertedWith("CompleteApplication: Invalid milestione state");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(2);
+    });
   });
 
   describe("Milestone state change", function () {

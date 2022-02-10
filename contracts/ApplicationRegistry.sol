@@ -25,7 +25,8 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         Submitted,
         Resubmit,
         Approved,
-        Rejected
+        Rejected,
+        Complete
     }
 
     /// @notice types of reward disbursals
@@ -191,6 +192,37 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             msg.sender,
             _reasonMetadataHash,
             _state,
+            application.milestoneCount,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Mark application as complete
+     * @param _applicationId target applicationId which needs to be marked as complete
+     * @param _workspaceId workspace id of application's grant
+     * @param _reasonMetadataHash metadata file hash with application overall feedback
+     */
+    function completeApplication(
+        uint96 _applicationId,
+        uint96 _workspaceId,
+        string memory _reasonMetadataHash
+    ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
+        Application storage application = applications[_applicationId];
+        for (uint48 i = 0; i < application.milestoneCount; i++) {
+            require(
+                applicationMilestones[_applicationId][i] == MilestoneState.Approved,
+                "CompleteApplication: Invalid milestione state"
+            );
+        }
+
+        application.state = ApplicationState.Complete;
+
+        emit ApplicationUpdated(
+            _applicationId,
+            msg.sender,
+            _reasonMetadataHash,
+            ApplicationState.Complete,
             application.milestoneCount,
             block.timestamp
         );
