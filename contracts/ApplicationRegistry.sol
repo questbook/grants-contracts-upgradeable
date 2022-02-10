@@ -25,7 +25,8 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         Submitted,
         Resubmit,
         Approved,
-        Rejected
+        Rejected,
+        Complete
     }
 
     /// @notice types of reward disbursals
@@ -43,6 +44,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint48 milestoneCount;
         string metadataHash;
         ApplicationState state;
+        bool milestonesDone;
     }
 
     /// @notice mapping to store applicationId along with application
@@ -122,7 +124,8 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             msg.sender,
             _milestoneCount,
             _metadataHash,
-            ApplicationState.Submitted
+            ApplicationState.Submitted,
+            false
         );
         applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
@@ -197,6 +200,32 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
     }
 
     /**
+     * @notice Mark application as complete
+     * @param _applicationId target applicationId which needs to be marked as complete
+     * @param _workspaceId workspace id of application's grant
+     * @param _reasonMetadataHash metadata file hash with application overall feedback
+     */
+    function completeApplication(
+        uint96 _applicationId,
+        uint96 _workspaceId,
+        string memory _reasonMetadataHash
+    ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
+        Application storage application = applications[_applicationId];
+        require(application.milestonesDone, "CompleteApplication: Invalid milestione state");
+
+        application.state = ApplicationState.Complete;
+
+        emit ApplicationUpdated(
+            _applicationId,
+            msg.sender,
+            _reasonMetadataHash,
+            ApplicationState.Complete,
+            application.milestoneCount,
+            block.timestamp
+        );
+    }
+
+    /**
      * @notice Update application milestone state
      * @param _applicationId target applicationId for which milestone needs to be updated
      * @param _milestoneId target milestoneId which needs to be updated
@@ -244,7 +273,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         IERC20 _disbursalAsset,
         uint256 _disbursalAmount
     ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
-        Application memory application = applications[_applicationId];
+        Application storage application = applications[_applicationId];
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         MilestoneState currentState = applicationMilestones[_applicationId][_milestoneId];
@@ -255,6 +284,10 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Approved;
         } else {
             revert("MilestoneStateUpdate: Invalid state transition");
+        }
+
+        if (_milestoneId == (application.milestoneCount - 1)) {
+            application.milestonesDone = true;
         }
 
         emit MilestoneUpdated(
