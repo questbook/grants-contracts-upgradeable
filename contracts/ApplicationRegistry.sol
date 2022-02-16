@@ -176,6 +176,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         string memory _reasonMetadataHash
     ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
+        require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
         /// @notice Submitted => Resubmit
         /// @notice Submitted => Approved
@@ -211,6 +212,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         string memory _reasonMetadataHash
     ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
+        require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.milestonesDone, "CompleteApplication: Invalid milestione state");
 
         application.state = ApplicationState.Complete;
@@ -260,20 +262,15 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
      * @param _milestoneId target milestoneId which needs to be updated
      * @param _workspaceId workspace id of application's grant
      * @param _reasonMetadataHash metadata file hash with state change reason
-     * @param _disbursalType 0 if disbursal from locked amount, 1 if P2P disbursal
-     * @param _disbursalAsset address of erc20 asset for disbursal
-     * @param _disbursalAmount amount to be disbursed
      */
     function approveMilestone(
         uint96 _applicationId,
         uint48 _milestoneId,
         uint96 _workspaceId,
-        string memory _reasonMetadataHash,
-        DisbursalType _disbursalType,
-        IERC20 _disbursalAsset,
-        uint256 _disbursalAmount
+        string memory _reasonMetadataHash
     ) external whenNotPaused onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
+        require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         MilestoneState currentState = applicationMilestones[_applicationId][_milestoneId];
@@ -297,30 +294,6 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             _reasonMetadataHash,
             block.timestamp
         );
-
-        /// @notice disburse reward
-        if (_disbursalAmount > 0) {
-            IGrant grantRef = IGrant(application.grant);
-            if (_disbursalType == DisbursalType.LockedAmount) {
-                grantRef.disburseReward(
-                    _applicationId,
-                    _milestoneId,
-                    address(_disbursalAsset),
-                    _disbursalAmount,
-                    msg.sender
-                );
-            } else if (_disbursalType == DisbursalType.P2P) {
-                grantRef.disburseRewardP2P(
-                    _applicationId,
-                    _milestoneId,
-                    address(_disbursalAsset),
-                    _disbursalAmount,
-                    msg.sender
-                );
-            } else {
-                revert("MilestoneStateUpdate: Invalid disbursal type");
-            }
-        }
     }
 
     /**

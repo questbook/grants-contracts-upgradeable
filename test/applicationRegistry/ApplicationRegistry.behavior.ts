@@ -105,15 +105,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
 
     it("Milestone approval wont work", async function () {
       expect(
-        this.applicationRegistry
-          .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+        this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
       ).to.be.revertedWith("Pausable: paused");
     });
   });
 
   describe("Application state change", function () {
-    it("grant manager can ask for application resubmission if application is in submitred state", async function () {
+    it("grant manager can ask for application resubmission if application is in submitted state", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
@@ -250,12 +248,8 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .approveMilestone(0, 1, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+      await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+      await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).completeApplication(0, 0, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(4);
@@ -266,9 +260,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+      await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
       expect(
         this.applicationRegistry.connect(this.signers.admin).completeApplication(0, 0, "reasonIpfsHash"),
       ).to.be.revertedWith("CompleteApplication: Invalid milestione state");
@@ -304,11 +296,8 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
-      ).to.be.reverted;
+      expect(this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"))
+        .to.be.reverted;
     });
 
     describe("If application is approved", function () {
@@ -348,26 +337,22 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       it("Milestone state can be updated from submitted to approved by grant manager", async function () {
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });
 
       it("Milestone state can not approved if invalid milestoneId provided", async function () {
         expect(
-          this.applicationRegistry
-            .connect(this.signers.admin)
-            .approveMilestone(0, 2, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+          this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 2, 0, "dummyApplicationIpfsHash"),
         ).to.be.reverted;
       });
 
       it("Milestone state can not reapproved by grant manager", async function () {
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
         expect(
-          this.applicationRegistry
-            .connect(this.signers.admin)
-            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+          this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
         ).to.be.reverted;
       });
 
@@ -377,15 +362,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           .requestMilestoneApproval(0, 0, "dummyApplicationIpfsHash");
         await this.applicationRegistry
           .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0);
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });
 
       it("Milestone state can not be updated from submitted to approved by non grant manager", async function () {
         expect(
-          this.applicationRegistry
-            .connect(this.signers.nonAdmin)
-            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+          this.applicationRegistry.connect(this.signers.nonAdmin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
         ).to.be.reverted;
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(0);
       });
@@ -395,82 +378,9 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           .connect(this.signers.applicantAdmin)
           .requestMilestoneApproval(0, 0, "dummyApplicationIpfsHash");
         expect(
-          this.applicationRegistry
-            .connect(this.signers.nonAdmin)
-            .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash", 1, "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0", 0),
+          this.applicationRegistry.connect(this.signers.nonAdmin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
         ).to.be.reverted;
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(1);
-      });
-
-      describe("Disburse reward", function () {
-        it("disburse reward using funds locked", async function () {
-          await this.mockGrant.mock.active.returns(true);
-          await this.mockGrant.mock.incrementApplicant.returns();
-          await this.applicationRegistry
-            .connect(this.signers.applicantAdmin)
-            .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
-          await this.mockGrant.mock.disburseReward.returns();
-          await this.applicationRegistry
-            .connect(this.signers.admin)
-            .approveMilestone(
-              1,
-              0,
-              0,
-              "dummyApplicationIpfsHash",
-              0,
-              "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0",
-              1000,
-            );
-          expect(await this.applicationRegistry.applicationMilestones(1, 0)).to.equal(2);
-        });
-
-        it("disburse reward using P2P", async function () {
-          await this.mockGrant.mock.active.returns(true);
-          await this.mockGrant.mock.incrementApplicant.returns();
-          await this.applicationRegistry
-            .connect(this.signers.applicantAdmin)
-            .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
-          await this.mockGrant.mock.disburseRewardP2P.returns();
-          await this.applicationRegistry
-            .connect(this.signers.admin)
-            .approveMilestone(
-              1,
-              0,
-              0,
-              "dummyApplicationIpfsHash",
-              1,
-              "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0",
-              1000,
-            );
-
-          expect(await this.applicationRegistry.applicationMilestones(1, 0)).to.equal(2);
-        });
-
-        it("disburse reward should fail with incorrect disbursal type", async function () {
-          await this.mockGrant.mock.active.returns(true);
-          await this.mockGrant.mock.incrementApplicant.returns();
-          await this.applicationRegistry
-            .connect(this.signers.applicantAdmin)
-            .submitApplication(this.mockGrant.address, 0, "dummyApplicationIpfsHash", 1);
-          await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(1, 0, 2, "reasonIpfsHash");
-          await this.mockGrant.mock.disburseRewardP2P.returns();
-          expect(
-            this.applicationRegistry
-              .connect(this.signers.admin)
-              .approveMilestone(
-                1,
-                0,
-                0,
-                "dummyApplicationIpfsHash",
-                2,
-                "0xD3db9D11c09cECd2E91bdE73F710dE6094179FA0",
-                1000,
-              ),
-          ).to.be.reverted;
-          expect(await this.applicationRegistry.applicationMilestones(1, 0)).to.equal(0);
-        });
       });
     });
 

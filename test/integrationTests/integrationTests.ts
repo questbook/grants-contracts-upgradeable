@@ -56,21 +56,6 @@ describe("Integration tests", function () {
     await this.myToken.connect(this.signers.erc20).mint(this.signers.admin.address, 10000);
   });
 
-  describe("Deposit funds", function () {
-    it("Should not work if amount is not approved", async function () {
-      expect(this.grant.connect(this.signers.admin).depositFunds(this.myToken.address, 1000)).to.be.reverted;
-      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
-      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
-    });
-
-    it("Should work if amount is approved", async function () {
-      await this.myToken.connect(this.signers.admin).approve(this.grant.address, 1000);
-      await this.grant.connect(this.signers.admin).depositFunds(this.myToken.address, 1000);
-      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(1000);
-      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(9000);
-    });
-  });
-
   describe("Withdraw funds", function () {
     it("Should not work if invoker is non admin", async function () {
       expect(
@@ -88,8 +73,7 @@ describe("Integration tests", function () {
     });
 
     it("Should work if grant has balance and invoked by workspace admin", async function () {
-      await this.myToken.connect(this.signers.admin).approve(this.grant.address, 1000);
-      await this.grant.connect(this.signers.admin).depositFunds(this.myToken.address, 1000);
+      await this.myToken.connect(this.signers.admin).transfer(this.grant.address, 1000);
       await this.grant
         .connect(this.signers.admin)
         .withdrawFunds(this.myToken.address, 1000, this.signers.admin.address);
@@ -101,19 +85,13 @@ describe("Integration tests", function () {
   describe("Withdraw rewards from locked funds", function () {
     it("Should not work if no balance on grant contract", async function () {
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
-      ).to.be.reverted;
+      expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
     });
 
     it("Should work if balance present in grant contract", async function () {
       await this.myToken.connect(this.signers.erc20).mint(this.grant.address, 10000);
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 1000);
+      await this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(9000);
     });
@@ -123,21 +101,13 @@ describe("Integration tests", function () {
     it("Should not work if amount is not approved", async function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
-      ).to.be.reverted;
+      expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
 
     it("Should not work if no balance in user wallet", async function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.admin)
-          .approveMilestone(0, 0, 0, "reasonIpfsHash", 0, this.myToken.address, 20000),
-      ).to.be.reverted;
+      expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
@@ -146,9 +116,7 @@ describe("Integration tests", function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
       await this.myToken.connect(this.signers.admin).approve(this.grant.address, 10000);
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .approveMilestone(0, 0, 0, "reasonIpfsHash", 1, this.myToken.address, 1000);
+      await this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(9000);
     });
