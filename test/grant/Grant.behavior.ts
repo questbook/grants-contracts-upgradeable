@@ -40,30 +40,4 @@ export function shouldBehaveLikeGrant(): void {
       expect(this.grant.connect(this.signers.nonAdmin).updateGrantAccessibility(false)).to.be.reverted;
     });
   });
-
-  describe("Fund deposit is", async function () {
-    it("possible if amount is approved and erc20 transfer succeeds", async function () {
-      await this.applicationRegistry
-        .connect(this.signers.admin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      await this.mockERC20.mock.allowance.returns(10000);
-      await this.mockERC20.mock.transferFrom.returns(true);
-      const deposit = await this.grant.connect(this.signers.admin).depositFunds(this.mockERC20.address, 1000);
-      const tx = await deposit.wait();
-      expect(tx.events[0].args[0]).to.equal(this.mockERC20.address);
-      expect(tx.events[0].args[1].toNumber()).to.equal(1000);
-    });
-
-    it("not possible if amount is not approved", async function () {
-      await this.mockERC20.mock.allowance.returns(500);
-      await this.mockERC20.mock.transferFrom.returns(true);
-      expect(this.grant.connect(this.signers.admin).depositFunds(this.mockERC20.address, 1000)).to.be.reverted;
-    });
-
-    it("not possible if amount is approved but erc20 transfer fails", async function () {
-      await this.mockERC20.mock.allowance.returns(10000);
-      await this.mockERC20.mock.transferFrom.returns(false);
-      expect(this.grant.connect(this.signers.admin).depositFunds(this.mockERC20.address, 1000)).to.be.reverted;
-    });
-  });
 }

@@ -27,9 +27,6 @@ contract Grant {
     /// @notice Emitted when a grant is updated
     event GrantUpdated(uint96 indexed workspaceId, string metadataHash, bool active, uint256 time);
 
-    /// @notice Emitted when funds are deposited
-    event FundsDeposited(address asset, uint256 amount, uint256 time);
-
     /// @notice Emitted when funds are withdrawn
     event FundsWithdrawn(address asset, uint256 amount, address recipient, uint256 time);
 
@@ -114,20 +111,6 @@ contract Grant {
     }
 
     /**
-     * @notice Deposit funds to a workspace, can be called by anyone
-     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
-     * @param _amount Amount to be deposited for a given asset
-     */
-    function depositFunds(IERC20 _erc20Interface, uint256 _amount) external {
-        emit FundsDeposited(address(_erc20Interface), _amount, block.timestamp);
-        if (_amount > _erc20Interface.allowance(msg.sender, address(this))) {
-            emit FundsDepositFailed(address(_erc20Interface), _amount, block.timestamp);
-            revert("Please approve funds before transfer");
-        }
-        require(_erc20Interface.transferFrom(msg.sender, address(this), _amount), "Failed to transfer funds");
-    }
-
-    /**
      * @notice Withdraws funds from a grant to specified recipient, can be called only by workspace admin
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount Amount to be withdrawn for a given asset
@@ -148,16 +131,21 @@ contract Grant {
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
-     * @param _sender address of person trasferring reward
      */
     function disburseReward(
         uint96 _applicationId,
         uint96 _milestoneId,
         IERC20 _erc20Interface,
-        uint256 _amount,
-        address _sender
-    ) external onlyApplicationRegistry {
-        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
+        uint256 _amount
+    ) external onlyWorkspaceAdmin {
+        emit DisburseReward(
+            _applicationId,
+            _milestoneId,
+            address(_erc20Interface),
+            msg.sender,
+            _amount,
+            block.timestamp
+        );
         require(
             _erc20Interface.transfer(applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
@@ -170,18 +158,23 @@ contract Grant {
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
-     * @param _sender address of person trasferring reward
      */
     function disburseRewardP2P(
         uint96 _applicationId,
         uint96 _milestoneId,
         IERC20 _erc20Interface,
-        uint256 _amount,
-        address _sender
-    ) external onlyApplicationRegistry {
-        emit DisburseReward(_applicationId, _milestoneId, address(_erc20Interface), _sender, _amount, block.timestamp);
+        uint256 _amount
+    ) external onlyWorkspaceAdmin {
+        emit DisburseReward(
+            _applicationId,
+            _milestoneId,
+            address(_erc20Interface),
+            msg.sender,
+            _amount,
+            block.timestamp
+        );
         require(
-            _erc20Interface.transferFrom(_sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+            _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
     }
