@@ -40,6 +40,7 @@ contract Grant {
         address asset,
         address sender,
         uint256 amount,
+        bool isP2P,
         uint256 time
     );
 
@@ -144,6 +145,7 @@ contract Grant {
             address(_erc20Interface),
             msg.sender,
             _amount,
+            false,
             block.timestamp
         );
         require(
@@ -171,6 +173,7 @@ contract Grant {
             address(_erc20Interface),
             msg.sender,
             _amount,
+            true,
             block.timestamp
         );
         require(
