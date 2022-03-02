@@ -11,7 +11,10 @@ There are 4 contracts involved with self explanatory names:
 - [Grant](https://github.com/questbook/contracts/blob/main/contracts/Grant.sol) - Implementation of grant related operations
 - [Application Registry](https://github.com/questbook/contracts/blob/main/contracts/ApplicationRegistry.sol) - Responsible for application related operations
 
-For more details about the product flow, check out below sitemap
+Sequence diagram:
+![Sequence Diagram](https://github.com/questbook/contracts/blob/main/docs/assets/sequence-diagram.svg)
+
+Product flow:
 ![Sitemap](https://github.com/questbook/contracts/blob/main/docs/assets/sitemap.png)
 
 ## Scaffolded from - [Solidity Template](https://github.com/PaulRBerg/solidity-template)
