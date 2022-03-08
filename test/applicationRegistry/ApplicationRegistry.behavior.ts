@@ -171,6 +171,18 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(application.state).to.equal(0);
     });
 
+    it("application state cannot be updated if wrong workspace id is passed", async function () {
+      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      expect(
+        this.applicationRegistry.connect(this.signers.nonAdmin).updateApplicationState(0, 1, 3, "reasonIpfsHash"),
+      ).to.be.revertedWith("ApplicationStateUpdate: Invalid workspace");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(0);
+    });
+
     it("application owner can resubmit application with updated metadata if grant manager has asked for resubmission", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
@@ -267,6 +279,19 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
     });
+
+    it("application cannot be completed if wrong workspaceId is passed", async function () {
+      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+      await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      expect(
+        this.applicationRegistry.connect(this.signers.nonAdmin).completeApplication(0, 1, "reasonIpfsHash"),
+      ).to.be.revertedWith("ApplicationStateUpdate: Invalid workspace");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(2);
+    });
   });
 
   describe("Milestone state change", function () {
@@ -345,6 +370,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         expect(
           this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 2, 0, "dummyApplicationIpfsHash"),
         ).to.be.reverted;
+      });
+
+      it("Milestone state can not approved if invalid workspaceId provided", async function () {
+        await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+        expect(
+          this.applicationRegistry.connect(this.signers.nonAdmin).approveMilestone(0, 0, 1, "dummyApplicationIpfsHash"),
+        ).to.be.revertedWith("ApplicationStateUpdate: Invalid workspace");
       });
 
       it("Milestone state can not reapproved by grant manager", async function () {
