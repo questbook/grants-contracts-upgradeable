@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "@nomiclabs/hardhat-etherscan";
 
 import "./tasks/accounts";
 import "./tasks/deploy";
@@ -21,6 +22,8 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
+  mumbai: 80001,
+  polygon: 137,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -35,7 +38,9 @@ if (!infuraApiKey) {
 }
 
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
+  let url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
+  if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
+  if (network === "polygon") url = "https://polygon-rpc.com/";
   return {
     accounts: {
       count: 10,
@@ -66,6 +71,8 @@ const config: HardhatUserConfig = {
     kovan: getChainConfig("kovan"),
     rinkeby: getChainConfig("rinkeby"),
     ropsten: getChainConfig("ropsten"),
+    mumbai: getChainConfig("mumbai"),
+    polygon: getChainConfig("polygon"),
   },
   paths: {
     artifacts: "./artifacts",
@@ -92,6 +99,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "src/types",
     target: "ethers-v5",
+  },
+  etherscan: {
+    apiKey: process.env.POLYGONSCAN_KEY,
   },
 };
 
