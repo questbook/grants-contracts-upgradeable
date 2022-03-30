@@ -19,8 +19,8 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     /// @notice mapping to store workspaceId vs workspace data structure
     mapping(uint96 => Workspace) public workspaces;
 
-    /// @notice mapping to store workspaceId vs admins
-    mapping(uint96 => mapping(address => bool)) public workspaceAdmins;
+    /// @notice mapping to store workspaceId vs members vs roles
+    mapping(uint96 => mapping(address => bytes32)) public getUserRoles;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -29,19 +29,23 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     /// @notice Emitted when a workspace is updated
     event WorkspaceUpdated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
 
-    /// @notice Emitted when a workspace is updated
-    event WorkspaceAdminsAdded(uint96 indexed id, address[] admins, string[] emails, uint256 time);
-
-    /// @notice Emitted when a workspace is updated
-    event WorkspaceAdminsRemoved(uint96 indexed id, address[] admins, uint256 time);
+    /// @notice Emitted when workspace members are updated
+    event WorkspaceMembersUpdated(
+        uint96 indexed id,
+        address[] members,
+        uint8[] roles,
+        bool[] enabled,
+        string[] emails,
+        uint256 time
+    );
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
-        require(workspaceAdmins[_workspaceId][msg.sender], "Unauthorised: Not an admin");
+        require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
         _;
     }
 
-    modifier withinLimit(uint256 _adminsLength) {
-        require(_adminsLength <= 1000, "WorkspaceRemoveAdmins: Limit exceeded");
+    modifier withinLimit(uint256 _membersLength) {
+        require(_membersLength <= 1000, "WorkspaceMembers: Limit exceeded");
         _;
     }
 
@@ -53,7 +57,7 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     function createWorkspace(string memory _metadataHash) external whenNotPaused {
         uint96 _id = workspaceCount;
         workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
-        workspaceAdmins[_id][msg.sender] = true;
+        _setRole(_id, msg.sender, 0, true);
         emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
         assert(workspaceCount + 1 > workspaceCount);
         workspaceCount += 1;
@@ -75,39 +79,30 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     }
 
     /**
-     * @notice Add admin to a workspace, can be called by workspace admins
+     * @notice Update workspace members' roles, can be called by workspace admins
      * @param _id ID of target workspace
-     * @param _admins New admins for managing workspace
-     * @param _emails emails of admin. admin[0] has email [0]
+     * @param _members Members whose roles are to be updated
+     * @param _roles Roles to be updated
+     * @param _enabled Whether to enable or disable the role
+     * @param _emails Emails of members.
      */
-    function addWorkspaceAdmins(
+    function updateWorkspaceMembers(
         uint96 _id,
-        address[] memory _admins,
+        address[] memory _members,
+        uint8[] memory _roles,
+        bool[] memory _enabled,
         string[] memory _emails
-    ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_admins.length) {
-        for (uint256 i = 0; i < _admins.length; i++) {
-            address adm = _admins[i];
-            workspaceAdmins[_id][adm] = true;
+    ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
+        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        for (uint256 i = 0; i < _members.length; i++) {
+            address member = _members[i];
+            uint8 role = _roles[i];
+            bool enabled = _enabled[i];
+            _setRole(_id, member, role, enabled);
         }
-        emit WorkspaceAdminsAdded(_id, _admins, _emails, block.timestamp);
-    }
-
-    /**
-     * @notice Remove admins from a workspace, can be called by workspace admins
-     * @param _id ID of target workspace
-     * @param _admins Admins to be removed
-     */
-    function removeWorkspaceAdmins(uint96 _id, address[] memory _admins)
-        external
-        whenNotPaused
-        onlyWorkspaceAdmin(_id)
-        withinLimit(_admins.length)
-    {
-        for (uint256 i = 0; i < _admins.length; i++) {
-            address adm = _admins[i];
-            workspaceAdmins[_id][adm] = false;
-        }
-        emit WorkspaceAdminsRemoved(_id, _admins, block.timestamp);
+        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
     }
 
     /**
@@ -117,7 +112,61 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
      * @return true if specified address is admin of provided workspace id, else false
      */
     function isWorkspaceAdmin(uint96 _id, address _address) external view override returns (bool) {
-        return workspaceAdmins[_id][_address];
+        return _checkRole(_id, _address, 0);
+    }
+
+    /**
+     * @notice Check if an address is admin or reviewer of specified workspace, can be called by anyone
+     * @param _id ID of target workspace
+     * @param _address Address to validate role
+     * @return true if specified address is admin or reviewer of provided workspace id, else false
+     */
+    function isWorkspaceAdminOrReviewer(uint96 _id, address _address) external view override returns (bool) {
+        return _checkRole(_id, _address, 0) || _checkRole(_id, _address, 1);
+    }
+
+    /**
+     * @notice Set role of an address for specified workspace, can be called internally
+     * @param _workspaceId ID of target workspace
+     * @param _address Address of the member whose role to set
+     * @param _role Role to be set
+     * @param _enabled Whether to enable or disable the role
+     */
+    function _setRole(
+        uint96 _workspaceId,
+        address _address,
+        uint8 _role,
+        bool _enabled
+    ) internal {
+        Workspace memory workspace = workspaces[_workspaceId];
+
+        /// @notice Do not allow anybody other than owner to set admin role false for workspace owner
+        if (_address == workspace.owner && _enabled == false && msg.sender != workspace.owner) {
+            revert("WorkspaceOwner: Cannot disable owner admin role");
+        }
+        if (_enabled) {
+            /// @notice Set _role'th bit in roles of _address in workspace
+            getUserRoles[_workspaceId][_address] |= bytes32(1 << _role);
+        } else {
+            /// @notice Unset _role'th bit in roles of _address in workspace
+            getUserRoles[_workspaceId][_address] &= ~bytes32(1 << _role);
+        }
+    }
+
+    /**
+     * @notice Check role of an address for specified workspace, can be called internally
+     * @param _workspaceId ID of target workspace
+     * @param _address Address of the member whose role to set
+     * @param _role Role to be set
+     * @return true if specified address has that role in specified workspace, else false
+     */
+    function _checkRole(
+        uint96 _workspaceId,
+        address _address,
+        uint8 _role
+    ) internal view returns (bool) {
+        /// @notice Check if _address has _role'th bit set in roles of _address in workspace
+        return (uint256(getUserRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
 
     function pause() external onlyOwner {

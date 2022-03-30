@@ -12,9 +12,22 @@ export function shouldBehaveLikeGrant(): void {
       expect(await this.grant.metadataHash()).to.equal("updatedIpfsHash");
     });
 
+    it("not possible if no one applied to grant and reviewer is updating", async function () {
+      expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      expect(this.grant.connect(this.signers.reviewer).updateGrant("updatedIpfsHash")).to.be.revertedWith(
+        "Unauthorised: Not an admin",
+      );
+      expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
+    });
+
     it("not possible if no one applied to grant and non admin is updating", async function () {
       expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
-      expect(this.grant.connect(this.signers.nonAdmin).updateGrant("updatedIpfsHash")).to.be.reverted;
+      expect(this.grant.connect(this.signers.nonAdmin).updateGrant("updatedIpfsHash")).to.be.revertedWith(
+        "Unauthorised: Not an admin",
+      );
       expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
     });
 
@@ -23,7 +36,9 @@ export function shouldBehaveLikeGrant(): void {
       await this.applicationRegistry
         .connect(this.signers.admin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
-      expect(this.grant.connect(this.signers.admin).updateGrant("updatedIpfsHash")).to.be.reverted;
+      expect(this.grant.connect(this.signers.admin).updateGrant("updatedIpfsHash")).to.be.revertedWith(
+        "GrantUpdate: Applicants have already started applying",
+      );
       expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
     });
   });
@@ -35,9 +50,21 @@ export function shouldBehaveLikeGrant(): void {
       expect(await this.grant.active()).to.equal(false);
     });
 
+    it("not possible if reviewer is updating", async function () {
+      expect(await this.grant.active()).to.equal(true);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      expect(this.grant.connect(this.signers.reviewer).updateGrantAccessibility(false)).to.be.revertedWith(
+        "Unauthorised: Not an admin",
+      );
+    });
+
     it("not possible if non admin is updating", async function () {
       expect(await this.grant.active()).to.equal(true);
-      expect(this.grant.connect(this.signers.nonAdmin).updateGrantAccessibility(false)).to.be.reverted;
+      expect(this.grant.connect(this.signers.nonAdmin).updateGrantAccessibility(false)).to.be.revertedWith(
+        "Unauthorised: Not an admin",
+      );
     });
   });
 }

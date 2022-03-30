@@ -16,6 +16,7 @@ describe("Unit tests", function () {
     this.signers.admin = signers[0];
     this.signers.nonAdmin = signers[1];
     this.signers.applicantAdmin = signers[2];
+    this.signers.reviewer = signers[3];
   });
 
   describe("ApplicationRegistry", function () {

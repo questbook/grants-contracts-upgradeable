@@ -40,17 +40,11 @@ export function shouldBehaveLikeWorkspaceRegistry(): void {
       ).to.be.revertedWith("Pausable: paused");
     });
 
-    it("add admins to workspace should not work", async function () {
+    it("update member roles from workspace should not work", async function () {
       expect(
         this.workspaceRegistry
-          .connect(this.signers.nonAdmin)
-          .addWorkspaceAdmins(0, [this.signers.nonAdmin.address], [""]),
-      ).to.be.revertedWith("Pausable: paused");
-    });
-
-    it("remove admins from workspace should not work", async function () {
-      expect(
-        this.workspaceRegistry.connect(this.signers.admin).removeWorkspaceAdmins(0, [this.signers.admin.address]),
+          .connect(this.signers.admin)
+          .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [true], [""]),
       ).to.be.revertedWith("Pausable: paused");
     });
   });
@@ -76,38 +70,83 @@ export function shouldBehaveLikeWorkspaceRegistry(): void {
     expect(workspace.metadataHash).to.equal("dummyIpfsHash");
   });
 
-  it("admin should be able to add admins", async function () {
+  it("admin should be able to update member roles", async function () {
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
     expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
 
     await this.workspaceRegistry
       .connect(this.signers.admin)
-      .addWorkspaceAdmins(0, [this.signers.nonAdmin.address], [""]);
-    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.nonAdmin.address)).to.equal(true);
+      .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [false], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(false);
   });
 
-  it("non admin should not be able to add admins", async function () {
+  it("admin should be able to add and remove reviewer member roles", async function () {
+    await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
+
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.reviewer.address)).to.equal(false);
+    expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(true);
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [false], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.reviewer.address)).to.equal(false);
+    expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(false);
+  });
+
+  it("admin should be able to add and remove admin member roles", async function () {
+    await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
+
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.nonAdmin.address], [0], [true], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.nonAdmin.address)).to.equal(true);
+    expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.nonAdmin.address)).to.equal(true);
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.nonAdmin.address], [0], [false], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.nonAdmin.address)).to.equal(false);
+    expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.nonAdmin.address)).to.equal(false);
+  });
+
+  it("non admin should not be able to update member roles", async function () {
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
     expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
     expect(
       this.workspaceRegistry
         .connect(this.signers.nonAdmin)
-        .addWorkspaceAdmins(0, [this.signers.nonAdmin.address], [""]),
-    ).to.be.reverted;
+        .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [false], [""]),
+    ).to.be.revertedWith("Unauthorised: Not an admin");
   });
 
-  it("admin should be able to remove admins", async function () {
+  it("other admin should not be able to update workspace owner admin role to false", async function () {
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
     expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
-
-    await this.workspaceRegistry.connect(this.signers.admin).removeWorkspaceAdmins(0, [this.signers.admin.address]);
-    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(false);
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.otherAdmin.address], [0], [true], [""]);
+    expect(
+      this.workspaceRegistry
+        .connect(this.signers.otherAdmin)
+        .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [false], [""]),
+    ).to.be.revertedWith("WorkspaceOwner: Cannot disable owner admin role");
   });
 
-  it("non admin should not be able to remove admins", async function () {
+  it("reviewer should not be able to update member roles", async function () {
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
     expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.admin.address)).to.equal(true);
-    expect(this.workspaceRegistry.connect(this.signers.nonAdmin).removeWorkspaceAdmins(0, [this.signers.admin.address]))
-      .to.be.reverted;
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+    expect(await this.workspaceRegistry.isWorkspaceAdmin(0, this.signers.reviewer.address)).to.equal(false);
+    expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(true);
+    expect(
+      this.workspaceRegistry
+        .connect(this.signers.reviewer)
+        .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [false], [""]),
+    ).to.be.revertedWith("Unauthorised: Not an admin");
   });
 }
