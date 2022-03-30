@@ -30,6 +30,8 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     event WorkspaceUpdated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
 
     /// @notice Emitted when workspace members are updated
+    /// @notice The role 0 denotes an admin role
+    /// @notice The role 1 denotes a reviewer role
     event WorkspaceMembersUpdated(
         uint96 indexed id,
         address[] members,
@@ -98,6 +100,8 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
         require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         for (uint256 i = 0; i < _members.length; i++) {
             address member = _members[i];
+            /// @notice The role 0 denotes an admin role
+            /// @notice The role 1 denotes a reviewer role
             uint8 role = _roles[i];
             bool enabled = _enabled[i];
             _setRole(_id, member, role, enabled);
