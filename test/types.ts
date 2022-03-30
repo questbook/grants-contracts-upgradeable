@@ -9,6 +9,8 @@ declare module "mocha" {
 export interface Signers {
   admin: SignerWithAddress;
   nonAdmin: SignerWithAddress;
+  reviewer: SignerWithAddress;
+  otherAdmin: SignerWithAddress;
   applicantAdmin: SignerWithAddress;
   erc20: SignerWithAddress;
 }

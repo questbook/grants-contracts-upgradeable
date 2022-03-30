@@ -73,7 +73,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry.connect(this.signers.admin).pause();
     });
 
-    it("Applicaion submission wont work", async function () {
+    it("Application submission wont work", async function () {
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -81,7 +81,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       ).to.be.revertedWith("Pausable: paused");
     });
 
-    it("Applicaion updation wont work", async function () {
+    it("Application updation wont work", async function () {
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -89,7 +89,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       ).to.be.revertedWith("Pausable: paused");
     });
 
-    it("Applicaion state updation wont work", async function () {
+    it("Application state updation wont work", async function () {
       expect(
         this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash"),
       ).to.be.revertedWith("Pausable: paused");
@@ -143,8 +143,60 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
-      expect(this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash")).to
-        .be.reverted;
+      expect(
+        this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
+      ).to.be.revertedWith("ApplicationStateUpdate: Invalid state transition");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(1);
+    });
+
+    it("grant reviewer can ask for application resubmission if application is in submitted state", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 1, "reasonIpfsHash");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(1);
+    });
+
+    it("grant reviewer can approve application", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(2);
+    });
+
+    it("grant reviewer can reject application", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 3, "reasonIpfsHash");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(3);
+    });
+
+    it("grant reviewer can not reject applications in resubmit state", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 1, "reasonIpfsHash");
+      expect(
+        this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
+      ).to.be.revertedWith("ApplicationStateUpdate: Invalid state transition");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
     });
@@ -267,6 +319,25 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(application.state).to.equal(4);
     });
 
+    it("workspace reviewer can mark application as complete if all milestones are approved", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.reviewer)
+        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.reviewer)
+        .approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
+      await this.applicationRegistry.connect(this.signers.reviewer).completeApplication(0, 0, "reasonIpfsHash");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(4);
+    });
+
     it("workspace admin can not mark application as complete if all milestones are not approved", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
@@ -275,6 +346,24 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
       expect(
         this.applicationRegistry.connect(this.signers.admin).completeApplication(0, 0, "reasonIpfsHash"),
+      ).to.be.revertedWith("CompleteApplication: Invalid milestones state");
+      const application = await this.applicationRegistry.applications(0);
+      expect(application.state).to.equal(2);
+    });
+
+    it("workspace reviewer can not mark application as complete if all milestones are not approved", async function () {
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 2, "reasonIpfsHash");
+      await this.applicationRegistry
+        .connect(this.signers.reviewer)
+        .approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
+      expect(
+        this.applicationRegistry.connect(this.signers.reviewer).completeApplication(0, 0, "reasonIpfsHash"),
       ).to.be.revertedWith("CompleteApplication: Invalid milestones state");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
@@ -366,6 +455,16 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });
 
+      it("Milestone state can be updated from submitted to approved by grant reviewer", async function () {
+        await this.workspaceRegistry
+          .connect(this.signers.admin)
+          .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+        await this.applicationRegistry
+          .connect(this.signers.reviewer)
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+        expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
+      });
+
       it("Milestone state can not approved if invalid milestoneId provided", async function () {
         expect(
           this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 2, 0, "dummyApplicationIpfsHash"),
@@ -388,12 +487,37 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         ).to.be.reverted;
       });
 
+      it("Milestone state can not reapproved by grant reviewer", async function () {
+        await this.workspaceRegistry
+          .connect(this.signers.admin)
+          .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+        await this.applicationRegistry
+          .connect(this.signers.reviewer)
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+        expect(
+          this.applicationRegistry.connect(this.signers.reviewer).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
+        ).to.be.revertedWith("MilestoneStateUpdate: Invalid state transition");
+      });
+
       it("Milestone state can be updated from requested to approved by grant manager", async function () {
         await this.applicationRegistry
           .connect(this.signers.applicantAdmin)
           .requestMilestoneApproval(0, 0, "dummyApplicationIpfsHash");
         await this.applicationRegistry
           .connect(this.signers.admin)
+          .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+        expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
+      });
+
+      it("Milestone state can be updated from requested to approved by grant reviewer", async function () {
+        await this.workspaceRegistry
+          .connect(this.signers.admin)
+          .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+        await this.applicationRegistry
+          .connect(this.signers.applicantAdmin)
+          .requestMilestoneApproval(0, 0, "dummyApplicationIpfsHash");
+        await this.applicationRegistry
+          .connect(this.signers.reviewer)
           .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
         expect(await this.applicationRegistry.applicationMilestones(0, 0)).to.equal(2);
       });

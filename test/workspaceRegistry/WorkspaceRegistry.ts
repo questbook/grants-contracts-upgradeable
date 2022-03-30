@@ -13,6 +13,8 @@ describe("Unit tests", function () {
     const signers: SignerWithAddress[] = await ethers.getSigners();
     this.signers.admin = signers[0];
     this.signers.nonAdmin = signers[1];
+    this.signers.reviewer = signers[2];
+    this.signers.otherAdmin = signers[3];
   });
 
   describe("WorkspaceRegistry", function () {

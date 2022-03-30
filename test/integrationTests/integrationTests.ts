@@ -17,6 +17,7 @@ describe("Integration tests", function () {
     this.signers.nonAdmin = signers[1];
     this.signers.applicantAdmin = signers[2];
     this.signers.erc20 = signers[3];
+    this.signers.reviewer = signers[4];
   });
 
   beforeEach(async function () {
@@ -65,6 +66,18 @@ describe("Integration tests", function () {
       ).to.be.revertedWith("Unauthorised: Not an admin");
     });
 
+    it("Should not work if invoker is reviewer", async function () {
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(true);
+      expect(
+        this.grant
+          .connect(this.signers.reviewer)
+          .withdrawFunds(this.myToken.address, 1000, this.signers.reviewer.address),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+    });
+
     it("Should not work if grant does not have balance", async function () {
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
       expect(
@@ -80,13 +93,50 @@ describe("Integration tests", function () {
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
     });
+
+    it("Should not work if grant has balance but invoked by workspace reviewer", async function () {
+      await this.myToken.connect(this.signers.admin).transfer(this.grant.address, 1000);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(true);
+      expect(
+        this.grant
+          .connect(this.signers.reviewer)
+          .withdrawFunds(this.myToken.address, 1000, this.signers.reviewer.address),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(1000);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(0);
+    });
   });
 
   describe("Withdraw rewards from locked funds", function () {
+    it("Should not work invoked by non admin", async function () {
+      await this.myToken.connect(this.signers.erc20).mint(this.grant.address, 10000);
+      expect(
+        this.grant.connect(this.signers.nonAdmin).disburseReward(0, 0, this.myToken.address, 1000),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+      expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
+      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(10000);
+    });
+
     it("Should not work if no balance on grant contract", async function () {
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
       expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
       expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(0);
+    });
+
+    it("Should not work if balance present in grant contract but invoked by workspace admin", async function () {
+      await this.myToken.connect(this.signers.erc20).mint(this.grant.address, 10000);
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      expect(await this.workspaceRegistry.isWorkspaceAdminOrReviewer(0, this.signers.reviewer.address)).to.equal(true);
+      expect(
+        this.grant.connect(this.signers.reviewer).disburseReward(0, 0, this.myToken.address, 1000),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+      expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
+      expect((await this.myToken.balanceOf(this.grant.address)).toNumber()).to.equal(10000);
     });
 
     it("Should work if balance present in grant contract", async function () {
@@ -101,15 +151,30 @@ describe("Integration tests", function () {
     it("Should not work if amount is not approved", async function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
-      expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
+      expect(
+        this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 10000),
+      ).to.be.revertedWith("ERC20: insufficient allowance");
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
 
     it("Should not work if no balance in user wallet", async function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
-      expect(this.grant.connect(this.signers.admin).disburseReward(0, 0, this.myToken.address, 20000)).to.be.reverted;
+      expect(this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 20000)).to.be
+        .reverted;
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
+    });
+
+    it("Should not work if invoked by reviewer", async function () {
+      await this.myToken.connect(this.signers.erc20).mint(this.signers.reviewer.address, 10000);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(10000);
+      expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
+      await this.myToken.connect(this.signers.reviewer).approve(this.grant.address, 10000);
+      expect(
+        this.grant.connect(this.signers.reviewer).disburseRewardP2P(0, 0, this.myToken.address, 1000),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+      expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(10000);
     });
 
     it("Should work if balance present in wallet and amount is approved", async function () {

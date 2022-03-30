@@ -49,6 +49,17 @@ export function shouldBehaveLikeGrantFactory(): void {
     expect(tx.events[0].args[2]).to.equal("dummyIpfsHash");
   });
 
+  it("workspace reviewer should not be able to create new grant", async function () {
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+    expect(
+      this.grantFactory
+        .connect(this.signers.reviewer)
+        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address),
+    ).to.be.revertedWith("GrantCreate: Unauthorised");
+  });
+
   it("workspace non admin should not be able to create new grant", async function () {
     expect(
       this.grantFactory
