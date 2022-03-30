@@ -361,10 +361,10 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry.connect(this.signers.reviewer).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.reviewer)
-        .approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
+        .approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
       expect(
         this.applicationRegistry.connect(this.signers.reviewer).completeApplication(0, 0, "reasonIpfsHash"),
-      ).to.be.revertedWith("CompleteApplication: Invalid milestione state");
+      ).to.be.revertedWith("CompleteApplication: Invalid milestones state");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
     });
