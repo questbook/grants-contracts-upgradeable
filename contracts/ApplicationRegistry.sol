@@ -42,9 +42,9 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         address grant;
         address owner;
         uint48 milestoneCount;
+        uint48 milestonesDone;
         string metadataHash;
         ApplicationState state;
-        bool milestonesDone;
     }
 
     /// @notice mapping to store applicationId along with application
@@ -126,9 +126,9 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             _grant,
             msg.sender,
             _milestoneCount,
+            0,
             _metadataHash,
-            ApplicationState.Submitted,
-            false
+            ApplicationState.Submitted
         );
         applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
@@ -216,7 +216,10 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
     ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
-        require(application.milestonesDone, "CompleteApplication: Invalid milestione state");
+        require(
+            application.milestonesDone == application.milestoneCount,
+            "CompleteApplication: Invalid milestones state"
+        );
 
         application.state = ApplicationState.Complete;
 
@@ -286,9 +289,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
             revert("MilestoneStateUpdate: Invalid state transition");
         }
 
-        if (_milestoneId == (application.milestoneCount - 1)) {
-            application.milestonesDone = true;
-        }
+        application.milestonesDone += 1;
 
         emit MilestoneUpdated(
             _applicationId,
