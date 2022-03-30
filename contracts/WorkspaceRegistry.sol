@@ -20,7 +20,7 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
     mapping(uint96 => Workspace) public workspaces;
 
     /// @notice mapping to store workspaceId vs members vs roles
-    mapping(uint96 => mapping(address => bytes32)) public getUserRoles;
+    mapping(uint96 => mapping(address => bytes32)) public memberRoles;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -150,10 +150,10 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
         }
         if (_enabled) {
             /// @notice Set _role'th bit in roles of _address in workspace
-            getUserRoles[_workspaceId][_address] |= bytes32(1 << _role);
+            memberRoles[_workspaceId][_address] |= bytes32(1 << _role);
         } else {
             /// @notice Unset _role'th bit in roles of _address in workspace
-            getUserRoles[_workspaceId][_address] &= ~bytes32(1 << _role);
+            memberRoles[_workspaceId][_address] &= ~bytes32(1 << _role);
         }
     }
 
@@ -170,7 +170,7 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
         uint8 _role
     ) internal view returns (bool) {
         /// @notice Check if _address has _role'th bit set in roles of _address in workspace
-        return (uint256(getUserRoles[_workspaceId][_address]) >> _role) & 1 != 0;
+        return (uint256(memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
 
     function pause() external onlyOwner {
