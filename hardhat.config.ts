@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@nomiclabs/hardhat-etherscan";
+import "@openzeppelin/hardhat-upgrades";
 
 import "./tasks/accounts";
 import "./tasks/deploy";
@@ -94,8 +95,8 @@ const config: HardhatUserConfig = {
       // Disable the optimizer when debugging
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
-        enabled: false,
-        runs: 800,
+        enabled: true,
+        runs: 200,
       },
     },
   },
@@ -105,8 +106,8 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     // apiKey: process.env.POLYGONSCAN_KEY,
-    // apiKey: process.env.ETHERSCAN_KEY,
-    apiKey: process.env.OPT_ETHERSCAN_KEY,
+    apiKey: process.env.ETHERSCAN_KEY,
+    // apiKey: process.env.OPT_ETHERSCAN_KEY,
   },
 };
 

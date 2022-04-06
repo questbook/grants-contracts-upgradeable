@@ -1,5 +1,4 @@
-import { artifacts, ethers, waffle } from "hardhat";
-import type { Artifact } from "hardhat/types";
+import { ethers, upgrades } from "hardhat";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 import type { ApplicationRegistry } from "../../src/types/ApplicationRegistry";
@@ -7,6 +6,7 @@ import type { WorkspaceRegistry } from "../../src/types/WorkspaceRegistry";
 import type { Grant } from "../../src/types/Grant";
 import { Signers } from "../types";
 import { shouldBehaveLikeApplicationRegistry } from "./ApplicationRegistry.behavior";
+import { expect } from "chai";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -21,31 +21,44 @@ describe("Unit tests", function () {
 
   describe("ApplicationRegistry", function () {
     beforeEach(async function () {
-      const workspaceRegistryArtifact: Artifact = await artifacts.readArtifact("WorkspaceRegistry");
+      this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
       this.workspaceRegistry = <WorkspaceRegistry>(
-        await waffle.deployContract(this.signers.admin, workspaceRegistryArtifact, [])
+        await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
       );
 
       await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
 
-      const applicationRegistryArtifact: Artifact = await artifacts.readArtifact("ApplicationRegistry");
+      this.applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
       this.applicationRegistry = <ApplicationRegistry>(
-        await waffle.deployContract(this.signers.admin, applicationRegistryArtifact, [])
+        await upgrades.deployProxy(this.applicationRegistryFactory, { kind: "uups" })
       );
 
       await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
 
-      const grantArtifact: Artifact = await artifacts.readArtifact("Grant");
+      this.grantFactory = await ethers.getContractFactory("Grant");
       this.grant = <Grant>(
-        await waffle.deployContract(this.signers.admin, grantArtifact, [
-          0,
-          "dummyGrantIpfsHash",
-          this.workspaceRegistry.address,
-          this.applicationRegistry.address,
-        ])
+        await upgrades.deployProxy(
+          this.grantFactory,
+          [
+            0,
+            "dummyGrantIpfsHash",
+            this.workspaceRegistry.address,
+            this.applicationRegistry.address,
+            this.signers.admin.address,
+          ],
+          { kind: "uups" },
+        )
       );
 
-      this.mockGrant = await waffle.deployMockContract(this.signers.admin, grantArtifact.abi);
+      this.applicationRegistryFactoryV2 = await ethers.getContractFactory("ApplicationRegistryV2");
+    });
+
+    it("test proxy deployment", async function () {
+      const applicationRegistyV2 = await upgrades.upgradeProxy(
+        this.applicationRegistry.address,
+        this.applicationRegistryFactoryV2,
+      );
+      expect(await applicationRegistyV2.version()).to.equal("v2!");
     });
 
     shouldBehaveLikeApplicationRegistry();

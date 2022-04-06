@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
 
 export function shouldBehaveLikeWorkspaceRegistry(): void {
   it("deployer can pause the contract", async function () {
@@ -148,5 +149,41 @@ export function shouldBehaveLikeWorkspaceRegistry(): void {
         .connect(this.signers.reviewer)
         .updateWorkspaceMembers(0, [this.signers.admin.address], [0], [false], [""]),
     ).to.be.revertedWith("Unauthorised: Not an admin");
+  });
+
+  describe("Proxy implementation upgrade", function () {
+    it("should not be able to call proxy initiliaze function", async function () {
+      expect(this.workspaceRegistry.initialize()).to.be.revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("deployer can upgrade the workspaceRegistry proxy implementation contract", async function () {
+      const workspaceRegistry = await upgrades.upgradeProxy(
+        this.workspaceRegistry.address,
+        this.workspaceRegistryFactoryV2,
+      );
+      expect(await workspaceRegistry.version()).to.equal("v2!");
+    });
+
+    it("non deployer cannot upgrade the workspaceRegistry proxy implementation contract", async function () {
+      const workspaceRegistryFactoryV2NonAdmin = await ethers.getContractFactory(
+        "WorkspaceRegistryV2",
+        this.signers.nonAdmin,
+      );
+      expect(
+        upgrades.upgradeProxy(this.workspaceRegistry.address, workspaceRegistryFactoryV2NonAdmin),
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should retain workspace data", async function () {
+      expect(await this.workspaceRegistry.workspaceCount()).to.equal(0);
+      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
+      expect(await this.workspaceRegistry.workspaceCount()).to.equal(1);
+      const workspaceRegistry = await upgrades.upgradeProxy(
+        this.workspaceRegistry.address,
+        this.workspaceRegistryFactoryV2,
+      );
+      expect(await workspaceRegistry.version()).to.equal("v2!");
+      expect(await workspaceRegistry.workspaceCount()).to.equal(1);
+    });
   });
 }

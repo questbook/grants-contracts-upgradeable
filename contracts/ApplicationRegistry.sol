@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IGrant.sol";
@@ -9,7 +11,7 @@ import "./interfaces/IApplicationRegistry.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
-contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
+contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationRegistry {
     /// @notice Number of applications submitted
     uint96 public applicationCount;
 
@@ -94,10 +96,27 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
     }
 
     /**
+     * @notice Calls initialize on the base contracts
+     *
+     * @dev This acts as a constructor for the upgradeable proxy contract
+     */
+    function initialize() external initializer {
+        __Ownable_init();
+    }
+
+    /**
+     * @notice Override of UUPSUpgradeable virtual function
+     *
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
+     * {upgradeTo} and {upgradeToAndCall}.
+     */
+    function _authorizeUpgrade(address) internal view override onlyOwner {}
+
+    /**
      * @notice sets workspace registry contract interface
      * @param _workspaceReg WorkspaceRegistry interface
      */
-    function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner whenNotPaused {
+    function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
         workspaceReg = _workspaceReg;
     }
 
@@ -113,7 +132,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint96 _workspaceId,
         string memory _metadataHash,
         uint48 _milestoneCount
-    ) external whenNotPaused {
+    ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
         require(grantRef.active(), "ApplicationSubmit: Invalid grant");
@@ -144,7 +163,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint96 _applicationId,
         string memory _metadataHash,
         uint48 _milestoneCount
-    ) external whenNotPaused {
+    ) external {
         Application storage application = applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
         require(application.state == ApplicationState.Resubmit, "ApplicationUpdate: Invalid state");
@@ -177,7 +196,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
@@ -213,7 +232,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint96 _applicationId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(
@@ -243,7 +262,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint96 _applicationId,
         uint48 _milestoneId,
         string memory _reasonMetadataHash
-    ) external whenNotPaused {
+    ) external {
         Application memory application = applications[_applicationId];
         require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
@@ -274,7 +293,7 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
         uint48 _milestoneId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
@@ -308,13 +327,5 @@ contract ApplicationRegistry is Ownable, Pausable, IApplicationRegistry {
     function getApplicationOwner(uint96 _applicationId) external view override returns (address) {
         Application memory application = applications[_applicationId];
         return application.owner;
-    }
-
-    function pause() external onlyOwner {
-        _pause();
-    }
-
-    function unpause() external onlyOwner {
-        _unpause();
     }
 }

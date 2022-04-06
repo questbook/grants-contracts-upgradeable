@@ -1,0 +1,221 @@
+Generating typings for: 34 artifacts in dir: src/types for target: ethers-v5
+Successfully generated 57 typings!
+Compiled 34 Solidity files successfully
+
+  Unit tests
+    ApplicationRegistry
+      ✓ test proxy deployment
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ deployer can set workspaceRegistry
+      ✓ active grant can receive application
+      ✓ applicant cannot submit application to same grant twice
+      ✓ inactive grant can not receive application
+      Application state change
+        ✓ grant manager can ask for application resubmission if application is in submitted state
+        ✓ grant manager can approve application
+        ✓ grant manager can reject application
+        ✓ grant manager can not reject applications in resubmit state
+        ✓ grant reviewer can ask for application resubmission if application is in submitted state
+        ✓ grant reviewer can approve application
+        ✓ grant reviewer can reject application
+        ✓ grant reviewer can not reject applications in resubmit state
+        ✓ application owner can not approve application
+        ✓ application owner can not reject application
+        ✓ application state cannot be updated if wrong workspace id is passed
+        ✓ application owner can resubmit application with updated metadata if grant manager has asked for resubmission
+        ✓ non owner can not resubmit application if grant manager has asked for resubmission
+        ✓ application owner can not resubmit application if application is in submitted state
+        ✓ application owner can not resubmit application if application is approved by grant manager
+        ✓ application owner can not resubmit application with updated metadata if grant manager has rejected the application
+        ✓ workspace admin can mark application as complete if all milestones are approved
+        ✓ workspace reviewer can mark application as complete if all milestones are approved
+        ✓ workspace admin can not mark application as complete if all milestones are not approved
+        ✓ workspace reviewer can not mark application as complete if all milestones are not approved
+        ✓ application cannot be completed if wrong workspaceId is passed
+      Milestone state change
+        ✓ Milestone state can not be updated if milestoneId is invalid
+        ✓ Milestone state can not be updated if application is not approved
+        ✓ Milestone state can not approved if application is not approved
+        ✓ should return application owner
+        ✓ deployer can set new deployer address
+        ✓ non deployer cannot set new deployer address
+        If application is approved
+          ✓ Milestone can not be requested for approval if its not in submitted state
+          ✓ Milestone state can be updated to requested by application owner
+          ✓ Milestone state can not be updated to requested by application non owner
+          ✓ Milestone state can be updated from submitted to approved by grant manager
+          ✓ Milestone state can be updated from submitted to approved by grant reviewer
+          ✓ Milestone state can not approved if invalid milestoneId provided
+          ✓ Milestone state can not approved if invalid workspaceId provided
+          ✓ Milestone state can not reapproved by grant manager
+          ✓ Milestone state can not reapproved by grant reviewer
+          ✓ Milestone state can be updated from requested to approved by grant manager
+          ✓ Milestone state can be updated from requested to approved by grant reviewer
+          ✓ Milestone state can not be updated from submitted to approved by non grant manager
+          ✓ Milestone state can not be updated from requested to approved by non grant manager
+      Proxy implementation upgrade
+        ✓ should not be able to call proxy initiliaze function
+        ✓ deployer can upgrade the applicationRegistry proxy implementation contract
+        ✓ non deployer cannot upgrade the applicationRegistry proxy implementation contract
+        ✓ should retain applicationRegistry data
+
+  Unit tests
+    Grant
+      ✓ test proxy deployment
+      ✓ Application count can only be modified by applicationRegistry
+      Updating a grant is
+        ✓ possible if no one applied to grant yet and admin is updating
+        ✓ not possible if no one applied to grant and reviewer is updating
+        ✓ not possible if no one applied to grant and non admin is updating
+        ✓ not possible if alteast 1 applicant applied to grant
+      Updating grant accessibility is
+        ✓ possible if admin is updating
+        ✓ not possible if reviewer is updating
+        ✓ not possible if non admin is updating
+      Proxy implementation upgrade
+        ✓ should not be able to call proxy initiliaze function
+        ✓ deployer can upgrade the grant proxy implementation contract
+        ✓ non deployer cannot upgrade the grantFactory proxy implementation contract
+        ✓ should retain grant data
+
+  Unit tests
+    GrantFactory
+      ✓ test proxy deployment
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ new grant creation not possible if contract is paused
+      ✓ workspace admin should be able to create new grant
+      ✓ workspace reviewer should not be able to create new grant
+      ✓ workspace non admin should not be able to create new grant
+      Proxy implementation upgrade
+        ✓ should not be able to call proxy initiliaze function
+        ✓ deployer can upgrade the grantFactory proxy implementation contract
+        ✓ non deployer cannot upgrade the grantFactory proxy implementation contract
+        ✓ deployer should be able to upgrade the grant implementation deployed using createGrant function
+        ✓ non deployer should not be able to upgrade the grant implementation deployed using createGrant function
+
+  Integration tests
+    Withdraw funds
+      ✓ Should not work if invoker is non admin
+      ✓ Should not work if invoker is reviewer
+      ✓ Should not work if grant does not have balance
+      ✓ Should work if grant has balance and invoked by workspace admin
+      ✓ Should not work if grant has balance but invoked by workspace reviewer
+    Withdraw rewards from locked funds
+      ✓ Should not work invoked by non admin
+      ✓ Should not work if no balance on grant contract
+      ✓ Should not work if balance present in grant contract but invoked by workspace admin
+      ✓ Should work if balance present in grant contract
+    Withdraw rewards using P2P transfer
+      ✓ Should not work if amount is not approved
+      ✓ Should not work if no balance in user wallet
+      ✓ Should not work if invoked by reviewer
+      ✓ Should work if balance present in wallet and amount is approved
+    Proxy implementation upgrade
+      ✓ should retain and withdraw funds
+
+  Unit tests
+    WorkspaceRegistry
+      ✓ test proxy deployment
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ should create new workspace
+      ✓ admin should be able to edit workspace
+      ✓ non admin should not be able to edit workspace
+      ✓ admin should be able to update member roles
+      ✓ admin should be able to add and remove reviewer member roles
+      ✓ admin should be able to add and remove admin member roles
+      ✓ non admin should not be able to update member roles
+      ✓ other admin should not be able to update workspace owner admin role to false
+      ✓ reviewer should not be able to update member roles
+      If contract is paused
+        ✓ workspace create should not work
+        ✓ workspace update should not work
+        ✓ update member roles from workspace should not work
+      Proxy implementation upgrade
+        ✓ should not be able to call proxy initiliaze function
+        ✓ deployer can upgrade the workspaceRegistry proxy implementation contract
+        ✓ non deployer cannot upgrade the workspaceRegistry proxy implementation contract
+        ✓ should retain workspace data
+
+·-----------------------------------------------------|---------------------------|-------------|-----------------------------·
+|                 [90mSolc version: 0.8.7[39m                 ·  [90mOptimizer enabled: true[39m  ·  [90mRuns: 200[39m  ·  [90mBlock limit: 30000000 gas[39m  │
+······················································|···························|·············|······························
+|  [32m[1mMethods[22m[39m                                                                                                                    │
+························|·····························|·············|·············|·············|···············|··············
+|  [1mContract[22m             ·  [1mMethod[22m                     ·  [32mMin[39m        ·  [32mMax[39m        ·  [32mAvg[39m        ·  [1m# calls[22m      ·  [1musd (avg)[22m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  approveMilestone           ·      [36m59749[39m  ·      [31m77174[39m  ·      74147  ·           [90m12[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  completeApplication        ·      [36m53794[39m  ·      [31m54144[39m  ·      53969  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  requestMilestoneApproval   ·          -  ·          -  ·      65355  ·            [90m5[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  setWorkspaceReg            ·      [36m31077[39m  ·      [31m50977[39m  ·      50724  ·           [90m79[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  submitApplication          ·     [36m183104[39m  ·     [31m183116[39m  ·     183116  ·           [90m56[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  transferOwnership          ·          -  ·          -  ·      33521  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  updateApplicationMetadata  ·          -  ·          -  ·      44707  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  updateApplicationState     ·      [36m71297[39m  ·      [31m72063[39m  ·      71539  ·           [90m44[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  upgradeTo                  ·      [36m39251[39m  ·      [31m39313[39m  ·      39293  ·           [90m26[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  disburseReward             ·          -  ·          -  ·     100763  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  disburseRewardP2P          ·          -  ·          -  ·     108217  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  updateGrant                ·          -  ·          -  ·      55295  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  updateGrantAccessibility   ·          -  ·          -  ·      51749  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  withdrawFunds              ·      [36m55561[39m  ·      [31m55583[39m  ·      55572  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  createGrant                ·          -  ·          -  ·     360020  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  pause                      ·      [36m51672[39m  ·      [31m51695[39m  ·      51686  ·           [90m10[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  unpause                    ·      [36m29706[39m  ·      [31m29728[39m  ·      29717  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  approve                    ·          -  ·          -  ·      46231  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  mint                       ·      [36m53429[39m  ·      [31m70529[39m  ·      66729  ·           [90m18[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  transfer                   ·          -  ·          -  ·      51510  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  createWorkspace            ·     [36m106697[39m  ·     [31m123797[39m  ·     123284  ·          [90m105[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  updateWorkspaceMembers     ·      [36m45895[39m  ·      [31m69760[39m  ·      66937  ·           [90m24[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  updateWorkspaceMetadata    ·          -  ·          -  ·      44922  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|·············|·············|·············|···············|··············
+|  [32m[1mDeployments[22m[39m                                        ·                                         ·  [1m% of limit[22m   ·             │
+······················································|·············|·············|·············|···············|··············
+|  ApplicationRegistry                                ·          -  ·          -  ·    2354382  ·        [90m7.8 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  ApplicationRegistryV2                              ·          -  ·          -  ·    2367566  ·        [90m7.9 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  Grant                                              ·          -  ·          -  ·    1732849  ·        [90m5.8 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  GrantFactory                                       ·          -  ·          -  ·    3305443  ·         [90m11 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  GrantFactoryV2                                     ·          -  ·          -  ·    3323101  ·       [90m11.1 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  GrantV2                                            ·          -  ·          -  ·    1743872  ·        [90m5.8 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  MyToken                                            ·          -  ·          -  ·     775204  ·        [90m2.6 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  WorkspaceRegistry                                  ·          -  ·          -  ·    1854372  ·        [90m6.2 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|·············|·············|·············|···············|··············
+|  WorkspaceRegistryV2                                ·          -  ·          -  ·    1867574  ·        [90m6.2 %[39m  ·          [32m[90m-[32m[39m  │
+·-----------------------------------------------------|-------------|-------------|-------------|---------------|-------------·
+
+  113 passing (37s)
+
