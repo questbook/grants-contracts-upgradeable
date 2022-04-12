@@ -1,27 +1,28 @@
 import { expect } from "chai";
+import { ethers, upgrades } from "hardhat";
 
 export function shouldBehaveLikeApplicationRegistry(): void {
-  it("deployer can pause the contract", async function () {
-    await this.applicationRegistry.connect(this.signers.admin).pause();
-    expect(await this.applicationRegistry.paused()).to.equal(true);
-  });
+  // it("deployer can pause the contract", async function () {
+  //   await this.applicationRegistry.connect(this.signers.admin).pause();
+  //   expect(await this.applicationRegistry.paused()).to.equal(true);
+  // });
 
-  it("non deployer can not pause the contract", async function () {
-    expect(this.applicationRegistry.connect(this.signers.nonAdmin).pause()).to.be.reverted;
-  });
+  // it("non deployer can not pause the contract", async function () {
+  //   expect(this.applicationRegistry.connect(this.signers.nonAdmin).pause()).to.be.reverted;
+  // });
 
-  it("deployer can unpause the contract", async function () {
-    await this.applicationRegistry.connect(this.signers.admin).pause();
-    expect(await this.applicationRegistry.paused()).to.equal(true);
-    await this.applicationRegistry.connect(this.signers.admin).unpause();
-    expect(await this.applicationRegistry.paused()).to.equal(false);
-  });
+  // it("deployer can unpause the contract", async function () {
+  //   await this.applicationRegistry.connect(this.signers.admin).pause();
+  //   expect(await this.applicationRegistry.paused()).to.equal(true);
+  //   await this.applicationRegistry.connect(this.signers.admin).unpause();
+  //   expect(await this.applicationRegistry.paused()).to.equal(false);
+  // });
 
-  it("non deployer can not unpause the contract", async function () {
-    await this.applicationRegistry.connect(this.signers.admin).pause();
-    expect(await this.applicationRegistry.paused()).to.equal(true);
-    expect(this.applicationRegistry.connect(this.signers.nonAdmin).unpause()).to.be.reverted;
-  });
+  // it("non deployer can not unpause the contract", async function () {
+  //   await this.applicationRegistry.connect(this.signers.admin).pause();
+  //   expect(await this.applicationRegistry.paused()).to.equal(true);
+  //   expect(this.applicationRegistry.connect(this.signers.nonAdmin).unpause()).to.be.reverted;
+  // });
 
   it("non deployer cannot set workspaceRegistry", async function () {
     expect(this.applicationRegistry.connect(this.signers.nonAdmin).setWorkspaceReg("dummyAddress")).to.be.reverted;
@@ -68,47 +69,47 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
   });
 
-  describe("If contract is paused", function () {
-    beforeEach(async function () {
-      await this.applicationRegistry.connect(this.signers.admin).pause();
-    });
+  // describe("If contract is paused", function () {
+  //   beforeEach(async function () {
+  //     await this.applicationRegistry.connect(this.signers.admin).pause();
+  //   });
 
-    it("Application submission wont work", async function () {
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.applicantAdmin)
-          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1),
-      ).to.be.revertedWith("Pausable: paused");
-    });
+  //   it("Application submission wont work", async function () {
+  //     expect(
+  //       this.applicationRegistry
+  //         .connect(this.signers.applicantAdmin)
+  //         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1),
+  //     ).to.be.revertedWith("Pausable: paused");
+  //   });
 
-    it("Application updation wont work", async function () {
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.applicantAdmin)
-          .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1),
-      ).to.be.revertedWith("Pausable: paused");
-    });
+  //   it("Application updation wont work", async function () {
+  //     expect(
+  //       this.applicationRegistry
+  //         .connect(this.signers.applicantAdmin)
+  //         .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1),
+  //     ).to.be.revertedWith("Pausable: paused");
+  //   });
 
-    it("Application state updation wont work", async function () {
-      expect(
-        this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash"),
-      ).to.be.revertedWith("Pausable: paused");
-    });
+  //   it("Application state updation wont work", async function () {
+  //     expect(
+  //       this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash"),
+  //     ).to.be.revertedWith("Pausable: paused");
+  //   });
 
-    it("Milestone request for approval wont work", async function () {
-      expect(
-        this.applicationRegistry
-          .connect(this.signers.applicantAdmin)
-          .requestMilestoneApproval(0, 3, "dummyApplicationIpfsHash"),
-      ).to.be.revertedWith("Pausable: paused");
-    });
+  //   it("Milestone request for approval wont work", async function () {
+  //     expect(
+  //       this.applicationRegistry
+  //         .connect(this.signers.applicantAdmin)
+  //         .requestMilestoneApproval(0, 3, "dummyApplicationIpfsHash"),
+  //     ).to.be.revertedWith("Pausable: paused");
+  //   });
 
-    it("Milestone approval wont work", async function () {
-      expect(
-        this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
-      ).to.be.revertedWith("Pausable: paused");
-    });
-  });
+  //   it("Milestone approval wont work", async function () {
+  //     expect(
+  //       this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"),
+  //     ).to.be.revertedWith("Pausable: paused");
+  //   });
+  // });
 
   describe("Application state change", function () {
     it("grant manager can ask for application resubmission if application is in submitted state", async function () {
@@ -558,6 +559,46 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(this.applicationRegistry.connect(this.signers.nonAdmin).transferOwnership(this.signers.nonAdmin.address))
         .to.be.reverted;
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.admin.address);
+    });
+  });
+
+  describe("Proxy implementation upgrade", function () {
+    it("should not be able to call proxy initiliaze function", async function () {
+      expect(this.applicationRegistry.initialize()).to.be.revertedWith(
+        "Initializable: contract is already initialized",
+      );
+    });
+
+    it("deployer can upgrade the applicationRegistry proxy implementation contract", async function () {
+      const applicationRegistry = await upgrades.upgradeProxy(
+        this.applicationRegistry.address,
+        this.applicationRegistryFactoryV2,
+      );
+      expect(await applicationRegistry.version()).to.equal("v2!");
+    });
+
+    it("non deployer cannot upgrade the applicationRegistry proxy implementation contract", async function () {
+      const applicationRegistryFactoryV2NonAdmin = await ethers.getContractFactory(
+        "ApplicationRegistryV2",
+        this.signers.nonAdmin,
+      );
+      expect(
+        upgrades.upgradeProxy(this.applicationRegistry.address, applicationRegistryFactoryV2NonAdmin),
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should retain applicationRegistry data", async function () {
+      expect(await this.applicationRegistry.applicationCount()).to.equal(0);
+      await this.applicationRegistry
+        .connect(this.signers.applicantAdmin)
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      expect(await this.applicationRegistry.applicationCount()).to.equal(1);
+      const applicationRegistry = await upgrades.upgradeProxy(
+        this.applicationRegistry.address,
+        this.applicationRegistryFactoryV2,
+      );
+      expect(await applicationRegistry.version()).to.equal("v2!");
+      expect(await applicationRegistry.applicationCount()).to.equal(1);
     });
   });
 }

@@ -1,0 +1,184 @@
+No need to generate any newer typings.
+
+  Unit tests
+    ApplicationRegistry
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ deployer can set workspaceRegistry
+      ✓ active grant can receive application
+      ✓ applicant cannot submit application to same grant twice
+      ✓ inactive grant can not receive application
+      If contract is paused
+        ✓ Applicaion submission wont work
+        ✓ Applicaion updation wont work
+        ✓ Applicaion state updation wont work
+        ✓ Milestone request for approval wont work
+        ✓ Milestone approval wont work
+      Application state change
+        ✓ grant manager can ask for application resubmission if application is in submitted state
+        ✓ grant manager can approve application
+        ✓ grant manager can reject application
+        ✓ grant manager can not reject applications in resubmit state
+        ✓ application owner can not approve application
+        ✓ application owner can not reject application
+        ✓ application state cannot be updated if wrong workspace id is passed
+        ✓ application owner can resubmit application with updated metadata if grant manager has asked for resubmission
+        ✓ non owner can not resubmit application if grant manager has asked for resubmission
+        ✓ application owner can not resubmit application if application is in submitted state
+        ✓ application owner can not resubmit application if application is approved by grant manager
+        ✓ application owner can not resubmit application with updated metadata if grant manager has rejected the application
+        ✓ workspace admin can mark application as complete if all milestones are approved
+        ✓ workspace admin can not mark application as complete if all milestones are not approved
+        ✓ application cannot be completed if wrong workspaceId is passed
+      Milestone state change
+        ✓ Milestone state can not be updated if milestoneId is invalid
+        ✓ Milestone state can not be updated if application is not approved
+        ✓ Milestone state can not approved if application is not approved
+        ✓ should return application owner
+        ✓ deployer can set new deployer address
+        ✓ non deployer cannot set new deployer address
+        If application is approved
+          ✓ Milestone can not be requested for approval if its not in submitted state
+          ✓ Milestone state can be updated to requested by application owner
+          ✓ Milestone state can not be updated to requested by application non owner
+          ✓ Milestone state can be updated from submitted to approved by grant manager
+          ✓ Milestone state can not approved if invalid milestoneId provided
+          ✓ Milestone state can not approved if invalid workspaceId provided
+          ✓ Milestone state can not reapproved by grant manager
+          ✓ Milestone state can be updated from requested to approved by grant manager
+          ✓ Milestone state can not be updated from submitted to approved by non grant manager
+          ✓ Milestone state can not be updated from requested to approved by non grant manager
+
+  Unit tests
+    Grant
+      ✓ Application count can only be modified by applicationRegistry
+      Updating a grant is
+        ✓ possible if no one applied to grant yet and admin is updating
+        ✓ not possible if no one applied to grant and non admin is updating
+        ✓ not possible if alteast 1 applicant applied to grant
+      Updating grant accessibility is
+        ✓ possible if admin is updating
+        ✓ not possible if non admin is updating
+
+  Unit tests
+    GrantFactory
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ new grant creation not possible if contract is paused
+      ✓ workspace admin should be able to create new grant
+      ✓ workspace non admin should not be able to create new grant
+
+  Integration tests
+    Withdraw funds
+      ✓ Should not work if invoker is non admin
+      ✓ Should not work if grant does not have balance
+      ✓ Should work if grant has balance and invoked by workspace admin
+    Withdraw rewards from locked funds
+      ✓ Should not work if no balance on grant contract
+      ✓ Should work if balance present in grant contract
+    Withdraw rewards using P2P transfer
+      ✓ Should not work if amount is not approved
+      ✓ Should not work if no balance in user wallet
+      ✓ Should work if balance present in wallet and amount is approved
+
+  Unit tests
+    WorkspaceRegistry
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ should create new workspace
+      ✓ admin should be able to edit workspace
+      ✓ non admin should not be able to edit workspace
+      ✓ admin should be able to add admins
+      ✓ non admin should not be able to add admins
+      ✓ admin should be able to remove admins
+      ✓ non admin should not be able to remove admins
+      If contract is paused
+        ✓ workspace create should not work
+        ✓ workspace update should not work
+        ✓ add admins to workspace should not work
+        ✓ remove admins from workspace should not work
+
+·-----------------------------------------------------|----------------------------|-------------|-----------------------------·
+|                 [90mSolc version: 0.8.7[39m                 ·  [90mOptimizer enabled: false[39m  ·  [90mRuns: 800[39m  ·  [90mBlock limit: 30000000 gas[39m  │
+······················································|····························|·············|······························
+|  [32m[1mMethods[22m[39m                                                                                                                     │
+························|·····························|··············|·············|·············|···············|··············
+|  [1mContract[22m             ·  [1mMethod[22m                     ·  [32mMin[39m         ·  [32mMax[39m        ·  [32mAvg[39m        ·  [1m# calls[22m      ·  [1musd (avg)[22m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  approveMilestone           ·       [36m54447[39m  ·      [31m71496[39m  ·      67606  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  completeApplication        ·           -  ·          -  ·      48175  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  pause                      ·           -  ·          -  ·      28171  ·            [90m8[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  requestMilestoneApproval   ·           -  ·          -  ·      64507  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  setWorkspaceReg            ·       [36m26701[39m  ·      [31m46601[39m  ·      46274  ·           [90m61[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  submitApplication          ·      [36m178465[39m  ·     [31m178477[39m  ·     178476  ·           [90m40[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  transferOwnership          ·           -  ·          -  ·      29021  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  unpause                    ·           -  ·          -  ·      28191  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  updateApplicationMetadata  ·           -  ·          -  ·      43574  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mApplicationRegistry[39m  ·  updateApplicationState     ·       [36m65622[39m  ·      [31m66198[39m  ·      65890  ·           [90m29[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  disburseReward             ·           -  ·          -  ·      89970  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  disburseRewardP2P          ·           -  ·          -  ·      97936  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  updateGrant                ·           -  ·          -  ·      46928  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  updateGrantAccessibility   ·           -  ·          -  ·      42942  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrant[39m                ·  withdrawFunds              ·           -  ·          -  ·      48431  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  createGrant                ·           -  ·          -  ·    1568833  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  pause                      ·           -  ·          -  ·      28126  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mGrantFactory[39m         ·  unpause                    ·           -  ·          -  ·      28124  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  approve                    ·           -  ·          -  ·      46857  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  mint                       ·       [36m54282[39m  ·      [31m71382[39m  ·      69482  ·            [90m9[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mMyToken[39m              ·  transfer                   ·           -  ·          -  ·      52301  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  addWorkspaceAdmins         ·           -  ·          -  ·      57319  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  createWorkspace            ·      [36m101854[39m  ·     [31m118954[39m  ·     118268  ·           [90m77[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  pause                      ·           -  ·          -  ·      28171  ·            [90m7[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  removeWorkspaceAdmins      ·           -  ·          -  ·      29554  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  unpause                    ·           -  ·          -  ·      28147  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [90mWorkspaceRegistry[39m    ·  updateWorkspaceMetadata    ·           -  ·          -  ·      40832  ·            [90m1[39m  ·          [32m[90m-[32m[39m  │
+························|·····························|··············|·············|·············|···············|··············
+|  [32m[1mDeployments[22m[39m                                        ·                                          ·  [1m% of limit[22m   ·             │
+······················································|··············|·············|·············|···············|··············
+|  ApplicationRegistry                                ·           -  ·          -  ·    3448328  ·       [90m11.5 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|··············|·············|·············|···············|··············
+|  Grant                                              ·     [36m1677986[39m  ·    [31m1677998[39m  ·    1677997  ·        [90m5.6 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|··············|·············|·············|···············|··············
+|  GrantFactory                                       ·           -  ·          -  ·    2837071  ·        [90m9.5 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|··············|·············|·············|···············|··············
+|  MyToken                                            ·           -  ·          -  ·    1547935  ·        [90m5.2 %[39m  ·          [32m[90m-[32m[39m  │
+······················································|··············|·············|·············|···············|··············
+|  WorkspaceRegistry                                  ·           -  ·          -  ·    1972325  ·        [90m6.6 %[39m  ·          [32m[90m-[32m[39m  │
+·-----------------------------------------------------|--------------|-------------|-------------|---------------|-------------·
+
+  82 passing (18s)
+

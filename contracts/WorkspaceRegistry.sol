@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
-contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
+contract WorkspaceRegistry is
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable,
+    IWorkspaceRegistry
+{
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
@@ -50,6 +59,24 @@ contract WorkspaceRegistry is Ownable, Pausable, IWorkspaceRegistry {
         require(_membersLength <= 1000, "WorkspaceMembers: Limit exceeded");
         _;
     }
+
+    /**
+     * @notice Calls initialize on the base contracts
+     *
+     * @dev This acts as a constructor for the upgradeable proxy contract
+     */
+    function initialize() external initializer {
+        __Ownable_init();
+        __Pausable_init();
+    }
+
+    /**
+     * @notice Override of UUPSUpgradeable virtual function
+     *
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
+     * {upgradeTo} and {upgradeToAndCall}.
+     */
+    function _authorizeUpgrade(address) internal view override onlyOwner {}
 
     /**
      * @notice Create a new workspace under which grants will be created,

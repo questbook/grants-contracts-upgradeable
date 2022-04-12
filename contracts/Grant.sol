@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
-contract Grant {
+contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /// @notice workspaceId to which the grant belongs
     uint96 public workspaceId;
 
@@ -66,23 +70,37 @@ contract Grant {
 
     /**
      * @notice Set grant details on contract deployment
+     *
      * @param _workspaceId workspace id to which the grant belong
      * @param _metadataHash metadata pointer
      * @param _workspaceReg workspace registry interface
      * @param _applicationReg application registry interface
+     *
+     * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    constructor(
+    function initialize(
         uint96 _workspaceId,
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
-        IApplicationRegistry _applicationReg
-    ) {
+        IApplicationRegistry _applicationReg,
+        address _grantFactoryOwner
+    ) external initializer {
+        __Ownable_init();
         workspaceId = _workspaceId;
         active = true;
         metadataHash = _metadataHash;
         applicationReg = _applicationReg;
         workspaceReg = _workspaceReg;
+        transferOwnership(_grantFactoryOwner);
     }
+
+    /**
+     * @notice Override of UUPSUpgradeable virtual function
+     *
+     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
+     * {upgradeTo} and {upgradeToAndCall}.
+     */
+    function _authorizeUpgrade(address) internal view override onlyOwner {}
 
     /**
      * @notice Update number of applications on grant, can be called by applicationRegistry contract

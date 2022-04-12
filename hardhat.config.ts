@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@nomiclabs/hardhat-etherscan";
+import "@openzeppelin/hardhat-upgrades";
 
 import "./tasks/accounts";
 import "./tasks/deploy";
@@ -41,7 +42,7 @@ if (!infuraApiKey) {
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   let url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
-  if (network === "polygon") url = "https://polygon-rpc.com/";
+  if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   return {
     accounts: {
@@ -94,8 +95,8 @@ const config: HardhatUserConfig = {
       // Disable the optimizer when debugging
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
-        enabled: false,
-        runs: 800,
+        enabled: true,
+        runs: 200,
       },
     },
   },
@@ -104,9 +105,9 @@ const config: HardhatUserConfig = {
     target: "ethers-v5",
   },
   etherscan: {
-    // apiKey: process.env.POLYGONSCAN_KEY,
+    apiKey: process.env.POLYGONSCAN_KEY,
     // apiKey: process.env.ETHERSCAN_KEY,
-    apiKey: process.env.OPT_ETHERSCAN_KEY,
+    // apiKey: process.env.OPT_ETHERSCAN_KEY,
   },
 };
 

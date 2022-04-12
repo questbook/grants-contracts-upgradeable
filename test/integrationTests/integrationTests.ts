@@ -1,4 +1,4 @@
-import { artifacts, ethers, waffle } from "hardhat";
+import { artifacts, ethers, upgrades, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
@@ -21,29 +21,35 @@ describe("Integration tests", function () {
   });
 
   beforeEach(async function () {
-    const workspaceRegistryArtifact: Artifact = await artifacts.readArtifact("WorkspaceRegistry");
+    this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
     this.workspaceRegistry = <WorkspaceRegistry>(
-      await waffle.deployContract(this.signers.admin, workspaceRegistryArtifact, [])
+      await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
     );
 
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
 
-    const applicationRegistryArtifact: Artifact = await artifacts.readArtifact("ApplicationRegistry");
+    const applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
     this.applicationRegistry = <ApplicationRegistry>(
-      await waffle.deployContract(this.signers.admin, applicationRegistryArtifact, [])
+      await upgrades.deployProxy(applicationRegistryFactory, { kind: "uups" })
     );
 
     await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
 
-    const grantArtifact: Artifact = await artifacts.readArtifact("Grant");
+    this.grantFactory = await ethers.getContractFactory("Grant");
     this.grant = <Grant>(
-      await waffle.deployContract(this.signers.admin, grantArtifact, [
-        0,
-        "dummyGrantIpfsHash",
-        this.workspaceRegistry.address,
-        this.applicationRegistry.address,
-      ])
+      await upgrades.deployProxy(
+        this.grantFactory,
+        [
+          0,
+          "dummyGrantIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+          this.signers.admin.address,
+        ],
+        { kind: "uups" },
+      )
     );
+    this.grantFactoryV2 = await ethers.getContractFactory("GrantV2");
 
     await this.applicationRegistry
       .connect(this.signers.applicantAdmin)
@@ -184,6 +190,17 @@ describe("Integration tests", function () {
       await this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(9000);
+    });
+  });
+
+  describe("Proxy implementation upgrade", function () {
+    it("should retain and withdraw funds", async function () {
+      await this.myToken.connect(this.signers.admin).transfer(this.grant.address, 1000);
+      const grant = await upgrades.upgradeProxy(this.grant.address, this.grantFactoryV2);
+      expect(await grant.version()).to.equal("v2!");
+      await grant.connect(this.signers.admin).withdrawFunds(this.myToken.address, 1000, this.signers.admin.address);
+      expect((await this.myToken.balanceOf(grant.address)).toNumber()).to.equal(0);
+      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
     });
   });
 });

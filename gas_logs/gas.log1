@@ -1,0 +1,185 @@
+No need to generate any newer typings.
+
+  Unit tests
+    ApplicationRegistry
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ non deployer cannot set workspaceRegistry
+      ✓ deployer can set workspaceRegistry
+      ✓ active grant can receive application
+      ✓ applicant cannot submit application to same grant twice
+      ✓ inactive grant can not receive application
+      If contract is paused
+        ✓ Applicaion submission wont work
+        ✓ Applicaion updation wont work
+        ✓ Applicaion state updation wont work
+        ✓ Milestone request for approval wont work
+        ✓ Milestone approval wont work
+      Application state change
+        ✓ grant manager can ask for application resubmission if application is in submitted state
+        ✓ grant manager can approve application
+        ✓ grant manager can reject application
+        ✓ grant manager can not reject applications in resubmit state
+        ✓ application owner can not approve application
+        ✓ application owner can not reject application
+        ✓ application state cannot be updated if wrong workspace id is passed
+        ✓ application owner can resubmit application with updated metadata if grant manager has asked for resubmission
+        ✓ non owner can not resubmit application if grant manager has asked for resubmission
+        ✓ application owner can not resubmit application if application is in submitted state
+        ✓ application owner can not resubmit application if application is approved by grant manager
+        ✓ application owner can not resubmit application with updated metadata if grant manager has rejected the application
+        ✓ workspace admin can mark application as complete if all milestones are approved
+        ✓ workspace admin can not mark application as complete if all milestones are not approved
+        ✓ application cannot be completed if wrong workspaceId is passed
+      Milestone state change
+        ✓ Milestone state can not be updated if milestoneId is invalid
+        ✓ Milestone state can not be updated if application is not approved
+        ✓ Milestone state can not approved if application is not approved
+        ✓ should return application owner
+        ✓ deployer can set new deployer address
+        ✓ non deployer cannot set new deployer address
+        If application is approved
+          ✓ Milestone can not be requested for approval if its not in submitted state
+          ✓ Milestone state can be updated to requested by application owner
+          ✓ Milestone state can not be updated to requested by application non owner
+          ✓ Milestone state can be updated from submitted to approved by grant manager
+          ✓ Milestone state can not approved if invalid milestoneId provided
+          ✓ Milestone state can not approved if invalid workspaceId provided
+          ✓ Milestone state can not reapproved by grant manager
+          ✓ Milestone state can be updated from requested to approved by grant manager
+          ✓ Milestone state can not be updated from submitted to approved by non grant manager
+          ✓ Milestone state can not be updated from requested to approved by non grant manager
+
+  Unit tests
+    Grant
+      ✓ Application count can only be modified by applicationRegistry
+      Updating a grant is
+        ✓ possible if no one applied to grant yet and admin is updating
+        ✓ not possible if no one applied to grant and non admin is updating
+        ✓ not possible if alteast 1 applicant applied to grant
+      Updating grant accessibility is
+        ✓ possible if admin is updating
+        ✓ not possible if non admin is updating
+
+  Unit tests
+    GrantFactory
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ new grant creation not possible if contract is paused
+      ✓ workspace admin should be able to create new grant
+      ✓ workspace non admin should not be able to create new grant
+
+  Integration tests
+    Withdraw funds
+      ✓ Should not work if invoker is non admin
+      ✓ Should not work if grant does not have balance
+      ✓ Should work if grant has balance and invoked by workspace admin
+    Withdraw rewards from locked funds
+      ✓ Should not work if no balance on grant contract
+      ✓ Should work if balance present in grant contract
+    Withdraw rewards using P2P transfer
+      ✓ Should not work if amount is not approved
+      ✓ Should not work if no balance in user wallet
+      ✓ Should work if balance present in wallet and amount is approved
+
+  Unit tests
+    WorkspaceRegistry
+      ✓ deployer can pause the contract
+      ✓ non deployer can not pause the contract
+      ✓ deployer can unpause the contract
+      ✓ non deployer can not unpause the contract
+      ✓ should create new workspace
+      ✓ admin should be able to edit workspace
+      ✓ non admin should not be able to edit workspace
+      ✓ admin should be able to add admins
+      ✓ non admin should not be able to add admins
+      ✓ admin should be able to remove admins
+      ✓ non admin should not be able to remove admins
+      If contract is paused
+        ✓ workspace create should not work
+        ✓ workspace update should not work
+        ✓ add admins to workspace should not work
+        ✓ remove admins from workspace should not work
+
+·-----------------------------------------------------|----------------------------|-------------|-----------------------------·
+|                 Solc version: 0.8.7                 ·  Optimizer enabled: false  ·  Runs: 800  ·  Block limit: 30000000 gas  │
+······················································|····························|·············|······························
+|  Methods                                                                                                                     │
+························|·····························|··············|·············|·············|···············|··············
+|  Contract             ·  Method                     ·  Min         ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  approveMilestone           ·       54447  ·      71496  ·      67606  ·            6  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  completeApplication        ·           -  ·          -  ·      48175  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  pause                      ·           -  ·          -  ·      28171  ·            8  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  requestMilestoneApproval   ·           -  ·          -  ·      64507  ·            4  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  setWorkspaceReg            ·       26701  ·      46601  ·      46274  ·           61  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  submitApplication          ·      178465  ·     178477  ·     178476  ·           40  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  transferOwnership          ·           -  ·          -  ·      29021  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  unpause                    ·           -  ·          -  ·      28191  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  updateApplicationMetadata  ·           -  ·          -  ·      43574  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  ApplicationRegistry  ·  updateApplicationState     ·       65622  ·      66198  ·      65890  ·           29  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Grant                ·  disburseReward             ·           -  ·          -  ·      89970  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Grant                ·  disburseRewardP2P          ·           -  ·          -  ·      97936  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Grant                ·  updateGrant                ·           -  ·          -  ·      46928  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Grant                ·  updateGrantAccessibility   ·           -  ·          -  ·      42942  ·            2  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Grant                ·  withdrawFunds              ·           -  ·          -  ·      48431  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  GrantFactory         ·  createGrant                ·           -  ·          -  ·    1568833  ·            2  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  GrantFactory         ·  pause                      ·           -  ·          -  ·      28126  ·            4  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  GrantFactory         ·  unpause                    ·           -  ·          -  ·      28124  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  MyToken              ·  approve                    ·           -  ·          -  ·      46857  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  MyToken              ·  mint                       ·       54282  ·      71382  ·      69482  ·            9  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  MyToken              ·  transfer                   ·           -  ·          -  ·      52301  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  addWorkspaceAdmins         ·           -  ·          -  ·      57319  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  createWorkspace            ·      101854  ·     118954  ·     118268  ·           77  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  pause                      ·           -  ·          -  ·      28171  ·            7  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  removeWorkspaceAdmins      ·           -  ·          -  ·      29554  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  unpause                    ·           -  ·          -  ·      28147  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  WorkspaceRegistry    ·  updateWorkspaceMetadata    ·           -  ·          -  ·      40832  ·            1  ·          -  │
+························|·····························|··············|·············|·············|···············|··············
+|  Deployments                                        ·                                          ·  % of limit   ·             │
+······················································|··············|·············|·············|···············|··············
+|  ApplicationRegistry                                ·           -  ·          -  ·    3448328  ·       11.5 %  ·          -  │
+······················································|··············|·············|·············|···············|··············
+|  Grant                                              ·     1677986  ·    1677998  ·    1677997  ·        5.6 %  ·          -  │
+······················································|··············|·············|·············|···············|··············
+|  GrantFactory                                       ·           -  ·          -  ·    2837071  ·        9.5 %  ·          -  │
+······················································|··············|·············|·············|···············|··············
+|  MyToken                                            ·           -  ·          -  ·    1547935  ·        5.2 %  ·          -  │
+······················································|··············|·············|·············|···············|··············
+|  WorkspaceRegistry                                  ·           -  ·          -  ·    1972325  ·        6.6 %  ·          -  │
+·-----------------------------------------------------|--------------|-------------|-------------|---------------|-------------·
+
+  82 passing (20s)
+
+
