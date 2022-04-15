@@ -8,6 +8,7 @@ import type { ApplicationRegistry } from "../../src/types/ApplicationRegistry";
 import { Signers } from "../types";
 import { shouldBehaveLikeGrantFactory } from "./GrantFactory.behavior";
 import { expect } from "chai";
+import { ApplicationReviewRegistry } from "../../src/types/ApplicationReviewRegistry";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -29,8 +30,21 @@ describe("Unit tests", function () {
 
       await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
 
+      this.applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
+      this.applicationReviewRegistry = <ApplicationReviewRegistry>(
+        await upgrades.deployProxy(this.applicationReviewRegistryFactory, { kind: "uups" })
+      );
+
+      await this.applicationReviewRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
+
       this.grantFactoryFactory = await ethers.getContractFactory("GrantFactory");
       this.grantFactory = <GrantFactory>await upgrades.deployProxy(this.grantFactoryFactory, { kind: "uups" });
+
+      await this.grantFactory
+        .connect(this.signers.admin)
+        .setApplicationReviewReg(this.applicationReviewRegistry.address);
+
+      await this.applicationReviewRegistry.connect(this.signers.admin).setGrantFactory(this.grantFactory.address);
 
       const applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
       this.applicationRegistry = <ApplicationRegistry>(

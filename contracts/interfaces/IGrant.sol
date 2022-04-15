@@ -27,4 +27,7 @@ interface IGrant {
         uint256 _amount,
         address _sender
     ) external;
+
+    /// @notice Return the workspace id to which the grant belongs
+    function workspaceId() external view returns (uint96);
 }

@@ -19,15 +19,15 @@ task("deploy:ApplicationRegistry").setAction(async function (taskArguments: Task
 });
 
 task("upgrade:ApplicationRegistry")
-  .addParam("addressApplicationRegistry", "address of the ApplicationRegistry implementation instance")
+  .addParam("address", "address of the ApplicationRegistry implementation instance")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
-    const { addressApplicationRegistry } = taskArguments;
-    console.log("upgrading ApplicationRegistry at address: ", addressApplicationRegistry);
+    const { address } = taskArguments;
+    console.log("upgrading ApplicationRegistry at address: ", address);
     const applicationRegistryFactoryV2: ApplicationRegistry__factory = <ApplicationRegistry__factory>(
-      await ethers.getContractFactory("ApplicationRegistryV2")
+      await ethers.getContractFactory("ApplicationRegistry")
     );
     const applicationRegistry: ApplicationRegistry = <ApplicationRegistry>(
-      await upgrades.upgradeProxy(addressApplicationRegistry, applicationRegistryFactoryV2)
+      await upgrades.upgradeProxy(address, applicationRegistryFactoryV2)
     );
     await applicationRegistry.deployed();
     console.log("ApplicationRegistryV2 Proxy deployed to: ", applicationRegistry.address);

@@ -17,16 +17,14 @@ task("deploy:GrantFactory").setAction(async function (taskArguments: TaskArgumen
 });
 
 task("upgrade:GrantFactory")
-  .addParam("addressGrantFactory", "address of the implementation instance")
+  .addParam("address", "address of the implementation instance")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
-    const { addressGrantFactory } = taskArguments;
-    console.log("upgrading GrantFactory at address: ", addressGrantFactory);
+    const { address } = taskArguments;
+    console.log("upgrading GrantFactory at address: ", address);
     const grantFactoryFactoryV2: GrantFactory__factory = <GrantFactory__factory>(
-      await ethers.getContractFactory("GrantFactoryV2")
+      await ethers.getContractFactory("GrantFactory")
     );
-    const grantFactory: GrantFactory = <GrantFactory>(
-      await upgrades.upgradeProxy(addressGrantFactory, grantFactoryFactoryV2)
-    );
+    const grantFactory: GrantFactory = <GrantFactory>await upgrades.upgradeProxy(address, grantFactoryFactoryV2);
     await grantFactory.deployed();
     console.log("GrantFactoryV2 Proxy deployed to: ", grantFactory.address);
   });

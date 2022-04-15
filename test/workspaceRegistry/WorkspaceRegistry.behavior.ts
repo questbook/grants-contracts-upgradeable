@@ -63,6 +63,16 @@ export function shouldBehaveLikeWorkspaceRegistry(): void {
     expect(workspace.metadataHash).to.equal("updatedIpfsHash");
   });
 
+  it("reviewer should be able to edit workspace", async function () {
+    await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
+    await this.workspaceRegistry
+      .connect(this.signers.admin)
+      .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+    await this.workspaceRegistry.connect(this.signers.reviewer).updateWorkspaceMetadata(0, "updatedIpfsHash");
+    const workspace = await this.workspaceRegistry.workspaces(0);
+    expect(workspace.metadataHash).to.equal("updatedIpfsHash");
+  });
+
   it("non admin should not be able to edit workspace", async function () {
     await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
     expect(this.workspaceRegistry.connect(this.signers.nonAdmin).updateWorkspaceMetadata(0, "updatedIpfsHash")).to.be

@@ -7,12 +7,16 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./Grant.sol";
+import "./interfaces/IApplicationReviewRegistry.sol";
 
 /// @title Factory contract used to create new grants,
 /// each grant is a new contract deployed using this factory
 contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address public immutable grantImplementation;
+
+    /// @notice applicationReviewRegistry interface
+    IApplicationReviewRegistry public applicationReviewReg;
 
     /// @notice Emitted when a new grant contract is deployed
     event GrantCreated(address grantAddress, uint96 workspaceId, string metadataHash, uint256 time);
@@ -33,7 +37,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() public initializer {
+    function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
     }
@@ -57,6 +61,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     function createGrant(
         uint96 _workspaceId,
         string memory _metadataHash,
+        string memory _rubricsMetadataHash,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg
     ) external whenNotPaused returns (address) {
@@ -74,7 +79,16 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         );
         address _grantAddress = address(grantProxy);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
         return _grantAddress;
+    }
+
+    /**
+     * @notice sets application review registry contract interface
+     * @param _applicationReviewReg ApplicationReviewRegistry interface
+     */
+    function setApplicationReviewReg(IApplicationReviewRegistry _applicationReviewReg) external onlyOwner {
+        applicationReviewReg = _applicationReviewReg;
     }
 
     function pause() external onlyOwner {

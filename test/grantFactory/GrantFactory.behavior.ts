@@ -29,7 +29,13 @@ export function shouldBehaveLikeGrantFactory(): void {
     expect(
       this.grantFactory
         .connect(this.signers.admin)
-        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address),
+        .createGrant(
+          0,
+          "dummyIpfsHash",
+          "dummyRubricsIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+        ),
     ).to.be.revertedWith("Pausable: paused");
   });
 
@@ -42,35 +48,77 @@ export function shouldBehaveLikeGrantFactory(): void {
     const expectedGrantAddress = ethers.utils.getContractAddress(transaction);
     const create = await this.grantFactory
       .connect(this.signers.admin)
-      .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address);
+      .createGrant(
+        0,
+        "dummyIpfsHash",
+        "dummyRubricsIpfsHash",
+        this.workspaceRegistry.address,
+        this.applicationRegistry.address,
+      );
     const tx = await create.wait();
     expect(tx.events[3].args[0]).to.equal(expectedGrantAddress);
     expect(parseInt(tx.events[3].args[1], 16)).to.equal(0);
     expect(tx.events[3].args[2]).to.equal("dummyIpfsHash");
   });
 
+  it("workspace admin should be able to create new grant alongwith rubrics", async function () {
+    const nonce = await waffle.provider.getTransactionCount(this.grantFactory.address);
+    const transaction = {
+      from: this.grantFactory.address,
+      nonce: nonce,
+    };
+    const expectedGrantAddress = ethers.utils.getContractAddress(transaction);
+    const create = await this.grantFactory
+      .connect(this.signers.admin)
+      .createGrant(
+        0,
+        "dummyIpfsHash",
+        "dummyRubricsIpfsHash",
+        this.workspaceRegistry.address,
+        this.applicationRegistry.address,
+      );
+    const tx = await create.wait();
+    expect(tx.events[3].args[0]).to.equal(expectedGrantAddress);
+    expect(parseInt(tx.events[3].args[1], 16)).to.equal(0);
+    expect(tx.events[3].args[2]).to.equal("dummyIpfsHash");
+    const grantReviewState = await this.applicationReviewRegistry.grantReviewStates(expectedGrantAddress);
+    expect(grantReviewState[3]).to.equal("dummyRubricsIpfsHash");
+  });
+
   it("workspace reviewer should not be able to create new grant", async function () {
     await this.workspaceRegistry
       .connect(this.signers.admin)
       .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
-    expect(
+    await expect(
       this.grantFactory
         .connect(this.signers.reviewer)
-        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address),
+        .createGrant(
+          0,
+          "dummyIpfsHash",
+          "dummyRubricsIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+        ),
     ).to.be.revertedWith("GrantCreate: Unauthorised");
   });
 
   it("workspace non admin should not be able to create new grant", async function () {
-    expect(
+    await expect(
       this.grantFactory
         .connect(this.signers.nonAdmin)
-        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address),
-    ).to.be.reverted;
+        .createGrant(
+          0,
+          "dummyIpfsHash",
+          "dummyRubricsIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+        ),
+    ).to.be.revertedWith("GrantCreate: Unauthorised");
   });
 
   describe("Proxy implementation upgrade", function () {
     it("should not be able to call proxy initiliaze function", async function () {
-      expect(this.grantFactory.initialize()).to.be.revertedWith("Initializable: contract is already initialized");
+      await expect(this.grantFactory.initialize()).to.be.revertedWith("Initializable: contract is already initialized");
     });
 
     it("deployer can upgrade the grantFactory proxy implementation contract", async function () {
@@ -80,7 +128,7 @@ export function shouldBehaveLikeGrantFactory(): void {
 
     it("non deployer cannot upgrade the grantFactory proxy implementation contract", async function () {
       const grantFactoryFactoryV2NonAdmin = await ethers.getContractFactory("GrantFactoryV2", this.signers.nonAdmin);
-      expect(upgrades.upgradeProxy(this.grantFactory.address, grantFactoryFactoryV2NonAdmin)).to.be.revertedWith(
+      await expect(upgrades.upgradeProxy(this.grantFactory.address, grantFactoryFactoryV2NonAdmin)).to.be.revertedWith(
         "Ownable: caller is not the owner",
       );
     });
@@ -91,7 +139,13 @@ export function shouldBehaveLikeGrantFactory(): void {
         .updateWorkspaceMembers(0, [this.signers.otherAdmin.address], [0], [true], [""]);
       const create = await this.grantFactory
         .connect(this.signers.otherAdmin)
-        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address);
+        .createGrant(
+          0,
+          "dummyIpfsHash",
+          "dummyRubricsIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+        );
       const tx = await create.wait();
       await upgrades.forceImport(tx.events[3].args[0], this.grantFactoryV1, { kind: "uups" });
       const grantv2 = await upgrades.upgradeProxy(tx.events[3].args[0], this.grantFactoryV2);
@@ -104,11 +158,17 @@ export function shouldBehaveLikeGrantFactory(): void {
         .updateWorkspaceMembers(0, [this.signers.otherAdmin.address], [0], [true], [""]);
       const create = await this.grantFactory
         .connect(this.signers.otherAdmin)
-        .createGrant(0, "dummyIpfsHash", this.workspaceRegistry.address, this.applicationRegistry.address);
+        .createGrant(
+          0,
+          "dummyIpfsHash",
+          "dummyRubricsIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+        );
       const tx = await create.wait();
       await upgrades.forceImport(tx.events[3].args[0], this.grantFactoryV1, { kind: "uups" });
       const grantFactoryV2NonAdmin = await ethers.getContractFactory("GrantV2", this.signers.nonAdmin);
-      expect(upgrades.upgradeProxy(tx.events[3].args[0], grantFactoryV2NonAdmin)).to.be.revertedWith(
+      await expect(upgrades.upgradeProxy(tx.events[3].args[0], grantFactoryV2NonAdmin)).to.be.revertedWith(
         "Ownable: caller is not the owner",
       );
     });

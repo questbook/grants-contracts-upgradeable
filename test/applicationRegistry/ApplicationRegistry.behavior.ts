@@ -274,7 +274,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1),
       ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
-      expect(application.metadataHash).to.equal("dummyApplicationIpfsHash");
+      expect(application.metadataHash).to.equal("updatedApplicationIpfsHash");
       expect(application.state).to.equal(0);
     });
 

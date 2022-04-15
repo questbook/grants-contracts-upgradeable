@@ -19,15 +19,15 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
 });
 
 task("upgrade:WorkspaceRegistry")
-  .addParam("addressWorkspaceRegistry", "address of the implementation instance")
+  .addParam("address", "address of the implementation instance")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
-    const { addressWorkspaceRegistry } = taskArguments;
-    console.log("upgrading WorkspaceRegistry at address: ", addressWorkspaceRegistry);
+    const { address } = taskArguments;
+    console.log("upgrading WorkspaceRegistry at address: ", address);
     const workspaceRegistryFactoryV2: WorkspaceRegistry__factory = <WorkspaceRegistry__factory>(
-      await ethers.getContractFactory("WorkspaceRegistryV2")
+      await ethers.getContractFactory("WorkspaceRegistry")
     );
     const workspaceRegistry: WorkspaceRegistry = <WorkspaceRegistry>(
-      await upgrades.upgradeProxy(addressWorkspaceRegistry, workspaceRegistryFactoryV2)
+      await upgrades.upgradeProxy(address, workspaceRegistryFactoryV2)
     );
     await workspaceRegistry.deployed();
     console.log("WorkspaceRegistryV2 Proxy deployed to: ", workspaceRegistry.address);
