@@ -26,6 +26,7 @@ const chainIds = {
   mumbai: 80001,
   polygon: 137,
   optimismkovan: 69,
+  optimism: 10,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -44,6 +45,7 @@ function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
   if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
+  if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   return {
     accounts: {
       count: 10,
@@ -77,6 +79,7 @@ const config: HardhatUserConfig = {
     mumbai: getChainConfig("mumbai"),
     polygon: getChainConfig("polygon"),
     optimismkovan: getChainConfig("optimismkovan"),
+    optimism: getChainConfig("optimism"),
   },
   paths: {
     artifacts: "./artifacts",
@@ -106,8 +109,8 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     // apiKey: process.env.POLYGONSCAN_KEY,
-    apiKey: process.env.ETHERSCAN_KEY,
-    // apiKey: process.env.OPT_ETHERSCAN_KEY,
+    // apiKey: process.env.ETHERSCAN_KEY,
+    apiKey: process.env.OPT_ETHERSCAN_KEY,
   },
 };
 
