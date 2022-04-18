@@ -166,7 +166,10 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     ) external {
         Application storage application = applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
-        require(application.state == ApplicationState.Resubmit, "ApplicationUpdate: Invalid state");
+        require(
+            application.state == ApplicationState.Resubmit || application.state == ApplicationState.Submitted,
+            "ApplicationUpdate: Invalid state"
+        );
         /// @dev we need to reset milestone state of all the milestones set previously
         for (uint48 i = 0; i < application.milestoneCount; i++) {
             applicationMilestones[_applicationId][i] = MilestoneState.Submitted;
@@ -327,5 +330,15 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function getApplicationOwner(uint96 _applicationId) external view override returns (address) {
         Application memory application = applications[_applicationId];
         return application.owner;
+    }
+
+    /**
+     * @notice returns application workspace id
+     * @param _applicationId applicationId for which owner is required
+     * @return id of application's workspace
+     */
+    function getApplicationWorkspace(uint96 _applicationId) external view override returns (uint96) {
+        Application memory application = applications[_applicationId];
+        return application.workspaceId;
     }
 }

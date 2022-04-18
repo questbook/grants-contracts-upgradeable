@@ -1005,7 +1005,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-ethers@npm:^2.0.4":
+"@nomiclabs/hardhat-ethers@npm:^2.0.5":
   version: 2.0.5
   resolution: "@nomiclabs/hardhat-ethers@npm:2.0.5"
   peerDependencies:
@@ -1032,7 +1032,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-waffle@npm:^2.0.2":
+"@nomiclabs/hardhat-waffle@npm:^2.0.3":
   version: 2.0.3
   resolution: "@nomiclabs/hardhat-waffle@npm:2.0.3"
   dependencies:
@@ -1811,9 +1811,9 @@ __metadata:
     "@ethersproject/bignumber": ^5.5.0
     "@ethersproject/bytes": ^5.5.0
     "@ethersproject/providers": ^5.5.2
-    "@nomiclabs/hardhat-ethers": ^2.0.4
+    "@nomiclabs/hardhat-ethers": ^2.0.5
     "@nomiclabs/hardhat-etherscan": ^3.0.3
-    "@nomiclabs/hardhat-waffle": ^2.0.2
+    "@nomiclabs/hardhat-waffle": ^2.0.3
     "@openzeppelin/contracts": ^4.4.2
     "@openzeppelin/contracts-upgradeable": ^4.5.2
     "@openzeppelin/hardhat-upgrades": ^1.17.0
@@ -1832,7 +1832,7 @@ __metadata:
     dotenv: ^14.3.2
     eslint: ^8.8.0
     eslint-config-prettier: ^8.3.0
-    ethereum-waffle: ^3.4.0
+    ethereum-waffle: ^3.4.4
     ethers: ^5.5.3
     fs-extra: ^10.0.0
     hardhat: ^2.8.0
@@ -1840,7 +1840,7 @@ __metadata:
     husky: ^7.0.4
     lint-staged: ^11.2.6
     lodash: ^4.17.21
-    mocha: ^9.2.0
+    mocha: ^9.2.2
     openzeppelin-solidity: ^4.4.2
     pinst: ^2.1.6
     prettier: ^2.5.1
@@ -5753,7 +5753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethereum-waffle@npm:^3.4.0":
+"ethereum-waffle@npm:^3.4.4":
   version: 3.4.4
   resolution: "ethereum-waffle@npm:3.4.4"
   dependencies:
@@ -10088,7 +10088,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mocha@npm:^9.2.0":
+"mocha@npm:^9.2.0, mocha@npm:^9.2.2":
   version: 9.2.2
   resolution: "mocha@npm:9.2.2"
   dependencies:

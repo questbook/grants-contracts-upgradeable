@@ -55,6 +55,14 @@ contract WorkspaceRegistry is
         _;
     }
 
+    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
+        require(
+            _checkRole(_workspaceId, msg.sender, 0) || _checkRole(_workspaceId, msg.sender, 1),
+            "Unauthorised: Neither an admin nor a reviewer"
+        );
+        _;
+    }
+
     modifier withinLimit(uint256 _membersLength) {
         require(_membersLength <= 1000, "WorkspaceMembers: Limit exceeded");
         _;
@@ -100,7 +108,7 @@ contract WorkspaceRegistry is
     function updateWorkspaceMetadata(uint96 _id, string memory _metadataHash)
         external
         whenNotPaused
-        onlyWorkspaceAdmin(_id)
+        onlyWorkspaceAdminOrReviewer(_id)
     {
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
