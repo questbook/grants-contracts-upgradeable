@@ -23,12 +23,12 @@ task("upgrade:ApplicationReviewRegistry")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
     const { address } = taskArguments;
     console.log("upgrading ApplicationReviewRegistry at address: ", address);
-    const applicationRegistryFactoryV2: ApplicationReviewRegistry__factory = <ApplicationReviewRegistry__factory>(
-      await ethers.getContractFactory("ApplicationRegistry")
+    const applicationReviewRegistryFactoryV2: ApplicationReviewRegistry__factory = <ApplicationReviewRegistry__factory>(
+      await ethers.getContractFactory("ApplicationReviewRegistry")
     );
     const applicationReviewRegistry: ApplicationReviewRegistry = <ApplicationReviewRegistry>(
-      await upgrades.upgradeProxy(address, applicationRegistryFactoryV2)
+      await upgrades.upgradeProxy(address, applicationReviewRegistryFactoryV2)
     );
     await applicationReviewRegistry.deployed();
-    console.log("ApplicationRegistryV2 Proxy deployed to: ", applicationReviewRegistry.address);
+    console.log("ApplicationReviewRegistryV2 Proxy deployed to: ", applicationReviewRegistry.address);
   });

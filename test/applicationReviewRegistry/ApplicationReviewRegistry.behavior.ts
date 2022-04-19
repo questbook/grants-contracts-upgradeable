@@ -33,9 +33,15 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await this.applicationReviewRegistry
         .connect(this.signers.admin)
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
+      await this.applicationReviewRegistry
+        .connect(this.signers.admin)
+        .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]);
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
+      expect(review[0]).to.equal(0);
       expect(review[3]).to.equal(this.grant.address);
       expect(review[4]).to.equal(this.signers.reviewer.address);
+      const otherReview = await this.applicationReviewRegistry.reviews(this.signers.nonAdmin.address, 0);
+      expect(otherReview[0]).to.equal(1);
     });
 
     it("admin of one workspace should not be able to assign reviewer to another workspace's grant's application", async function () {
@@ -61,6 +67,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .connect(this.signers.admin)
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [false]);
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
+      expect(review[0]).to.equal(0);
       expect(review[3]).to.equal(this.grant.address);
       expect(review[4]).to.equal(this.signers.reviewer.address);
       expect(review[6]).to.equal(false);
