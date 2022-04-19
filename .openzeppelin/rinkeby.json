@@ -1282,6 +1282,250 @@
           }
         }
       }
+    },
+    "5e014c21693d03f7702ae1add220cbf492c1cc7eac723c713c5177088ca107c2": {
+      "address": "0xc7bebb140e0295fd748b15c0EcB1b7f0a20b9648",
+      "txHash": "0x8dd47f8a4708b8d1075efb55ef7eaaf87c9054a410e4f9b37dadd476eaafc03e",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "label": "workspaceReg",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_contract(IWorkspaceRegistry)5254",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:31"
+          },
+          {
+            "label": "grantFactory",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_contract(IGrantFactory)5230",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:34"
+          },
+          {
+            "label": "applicationReg",
+            "offset": 0,
+            "slot": "203",
+            "type": "t_contract(IApplicationRegistry)5164",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:37"
+          },
+          {
+            "label": "reviewCount",
+            "offset": 20,
+            "slot": "203",
+            "type": "t_uint96",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:40"
+          },
+          {
+            "label": "reviews",
+            "offset": 0,
+            "slot": "204",
+            "type": "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)3551_storage))",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:43"
+          },
+          {
+            "label": "grantReviewStates",
+            "offset": 0,
+            "slot": "205",
+            "type": "t_mapping(t_address,t_struct(GrantReviewState)3560_storage)",
+            "contract": "ApplicationReviewRegistry",
+            "src": "contracts/ApplicationReviewRegistry.sol:46"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IApplicationRegistry)5164": {
+            "label": "contract IApplicationRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IGrantFactory)5230": {
+            "label": "contract IGrantFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IWorkspaceRegistry)5254": {
+            "label": "contract IWorkspaceRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)3551_storage))": {
+            "label": "mapping(address => mapping(uint96 => struct ApplicationReviewRegistry.Review))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(GrantReviewState)3560_storage)": {
+            "label": "mapping(address => struct ApplicationReviewRegistry.GrantReviewState)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint96,t_struct(Review)3551_storage)": {
+            "label": "mapping(uint96 => struct ApplicationReviewRegistry.Review)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(GrantReviewState)3560_storage": {
+            "label": "struct ApplicationReviewRegistry.GrantReviewState",
+            "members": [
+              {
+                "label": "grant",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "workspaceId",
+                "type": "t_uint96",
+                "offset": 20,
+                "slot": "0"
+              },
+              {
+                "label": "numOfReviews",
+                "type": "t_uint96",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "rubricsMetadataHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(Review)3551_storage": {
+            "label": "struct ApplicationReviewRegistry.Review",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint96",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "workspaceId",
+                "type": "t_uint96",
+                "offset": 12,
+                "slot": "0"
+              },
+              {
+                "label": "applicationId",
+                "type": "t_uint96",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "grant",
+                "type": "t_address",
+                "offset": 12,
+                "slot": "1"
+              },
+              {
+                "label": "reviewer",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "metadataHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "active",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint96": {
+            "label": "uint96",
+            "numberOfBytes": "12"
+          }
+        }
+      }
     }
   }
 }

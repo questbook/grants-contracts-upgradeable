@@ -152,10 +152,19 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
 
         for (uint256 i = 0; i < _reviewers.length; i++) {
-            uint96 _id = reviewCount;
+            require(_reviewers[i] != address(0), "AssignReviewer: Reviewer is zero address");
+
+            Review memory review = reviews[_reviewers[i]][_applicationId];
+            uint96 _id;
+            if (review.reviewer == address(0)) {
+                _id = reviewCount;
+                assert(reviewCount + 1 > reviewCount);
+                reviewCount += 1;
+            } else {
+                _id = review.id;
+            }
+
             _reviewIds[i] = _id;
-            assert(reviewCount + 1 > reviewCount);
-            reviewCount += 1;
             reviews[_reviewers[i]][_applicationId] = Review(
                 _id,
                 _workspaceId,
