@@ -3,260 +3,29 @@
   "proxies": [
     {
       "address": "0x6D0f81BDA11995f25921aAd5B43359630E65Ca96",
-      "txHash": "0xbcfbded54a5582076750611b75248bf195eacf08acbe1d88e60a5f9b07c05598",
+      "txHash": "0x3d0376e1a0b7c1ca0ac0fe705e61a3005d15f9088fb39da109a0d2688aad5439",
       "kind": "uups"
     },
     {
       "address": "0xda717ab1206c59493e1E5c66F4e0712B39EC6D81",
-      "txHash": "0x3df9a3232371aeac2bdbef5c06e211503c53ae6c8fbb0bf41f2031d0d1c20313",
+      "txHash": "0xb14e14461cf48de2e54aa99cbd08411aaf8869fbfc5dd3e3434a154524513338",
       "kind": "uups"
     },
     {
       "address": "0x32798CC9da06363eF2b0eE12e54cD4476D9C891a",
-      "txHash": "0xe165f5ac8dfccd599138aa15aaeecae0bb0a456db39277f3c9ce68832b94fb1d",
+      "txHash": "0xf55b65f6a70505337c9a5a65ed2255378289cb7596806c63412c4db8af01ff6f",
       "kind": "uups"
     },
     {
       "address": "0x2d49a247AA77cA433218C9567953645bE04A7b3A",
-      "txHash": "0x5f7bbc0ef23129d5efac23d81c88f60e5a777b0aed5656998248ed5a5c9e9f7a",
-      "kind": "uups"
-    },
-    {
-      "address": "0xF39E0AA8cA215D41dF7c9AeB3aBa76FfdAd0951F",
-      "txHash": "0x4d8e8495a6cc2dad9b6cc6b44ac5d78c42a1e5c6634ce4614fd2dd4d8a390a70",
+      "txHash": "0xcc2da7b33899509e16fd978b49511a8131d83b921a490c9eeb51ed6383061a8b",
       "kind": "uups"
     }
   ],
   "impls": {
-    "97c1590a13700da6658a8bb401d038c8f58f8c4031a06eb9f2c5b6ae4c649b94": {
-      "address": "0xeDb10f503E128e9167a31c612aDeF4E098Da717e",
-      "txHash": "0xd4ff489885a37daa7557c918938430f402c853f707c1f62bfbd252234e496572",
-      "layout": {
-        "storage": [
-          {
-            "label": "_initialized",
-            "offset": 0,
-            "slot": "0",
-            "type": "t_bool",
-            "contract": "Initializable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
-          },
-          {
-            "label": "_initializing",
-            "offset": 1,
-            "slot": "0",
-            "type": "t_bool",
-            "contract": "Initializable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "1",
-            "type": "t_array(t_uint256)50_storage",
-            "contract": "ERC1967UpgradeUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "51",
-            "type": "t_array(t_uint256)50_storage",
-            "contract": "UUPSUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "101",
-            "type": "t_array(t_uint256)50_storage",
-            "contract": "ContextUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
-          },
-          {
-            "label": "_owner",
-            "offset": 0,
-            "slot": "151",
-            "type": "t_address",
-            "contract": "OwnableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
-          },
-          {
-            "label": "__gap",
-            "offset": 0,
-            "slot": "152",
-            "type": "t_array(t_uint256)49_storage",
-            "contract": "OwnableUpgradeable",
-            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
-          },
-          {
-            "label": "applicationCount",
-            "offset": 0,
-            "slot": "201",
-            "type": "t_uint96",
-            "contract": "ApplicationRegistry",
-            "src": "contracts/ApplicationRegistry.sol:16"
-          },
-          {
-            "label": "applications",
-            "offset": 0,
-            "slot": "202",
-            "type": "t_mapping(t_uint96,t_struct(Application)2846_storage)",
-            "contract": "ApplicationRegistry",
-            "src": "contracts/ApplicationRegistry.sol:53"
-          },
-          {
-            "label": "applicantGrant",
-            "offset": 0,
-            "slot": "203",
-            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
-            "contract": "ApplicationRegistry",
-            "src": "contracts/ApplicationRegistry.sol:58"
-          },
-          {
-            "label": "applicationMilestones",
-            "offset": 0,
-            "slot": "204",
-            "type": "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2819))",
-            "contract": "ApplicationRegistry",
-            "src": "contracts/ApplicationRegistry.sol:61"
-          },
-          {
-            "label": "workspaceReg",
-            "offset": 0,
-            "slot": "205",
-            "type": "t_contract(IWorkspaceRegistry)4601",
-            "contract": "ApplicationRegistry",
-            "src": "contracts/ApplicationRegistry.sol:64"
-          }
-        ],
-        "types": {
-          "t_address": {
-            "label": "address",
-            "numberOfBytes": "20"
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]",
-            "numberOfBytes": "1568"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]",
-            "numberOfBytes": "1600"
-          },
-          "t_bool": {
-            "label": "bool",
-            "numberOfBytes": "1"
-          },
-          "t_contract(IWorkspaceRegistry)4601": {
-            "label": "contract IWorkspaceRegistry",
-            "numberOfBytes": "20"
-          },
-          "t_enum(ApplicationState)2825": {
-            "label": "enum ApplicationRegistry.ApplicationState",
-            "members": ["Submitted", "Resubmit", "Approved", "Rejected", "Complete"],
-            "numberOfBytes": "1"
-          },
-          "t_enum(MilestoneState)2819": {
-            "label": "enum ApplicationRegistry.MilestoneState",
-            "members": ["Submitted", "Requested", "Approved"],
-            "numberOfBytes": "1"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
-            "label": "mapping(address => mapping(address => bool))",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint48,t_enum(MilestoneState)2819)": {
-            "label": "mapping(uint48 => enum ApplicationRegistry.MilestoneState)",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2819))": {
-            "label": "mapping(uint96 => mapping(uint48 => enum ApplicationRegistry.MilestoneState))",
-            "numberOfBytes": "32"
-          },
-          "t_mapping(t_uint96,t_struct(Application)2846_storage)": {
-            "label": "mapping(uint96 => struct ApplicationRegistry.Application)",
-            "numberOfBytes": "32"
-          },
-          "t_string_storage": {
-            "label": "string",
-            "numberOfBytes": "32"
-          },
-          "t_struct(Application)2846_storage": {
-            "label": "struct ApplicationRegistry.Application",
-            "members": [
-              {
-                "label": "id",
-                "type": "t_uint96",
-                "offset": 0,
-                "slot": "0"
-              },
-              {
-                "label": "workspaceId",
-                "type": "t_uint96",
-                "offset": 12,
-                "slot": "0"
-              },
-              {
-                "label": "grant",
-                "type": "t_address",
-                "offset": 0,
-                "slot": "1"
-              },
-              {
-                "label": "owner",
-                "type": "t_address",
-                "offset": 0,
-                "slot": "2"
-              },
-              {
-                "label": "milestoneCount",
-                "type": "t_uint48",
-                "offset": 20,
-                "slot": "2"
-              },
-              {
-                "label": "milestonesDone",
-                "type": "t_uint48",
-                "offset": 26,
-                "slot": "2"
-              },
-              {
-                "label": "metadataHash",
-                "type": "t_string_storage",
-                "offset": 0,
-                "slot": "3"
-              },
-              {
-                "label": "state",
-                "type": "t_enum(ApplicationState)2825",
-                "offset": 0,
-                "slot": "4"
-              }
-            ],
-            "numberOfBytes": "160"
-          },
-          "t_uint256": {
-            "label": "uint256",
-            "numberOfBytes": "32"
-          },
-          "t_uint48": {
-            "label": "uint48",
-            "numberOfBytes": "6"
-          },
-          "t_uint96": {
-            "label": "uint96",
-            "numberOfBytes": "12"
-          }
-        }
-      }
-    },
     "62fc1d8dbd60ee40cd69945e573db9cf8aa558bd80f5067f98876409f609f58a": {
-      "address": "0x2dB223158288B2299480aF577eDF30D5a533F137",
-      "txHash": "0xc61e12d073b61c7ea76f0db45da1eaa74f1aa32ff723aabef1d3678e1986dc5a",
+      "address": "0xeDb10f503E128e9167a31c612aDeF4E098Da717e",
+      "txHash": "0x81524ebce364bd4bc9fbfdd20b0eda1af7abdf3dfa3362ab8a3552156fd2cae2",
       "layout": {
         "storage": [
           {
@@ -429,8 +198,8 @@
       }
     },
     "14265a1d08bb7ace3ff30da8b27c5a01ab45726e36a7b3767f20aaf77634f4a3": {
-      "address": "0xf08bCcf3C9DE7Daf25BCe13C87D0dd69754E0a33",
-      "txHash": "0xd320e4191a777907ea655158dbd0dc546efb3a659ba4261ea0e918aba88e7edf",
+      "address": "0x2dB223158288B2299480aF577eDF30D5a533F137",
+      "txHash": "0x9f87760ea0838344c5ed33eb0e41c7d48cecbf0891bb097b9cf1a15f9c53829b",
       "layout": {
         "storage": [
           {
@@ -543,8 +312,8 @@
       }
     },
     "af922dd75612f4173a90d7e77ca69a406fda4fb912727b025fe65b34f7ddbe5e": {
-      "address": "0xF4Db8BdDF1029764e4E09e7cE34149371a9A7027",
-      "txHash": "0xadca9e60d4a427bc571c4ab590b25d9bf03d514e62a387b97b4bc43c3c72d491",
+      "address": "0xf08bCcf3C9DE7Daf25BCe13C87D0dd69754E0a33",
+      "txHash": "0xcc4f3dde721df5307a899788353d87491dd931e3d343b2c0ca500b8180dc2039",
       "layout": {
         "storage": [
           {
@@ -769,8 +538,8 @@
       }
     },
     "5e014c21693d03f7702ae1add220cbf492c1cc7eac723c713c5177088ca107c2": {
-      "address": "0xab163375C1aD08e24005771cC9908a1C7c61Adaa",
-      "txHash": "0xe9491625527c0433b58a3d0caa13f1710362b4434171180079f00d55e515371e",
+      "address": "0xF4Db8BdDF1029764e4E09e7cE34149371a9A7027",
+      "txHash": "0xb347b06e34b11ce2fef95636dd892f304b7bff5baee326222116e42021afdc6b",
       "layout": {
         "storage": [
           {
