@@ -27,6 +27,7 @@ const chainIds = {
   polygon: 137,
   optimismkovan: 69,
   optimism: 10,
+  harmonytestnet0: 1666700000,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -46,6 +47,7 @@ function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
+  if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
   return {
     accounts: {
       count: 10,
@@ -80,6 +82,7 @@ const config: HardhatUserConfig = {
     polygon: getChainConfig("polygon"),
     optimismkovan: getChainConfig("optimismkovan"),
     optimism: getChainConfig("optimism"),
+    harmonytestnet0: getChainConfig("harmonytestnet0"),
   },
   paths: {
     artifacts: "./artifacts",
