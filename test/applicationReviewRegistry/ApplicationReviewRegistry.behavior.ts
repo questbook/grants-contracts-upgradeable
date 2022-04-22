@@ -189,6 +189,106 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
+  describe("Reviewer payments status", function () {
+    it("non admin should not be able to change payment status", async function () {
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.nonAdmin)
+          .markPaymentDone(
+            0,
+            [0],
+            this.signers.reviewer.address,
+            [0],
+            this.myToken.address,
+            100,
+            "dummyTransactionHash",
+          ),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+    });
+
+    it("length of review ids should match the application ids", async function () {
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.admin)
+          .markPaymentDone(
+            0,
+            [0, 1],
+            this.signers.reviewer.address,
+            [0],
+            this.myToken.address,
+            100,
+            "dummyTransactionHash",
+          ),
+      ).to.be.revertedWith("ChangePaymentStatus: Parameters length mismatch");
+    });
+
+    it("admin of one workspace should not be able to change payment status of another workspace review", async function () {
+      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHashNonAdmin");
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.nonAdmin)
+          .markPaymentDone(
+            1,
+            [0],
+            this.signers.reviewer.address,
+            [0],
+            this.myToken.address,
+            100,
+            "dummyTransactionHash",
+          ),
+      ).to.be.revertedWith("ChangePaymentStatus: Unauthorised");
+    });
+
+    it("admin should be able to change payment status of their workspace's review", async function () {
+      await this.applicationReviewRegistry
+        .connect(this.signers.admin)
+        .markPaymentDone(0, [0], this.signers.reviewer.address, [0], this.myToken.address, 100, "dummyTransactionHash");
+      expect(await this.applicationReviewRegistry.reviewPaymentsStatus(0)).to.be.true;
+    });
+  });
+
+  describe("Reviewer fulfill payment", function () {
+    it("non admin should not be able to fulfill payment", async function () {
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.nonAdmin)
+          .fulfillPayment(0, [0], this.signers.reviewer.address, [0], this.myToken.address, 100),
+      ).to.be.revertedWith("Unauthorised: Not an admin");
+    });
+
+    it("admin of one workspace should not be able to fulfill payment of another workspace review", async function () {
+      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHashNonAdmin");
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.nonAdmin)
+          .fulfillPayment(1, [0], this.signers.reviewer.address, [0], this.myToken.address, 100),
+      ).to.be.revertedWith("ChangePaymentStatus: Unauthorised");
+    });
+
+    it("should not work if amount is not approved", async function () {
+      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(0);
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.admin)
+          .fulfillPayment(0, [0], this.signers.reviewer.address, [0], this.myToken.address, 100),
+      ).to.be.reverted;
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(0);
+      expect(await this.applicationReviewRegistry.reviewPaymentsStatus(0)).to.be.false;
+    });
+
+    it("should work if amount is approved", async function () {
+      expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(0);
+      await this.myToken.connect(this.signers.admin).approve(this.applicationReviewRegistry.address, 10000);
+      await this.applicationReviewRegistry
+        .connect(this.signers.admin)
+        .fulfillPayment(0, [0], this.signers.reviewer.address, [0], this.myToken.address, 10000);
+      expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(10000);
+      expect(await this.applicationReviewRegistry.reviewPaymentsStatus(0)).to.be.true;
+    });
+  });
+
   describe("Proxy implementation upgrade", function () {
     it("should not be able to call proxy initiliaze function", async function () {
       await expect(this.applicationReviewRegistry.initialize()).to.be.revertedWith(

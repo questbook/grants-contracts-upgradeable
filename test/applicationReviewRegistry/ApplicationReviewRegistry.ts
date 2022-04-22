@@ -1,4 +1,4 @@
-import { ethers, upgrades } from "hardhat";
+import { artifacts, ethers, upgrades, waffle } from "hardhat";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 import type { ApplicationRegistry } from "../../src/types/ApplicationRegistry";
@@ -9,6 +9,7 @@ import { Signers } from "../types";
 import { shouldBehaveLikeApplicationReviewRegistry } from "./ApplicationReviewRegistry.behavior";
 import { expect } from "chai";
 import { GrantFactory } from "../../src/types/GrantFactory";
+import { Artifact } from "hardhat/types";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -19,9 +20,10 @@ describe("Unit tests", function () {
     this.signers.nonAdmin = signers[1];
     this.signers.applicantAdmin = signers[2];
     this.signers.reviewer = signers[3];
+    this.signers.erc20 = signers[4];
   });
 
-  describe("ApplicationRegistry", function () {
+  describe("ApplicationReviewRegistry", function () {
     beforeEach(async function () {
       this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
       this.workspaceRegistry = <WorkspaceRegistry>(
@@ -73,6 +75,12 @@ describe("Unit tests", function () {
         .setApplicationReviewReg(this.applicationReviewRegistry.address);
 
       this.applicationReviewRegistryFactoryV2 = await ethers.getContractFactory("ApplicationReviewRegistryV2");
+
+      const erc20Artifact: Artifact = await artifacts.readArtifact("MyToken");
+      this.myToken = await waffle.deployContract(this.signers.erc20, erc20Artifact, []);
+
+      // transfer 10000 tokens to admin
+      await this.myToken.connect(this.signers.erc20).mint(this.signers.admin.address, 10000);
     });
 
     it("test proxy deployment", async function () {
