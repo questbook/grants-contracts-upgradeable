@@ -87,11 +87,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
-    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
-        require(
-            workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender),
-            "Unauthorised: Neither an admin nor a reviewer"
-        );
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
+        require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
         _;
     }
 
@@ -199,7 +196,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
@@ -235,7 +232,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _applicationId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(
@@ -296,7 +293,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint48 _milestoneId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");

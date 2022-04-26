@@ -56,7 +56,29 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       ).to.be.revertedWith("AssignReviewer: Unauthorized");
     });
 
-    it("admin should be able to unassign reviewer", async function () {
+    it("admin should be not able to unassign reviewer if review has been already submitted", async function () {
+      await this.workspaceRegistry
+        .connect(this.signers.admin)
+        .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
+      await this.applicationReviewRegistry
+        .connect(this.signers.admin)
+        .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
+      await this.applicationReviewRegistry
+        .connect(this.signers.reviewer)
+        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+      await expect(
+        this.applicationReviewRegistry
+          .connect(this.signers.admin)
+          .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [false]),
+      ).to.be.revertedWith("AssignReviewer: Review already submitted");
+      const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
+      expect(review[0]).to.equal(0);
+      expect(review[3]).to.equal(this.grant.address);
+      expect(review[4]).to.equal(this.signers.reviewer.address);
+      expect(review[6]).to.equal(true);
+    });
+
+    it("admin should be able to unassign reviewer if review has not been submitted", async function () {
       await this.workspaceRegistry
         .connect(this.signers.admin)
         .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);

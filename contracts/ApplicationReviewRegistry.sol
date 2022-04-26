@@ -179,6 +179,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             require(_reviewers[i] != address(0), "AssignReviewer: Reviewer is zero address");
 
             Review memory review = reviews[_reviewers[i]][_applicationId];
+
+            if (_hasSubmittedReview(review.metadataHash) && !_active[i]) {
+                revert("AssignReviewer: Review already submitted");
+            }
+
             uint96 _id;
             if (review.reviewer == address(0)) {
                 _id = reviewCount;
@@ -230,8 +235,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(review.workspaceId == _workspaceId, "ReviewSubmit: Unauthorised");
         require(review.active, "ReviewSubmit: Revoked access");
 
-        bytes memory metadataHashBytes = bytes(review.metadataHash);
-        if (metadataHashBytes.length == 0) {
+        if (!_hasSubmittedReview(review.metadataHash)) {
             grantReviewState.numOfReviews += 1;
         }
 
@@ -326,5 +330,17 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             _amount,
             block.timestamp
         );
+    }
+
+    /**
+     * @notice Internal function to check if a review has been submitted
+     * @param _metadataHash IPFS hash of the review metadata
+     * @return bool true if review has been submitted, false otherwise
+     *
+     * @dev Just checks the length of the metadata hash, if it is not 0, then it has been submitted
+     */
+    function _hasSubmittedReview(string memory _metadataHash) internal pure returns (bool) {
+        bytes memory metadataHashBytes = bytes(_metadataHash);
+        return (metadataHashBytes.length != 0);
     }
 }
