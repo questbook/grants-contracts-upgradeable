@@ -4,6 +4,7 @@ pragma solidity 0.8.7;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
@@ -45,6 +46,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice mapping to store grant address vs grant review state
     mapping(address => GrantReviewState) public grantReviewStates;
 
+    /// @notice mapping to store review id vs review payment status
+    mapping(uint96 => bool) public reviewPaymentsStatus;
+
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
     event ReviewersAssigned(
@@ -69,6 +73,26 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice Emitted when rubric metadata is set
     event RubricsSet(uint96 _workspaceId, address indexed _grantAddress, string _metadataHash, uint256 time);
+
+    /// @notice Emitted when review payment is marked as done
+    event ReviewPaymentMarkedDone(
+        uint96[] _reviewIds,
+        address _asset,
+        address _reviewer,
+        uint256 _amount,
+        string _transactionHash,
+        uint256 time
+    );
+
+    /// @notice Emitted when review payment is fulfilled
+    event ReviewPaymentFulfilled(
+        uint96[] _reviewIds,
+        address _asset,
+        address _sender,
+        address _reviewer,
+        uint256 _amount,
+        uint256 time
+    );
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
@@ -241,6 +265,71 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         grantReviewState.grant = _grantAddress;
 
         emit RubricsSet(_workspaceId, _grantAddress, _metadataHash, block.timestamp);
+    }
+
+    /**
+     * @notice Mark payment as done of a review, only callable by Admin of the workspace
+     * @param _workspaceId Workspace id
+     * @param _applicationIds Array of Application ids
+     * @param _reviewer Address of the reviewer
+     * @param _reviewIds Array of review ids
+     * @param _erc20Interface interface for erc20 asset using which payment is done
+     * @param _amount Amount of the payment
+     * @param _transactionHash Transaction hash of the payment
+     */
+    function markPaymentDone(
+        uint96 _workspaceId,
+        uint96[] memory _applicationIds,
+        address _reviewer,
+        uint96[] memory _reviewIds,
+        IERC20 _erc20Interface,
+        uint256 _amount,
+        string memory _transactionHash
+    ) public onlyWorkspaceAdmin(_workspaceId) {
+        require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
+
+        for (uint256 i = 0; i < _reviewIds.length; i++) {
+            Review memory review = reviews[_reviewer][_applicationIds[i]];
+            require(review.workspaceId == _workspaceId, "ChangePaymentStatus: Unauthorised");
+            reviewPaymentsStatus[_reviewIds[i]] = true;
+        }
+        emit ReviewPaymentMarkedDone(
+            _reviewIds,
+            address(_erc20Interface),
+            _reviewer,
+            _amount,
+            _transactionHash,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Fulfill payment for reviews to reviewer, only callable by Admin of the workspace
+     * @param _workspaceId Workspace id
+     * @param _applicationIds Array of Application ids
+     * @param _reviewer Address of the reviewer
+     * @param _reviewIds Array of review ids
+     * @param _erc20Interface interface for erc20 asset using which payment is done
+     * @param _amount Amount to be paid
+     */
+    function fulfillPayment(
+        uint96 _workspaceId,
+        uint96[] memory _applicationIds,
+        address _reviewer,
+        uint96[] memory _reviewIds,
+        IERC20 _erc20Interface,
+        uint256 _amount
+    ) external onlyWorkspaceAdmin(_workspaceId) {
+        markPaymentDone(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount, "");
+        require(_erc20Interface.transferFrom(msg.sender, _reviewer, _amount), "Failed to transfer funds");
+        emit ReviewPaymentFulfilled(
+            _reviewIds,
+            address(_erc20Interface),
+            msg.sender,
+            _reviewer,
+            _amount,
+            block.timestamp
+        );
     }
 
     /**
