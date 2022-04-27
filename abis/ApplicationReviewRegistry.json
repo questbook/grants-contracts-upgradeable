@@ -54,7 +54,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint96[]",
         "name": "_reviewIds",
         "type": "uint96[]"
@@ -97,7 +97,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint96[]",
         "name": "_reviewIds",
         "type": "uint96[]"

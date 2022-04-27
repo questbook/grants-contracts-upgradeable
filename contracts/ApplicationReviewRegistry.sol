@@ -76,7 +76,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice Emitted when review payment is marked as done
     event ReviewPaymentMarkedDone(
-        uint96[] indexed _reviewIds,
+        uint96[] _reviewIds,
         address _asset,
         address _reviewer,
         uint256 _amount,
@@ -86,7 +86,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice Emitted when review payment is fulfilled
     event ReviewPaymentFulfilled(
-        uint96[] indexed _reviewIds,
+        uint96[] _reviewIds,
         address _asset,
         address _sender,
         address _reviewer,
