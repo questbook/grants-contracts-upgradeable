@@ -28,6 +28,7 @@ const chainIds = {
   optimismkovan: 69,
   optimism: 10,
   harmonytestnet0: 1666700000,
+  neonlabs: 245022926,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -48,6 +49,7 @@ function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
+  if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
   return {
     accounts: {
       count: 10,
@@ -83,6 +85,11 @@ const config: HardhatUserConfig = {
     optimismkovan: getChainConfig("optimismkovan"),
     optimism: getChainConfig("optimism"),
     harmonytestnet0: getChainConfig("harmonytestnet0"),
+    neonlabs: {
+      url: "https://proxy.devnet.neonlabs.org/solana",
+      accounts: [`0x${mnemonic}`],
+      chainId: chainIds.neonlabs,
+    },
   },
   paths: {
     artifacts: "./artifacts",
