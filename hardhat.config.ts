@@ -32,9 +32,9 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-const mnemonic: string | undefined = process.env.MNEMONIC;
-if (!mnemonic) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+const privateKey: string | undefined = process.env.MNEMONIC;
+if (!privateKey) {
+  throw new Error("Please set your private key in a .env file");
 }
 
 const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
@@ -44,16 +44,20 @@ if (!infuraApiKey) {
 
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   let url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
+  let _privateKey = privateKey;
   if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
   if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
-  if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
+  if (network === "neonlabs") {
+    url = "https://proxy.devnet.neonlabs.org/solana";
+    _privateKey = `0x${privateKey}`;
+  }
   return {
     accounts: {
       count: 10,
-      mnemonic,
+      mnemonic: _privateKey,
       path: "m/44'/60'/0'/0",
     },
     chainId: chainIds[network],
@@ -72,7 +76,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: {
-        mnemonic,
+        mnemonic: PRIVATE_KEY,
       },
       chainId: chainIds.hardhat,
     },
@@ -85,11 +89,7 @@ const config: HardhatUserConfig = {
     optimismkovan: getChainConfig("optimismkovan"),
     optimism: getChainConfig("optimism"),
     harmonytestnet0: getChainConfig("harmonytestnet0"),
-    neonlabs: {
-      url: "https://proxy.devnet.neonlabs.org/solana",
-      accounts: [`0x${mnemonic}`],
-      chainId: chainIds.neonlabs,
-    },
+    neonlabs: getChainConfig("neonlabs"),
   },
   paths: {
     artifacts: "./artifacts",
