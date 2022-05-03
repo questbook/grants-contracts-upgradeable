@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IGrant.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./utils/Gasless.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
@@ -87,8 +88,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
-    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
-        require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId, address originalMsgSender) {
+        require(workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender), "Unauthorised: Not an admin");
         _;
     }
 
@@ -97,7 +98,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer {
+    function initialize() external initializer { // TODO: Should this function be made gasless?
         __Ownable_init();
     }
 
@@ -128,9 +129,17 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         address _grant,
         uint96 _workspaceId,
         string memory _metadataHash,
-        uint48 _milestoneCount
+        uint48 _milestoneCount, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
     ) external {
-        require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
+        Gasless._verifyTX(abi.encode(_grant, _workspaceId, _metadataHash, _milestoneCount), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        
+        require(!applicantGrant[originalMsgSender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
         require(grantRef.active(), "ApplicationSubmit: Invalid grant");
         uint96 _id = applicationCount;
@@ -140,14 +149,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             _id,
             _workspaceId,
             _grant,
-            msg.sender,
+            originalMsgSender,
             _milestoneCount,
             0,
             _metadataHash,
             ApplicationState.Submitted
         );
-        applicantGrant[msg.sender][_grant] = true;
-        emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
+        applicantGrant[originalMsgSender][_grant] = true;
+        emit ApplicationSubmitted(_id, _grant, originalMsgSender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
     }
 
@@ -159,10 +168,18 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function updateApplicationMetadata(
         uint96 _applicationId,
         string memory _metadataHash,
-        uint48 _milestoneCount
+        uint48 _milestoneCount,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
     ) external {
+        Gasless._verifyTX(abi.encode(_applicationId, _metadataHash, _milestoneCount), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         Application storage application = applications[_applicationId];
-        require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
+        require(application.owner == originalMsgSender, "ApplicationUpdate: Unauthorised");
         require(
             application.state == ApplicationState.Resubmit || application.state == ApplicationState.Submitted,
             "ApplicationUpdate: Invalid state"
@@ -176,7 +193,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         application.state = ApplicationState.Submitted;
         emit ApplicationUpdated(
             _applicationId,
-            msg.sender,
+            originalMsgSender,
             _metadataHash,
             ApplicationState.Submitted,
             _milestoneCount,
@@ -195,8 +212,16 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _applicationId,
         uint96 _workspaceId,
         ApplicationState _state,
-        string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+        string memory _reasonMetadataHash,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_applicationId, _workspaceId, _state, _reasonMetadataHash), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
@@ -214,7 +239,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         }
         emit ApplicationUpdated(
             _applicationId,
-            msg.sender,
+            originalMsgSender,
             _reasonMetadataHash,
             _state,
             application.milestoneCount,
@@ -231,8 +256,17 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function completeApplication(
         uint96 _applicationId,
         uint96 _workspaceId,
-        string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+        string memory _reasonMetadataHash,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+
+        Gasless._verifyTX(abi.encode(_applicationId, _workspaceId, _reasonMetadataHash), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(
@@ -244,7 +278,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
 
         emit ApplicationUpdated(
             _applicationId,
-            msg.sender,
+            originalMsgSender,
             _reasonMetadataHash,
             ApplicationState.Complete,
             application.milestoneCount,
@@ -261,10 +295,18 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function requestMilestoneApproval(
         uint96 _applicationId,
         uint48 _milestoneId,
-        string memory _reasonMetadataHash
+        string memory _reasonMetadataHash,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
     ) external {
+        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _reasonMetadataHash), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         Application memory application = applications[_applicationId];
-        require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
+        require(application.owner == originalMsgSender, "MilestoneStateUpdate: Unauthorised");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         require(
@@ -292,8 +334,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _applicationId,
         uint48 _milestoneId,
         uint96 _workspaceId,
-        string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+        string memory _reasonMetadataHash,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _workspaceId, _reasonMetadataHash), txHash);
+
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");

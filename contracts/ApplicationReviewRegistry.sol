@@ -9,6 +9,7 @@ import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
+import "./utils/Gasless.sol";
 
 contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     struct Review {
@@ -94,22 +95,23 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 time
     );
 
-    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
-        require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId, address originalMsgSender) {
+        require(workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender), "Unauthorised: Not an admin");
         _;
     }
 
-    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
+    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId, address originalMsgSender) {
         require(
-            workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender),
+            workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, originalMsgSender),
             "Unauthorised: Neither an admin nor a reviewer"
         );
         _;
     }
 
-    modifier onlyWorkspaceAdminOrGrantFactory(uint96 _workspaceId) {
+    modifier onlyWorkspaceAdminOrGrantFactory(uint96 _workspaceId, address originalMsgSender) {
         require(
-            workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender) || msg.sender == address(grantFactory),
+            workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender) || 
+            msg.sender == address(grantFactory),
             "Unauthorised: Not an admin nor grantFactory"
         );
         _;
@@ -120,7 +122,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer {
+    function initialize() external initializer { // TODO: Should this function be made gasless?
         __Ownable_init();
     }
 
@@ -169,8 +171,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active
-    ) public onlyWorkspaceAdmin(_workspaceId) {
+        bool[] memory _active, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) public onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _reviewers, _active), txHash);
+
         require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
         require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
@@ -227,9 +235,17 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress,
-        string memory _metadataHash
-    ) public onlyWorkspaceAdminOrReviewer(_workspaceId) {
-        Review storage review = reviews[msg.sender][_applicationId];
+        string memory _metadataHash, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) public onlyWorkspaceAdminOrReviewer(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _metadataHash), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        
+        Review storage review = reviews[originalMsgSender][_applicationId];
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
         require(review.workspaceId == _workspaceId, "ReviewSubmit: Unauthorised");
@@ -253,8 +269,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     function setRubrics(
         uint96 _workspaceId,
         address _grantAddress,
-        string memory _metadataHash
-    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+        string memory _metadataHash, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        if(msg.sender != address(grantFactory)){
+            Gasless._verifyTX(abi.encode(_workspaceId, _grantAddress, _metadataHash), txHash);
+        }
+
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSet: Unauthorised");
@@ -284,8 +308,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96[] memory _reviewIds,
         IERC20 _erc20Interface,
         uint256 _amount,
-        string memory _transactionHash
-    ) public onlyWorkspaceAdmin(_workspaceId) {
+        string memory _transactionHash, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) public onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+        
+        Gasless._verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
+         _amount, _transactionHash), txHash);
+
         require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
 
         for (uint256 i = 0; i < _reviewIds.length; i++) {
@@ -318,14 +350,24 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _reviewer,
         uint96[] memory _reviewIds,
         IERC20 _erc20Interface,
-        uint256 _amount
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+        uint256 _amount, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+
+        Gasless._verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
+         _amount), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         markPaymentDone(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount, "");
-        require(_erc20Interface.transferFrom(msg.sender, _reviewer, _amount), "Failed to transfer funds");
+        require(_erc20Interface.transferFrom(originalMsgSender, _reviewer, _amount), "Failed to transfer funds");
         emit ReviewPaymentFulfilled(
             _reviewIds,
             address(_erc20Interface),
-            msg.sender,
+            originalMsgSender,
             _reviewer,
             _amount,
             block.timestamp

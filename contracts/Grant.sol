@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./utils/Gasless.sol";
+
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
 contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
@@ -58,8 +60,8 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 time
     );
 
-    modifier onlyWorkspaceAdmin() {
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "Unauthorised: Not an admin");
+    modifier onlyWorkspaceAdmin(address originalMsgSender) {
+        require(workspaceReg.isWorkspaceAdmin(workspaceId, originalMsgSender), "Unauthorised: Not an admin");
         _;
     }
 
@@ -78,7 +80,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize(
+    function initialize( // TODO: Should this function be made gasless?
         uint96 _workspaceId,
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
@@ -114,7 +116,15 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Update the metadata pointer of a grant, can be called by workspace admins
      * @param _metadataHash New URL that points to grant metadata
      */
-    function updateGrant(string memory _metadataHash) external onlyWorkspaceAdmin {
+    function updateGrant(
+        string memory _metadataHash, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_metadataHash), txHash);
+
         require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
         metadataHash = _metadataHash;
         emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
@@ -124,7 +134,16 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Update grant accessibility, can be called by workspace admins
      * @param _canAcceptApplication set to false for disabling grant from receiving new applications
      */
-    function updateGrantAccessibility(bool _canAcceptApplication) external onlyWorkspaceAdmin {
+    function updateGrantAccessibility(
+        bool _canAcceptApplication, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+        
+        Gasless._verifyTX(abi.encode(_canAcceptApplication), txHash);
+
         active = _canAcceptApplication;
         emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }
@@ -138,8 +157,14 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function withdrawFunds(
         IERC20 _erc20Interface,
         uint256 _amount,
-        address _recipient
-    ) external onlyWorkspaceAdmin {
+        address _recipient, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_erc20Interface, _amount, _recipient), txHash);
+
         emit FundsWithdrawn(address(_erc20Interface), _amount, _recipient, block.timestamp);
         require(_erc20Interface.transfer(_recipient, _amount), "Failed to transfer funds");
     }
@@ -155,13 +180,21 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint96 _applicationId,
         uint96 _milestoneId,
         IERC20 _erc20Interface,
-        uint256 _amount
-    ) external onlyWorkspaceAdmin {
+        uint256 _amount, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+
         emit DisburseReward(
             _applicationId,
             _milestoneId,
             address(_erc20Interface),
-            msg.sender,
+            originalMsgSender,
             _amount,
             false,
             block.timestamp
@@ -183,19 +216,29 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint96 _applicationId,
         uint96 _milestoneId,
         IERC20 _erc20Interface,
-        uint256 _amount
-    ) external onlyWorkspaceAdmin {
+        uint256 _amount, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+        
+        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        
         emit DisburseReward(
             _applicationId,
             _milestoneId,
             address(_erc20Interface),
-            msg.sender,
+            originalMsgSender,
             _amount,
             true,
             block.timestamp
         );
         require(
-            _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+            _erc20Interface.transferFrom(originalMsgSender, applicationReg.getApplicationOwner(_applicationId), 
+            _amount), // TODO: Will originalMsgSender here cause problems?
             "Failed to transfer funds"
         );
     }

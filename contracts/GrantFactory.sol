@@ -37,7 +37,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer {
+    function initialize() external initializer { // TODO: Should this function be made gasless?
         __Ownable_init();
         __Pausable_init();
     }
@@ -63,9 +63,19 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         string memory _metadataHash,
         string memory _rubricsMetadataHash,
         IWorkspaceRegistry _workspaceReg,
-        IApplicationRegistry _applicationReg
+        IApplicationRegistry _applicationReg, 
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
     ) external whenNotPaused returns (address) {
-        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantCreate: Unauthorised");
+        
+        Gasless._verifyTX(abi.encode(_workspaceId, _metadataHash, _rubricsMetadataHash, _workspaceReg, _applicationReg
+        ), txHash);
+
+        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        
+        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender), "GrantCreate: Unauthorised");
         ERC1967Proxy grantProxy = new ERC1967Proxy(
             grantImplementation,
             abi.encodeWithSelector(
@@ -79,7 +89,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         );
         address _grantAddress = address(grantProxy);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
-        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash, "0x0", 0, "0x0", "0x0"); // TODO insert correct txHash, v, r, s
         return _grantAddress;
     }
 

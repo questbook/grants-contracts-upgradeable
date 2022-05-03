@@ -50,14 +50,14 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
-    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
-        require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId, address originalMsgSender) {
+        require(_checkRole(_workspaceId, originalMsgSender, 0), "Unauthorised: Not an admin");
         _;
     }
 
-    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
+    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId, address originalMsgSender) {
         require(
-            _checkRole(_workspaceId, msg.sender, 0) || _checkRole(_workspaceId, msg.sender, 1),
+            _checkRole(_workspaceId, originalMsgSender, 0) || _checkRole(_workspaceId, originalMsgSender, 1),
             "Unauthorised: Neither an admin nor a reviewer"
         );
         _;
@@ -91,7 +91,7 @@ contract WorkspaceRegistry is
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
      */
-    function createWorkspace(string memory _metadataHash) external whenNotPaused {
+    function createWorkspace(string memory _metadataHash) external whenNotPaused { // TODO: Should this function be made gasless?
         uint96 _id = workspaceCount;
         workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
         _setRole(_id, msg.sender, 0, true);
@@ -105,11 +105,17 @@ contract WorkspaceRegistry is
      * @param _id ID of workspace to update
      * @param _metadataHash New IPFS hash that points to workspace metadata
      */
-    function updateWorkspaceMetadata(uint96 _id, string memory _metadataHash)
-        external
-        whenNotPaused
-        onlyWorkspaceAdminOrReviewer(_id)
-    {
+    function updateWorkspaceMetadata(
+        uint96 _id, 
+        string memory _metadataHash,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_id, Gasless._msgSender(txHash, v, r, s)) {
+
+        Gasless._verifyTX(abi.encode(_id, _metadataHash), txHash);
+
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
         emit WorkspaceUpdated(workspace.id, workspace.owner, workspace.metadataHash, block.timestamp);
@@ -128,8 +134,15 @@ contract WorkspaceRegistry is
         address[] memory _members,
         uint8[] memory _roles,
         bool[] memory _enabled,
-        string[] memory _emails
-    ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
+        string[] memory _emails,
+        bytes32 txHash, 
+        uint8 v,
+        bytes32 r, 
+        bytes32 s
+    ) external whenNotPaused onlyWorkspaceAdmin(_id, Gasless._msgSender(txHash, v, r, s)) withinLimit(_members.length) {
+
+        Gasless._verifyTX(abi.encode(_id, _members, _roles, _enabled, _emails), txHash);
+
         require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
@@ -171,7 +184,7 @@ contract WorkspaceRegistry is
      * @param _role Role to be set
      * @param _enabled Whether to enable or disable the role
      */
-    function _setRole(
+    function _setRole( // TODO: Should this function be made gasless?
         uint96 _workspaceId,
         address _address,
         uint8 _role,
