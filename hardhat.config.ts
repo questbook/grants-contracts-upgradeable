@@ -76,7 +76,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: {
-        mnemonic: PRIVATE_KEY,
+        mnemonic: privateKey,
       },
       chainId: chainIds.hardhat,
     },
