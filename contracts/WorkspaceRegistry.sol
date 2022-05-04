@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
+import "./utils/Gasless.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
 contract WorkspaceRegistry is
@@ -13,7 +14,8 @@ contract WorkspaceRegistry is
     UUPSUpgradeable,
     OwnableUpgradeable,
     PausableUpgradeable,
-    IWorkspaceRegistry
+    IWorkspaceRegistry,
+    Gasless
 {
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
@@ -91,7 +93,7 @@ contract WorkspaceRegistry is
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
      */
-    function createWorkspace(string memory _metadataHash) external whenNotPaused { // TODO: Should this function be made gasless?
+    function createWorkspace(string memory _metadataHash) external whenNotPaused { // TODO: Should this function be made gasless? 
         uint96 _id = workspaceCount;
         workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
         _setRole(_id, msg.sender, 0, true);
@@ -112,9 +114,9 @@ contract WorkspaceRegistry is
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_id, Gasless._msgSender(txHash, v, r, s)) {
+    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_id, _msgSender(txHash, v, r, s)) {
 
-        Gasless._verifyTX(abi.encode(_id, _metadataHash), txHash);
+        _verifyTX(abi.encode(_id, _metadataHash), txHash);
 
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
@@ -139,9 +141,9 @@ contract WorkspaceRegistry is
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external whenNotPaused onlyWorkspaceAdmin(_id, Gasless._msgSender(txHash, v, r, s)) withinLimit(_members.length) {
+    ) external whenNotPaused onlyWorkspaceAdmin(_id, _msgSender(txHash, v, r, s)) withinLimit(_members.length) {
 
-        Gasless._verifyTX(abi.encode(_id, _members, _roles, _enabled, _emails), txHash);
+        _verifyTX(abi.encode(_id, _members, _roles, _enabled, _emails), txHash);
 
         require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
@@ -184,7 +186,7 @@ contract WorkspaceRegistry is
      * @param _role Role to be set
      * @param _enabled Whether to enable or disable the role
      */
-    function _setRole( // TODO: Should this function be made gasless?
+    function _setRole( 
         uint96 _workspaceId,
         address _address,
         uint8 _role,

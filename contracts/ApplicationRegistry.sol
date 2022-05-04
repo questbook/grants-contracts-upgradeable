@@ -12,7 +12,7 @@ import "./utils/Gasless.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
-contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationRegistry {
+contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationRegistry, Gasless {
     /// @notice Number of applications submitted
     uint96 public applicationCount;
 
@@ -98,7 +98,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer { // TODO: Should this function be made gasless?
+    function initialize() external initializer { 
         __Ownable_init();
     }
 
@@ -135,9 +135,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         bytes32 r, 
         bytes32 s
     ) external {
-        Gasless._verifyTX(abi.encode(_grant, _workspaceId, _metadataHash, _milestoneCount), txHash);
+        _verifyTX(abi.encode(_grant, _workspaceId, _metadataHash, _milestoneCount), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
         
         require(!applicantGrant[originalMsgSender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
@@ -174,9 +174,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         bytes32 r, 
         bytes32 s
     ) external {
-        Gasless._verifyTX(abi.encode(_applicationId, _metadataHash, _milestoneCount), txHash);
+        _verifyTX(abi.encode(_applicationId, _metadataHash, _milestoneCount), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         Application storage application = applications[_applicationId];
         require(application.owner == originalMsgSender, "ApplicationUpdate: Unauthorised");
@@ -217,10 +217,10 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_applicationId, _workspaceId, _state, _reasonMetadataHash), txHash);
+    ) external onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_applicationId, _workspaceId, _state, _reasonMetadataHash), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
@@ -261,11 +261,11 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+    ) external onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
 
-        Gasless._verifyTX(abi.encode(_applicationId, _workspaceId, _reasonMetadataHash), txHash);
+        _verifyTX(abi.encode(_applicationId, _workspaceId, _reasonMetadataHash), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
@@ -301,9 +301,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         bytes32 r, 
         bytes32 s
     ) external {
-        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _reasonMetadataHash), txHash);
+        _verifyTX(abi.encode(_applicationId, _milestoneId, _reasonMetadataHash), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         Application memory application = applications[_applicationId];
         require(application.owner == originalMsgSender, "MilestoneStateUpdate: Unauthorised");
@@ -339,8 +339,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _workspaceId, _reasonMetadataHash), txHash);
+    ) external onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_applicationId, _milestoneId, _workspaceId, _reasonMetadataHash), txHash);
 
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");

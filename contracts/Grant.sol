@@ -11,7 +11,7 @@ import "./utils/Gasless.sol";
 
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
-contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable, Gasless {
     /// @notice workspaceId to which the grant belongs
     uint96 public workspaceId;
 
@@ -80,7 +80,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize( // TODO: Should this function be made gasless?
+    function initialize( 
         uint96 _workspaceId,
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
@@ -122,8 +122,8 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_metadataHash), txHash);
+    ) external onlyWorkspaceAdmin(_msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_metadataHash), txHash);
 
         require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
         metadataHash = _metadataHash;
@@ -140,9 +140,9 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+    ) external onlyWorkspaceAdmin(_msgSender(txHash, v, r, s)) {
         
-        Gasless._verifyTX(abi.encode(_canAcceptApplication), txHash);
+        _verifyTX(abi.encode(_canAcceptApplication), txHash);
 
         active = _canAcceptApplication;
         emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
@@ -162,8 +162,8 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_erc20Interface, _amount, _recipient), txHash);
+    ) external onlyWorkspaceAdmin(_msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_erc20Interface, _amount, _recipient), txHash);
 
         emit FundsWithdrawn(address(_erc20Interface), _amount, _recipient, block.timestamp);
         require(_erc20Interface.transfer(_recipient, _amount), "Failed to transfer funds");
@@ -185,10 +185,10 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
+    ) external onlyWorkspaceAdmin(_msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         emit DisburseReward(
             _applicationId,
@@ -221,11 +221,11 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(Gasless._msgSender(txHash, v, r, s)) {
+    ) external onlyWorkspaceAdmin(_msgSender(txHash, v, r, s)) {
         
-        Gasless._verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
+        _verifyTX(abi.encode(_applicationId, _milestoneId, _erc20Interface, _amount), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
         
         emit DisburseReward(
             _applicationId,
@@ -238,7 +238,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         );
         require(
             _erc20Interface.transferFrom(originalMsgSender, applicationReg.getApplicationOwner(_applicationId), 
-            _amount), // TODO: Will originalMsgSender here cause problems?
+            _amount), 
             "Failed to transfer funds"
         );
     }

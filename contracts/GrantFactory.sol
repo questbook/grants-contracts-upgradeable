@@ -8,10 +8,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./Grant.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
+import "./utils/Gasless.sol";
 
 /// @title Factory contract used to create new grants,
 /// each grant is a new contract deployed using this factory
-contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, Gasless {
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address public immutable grantImplementation;
 
@@ -37,7 +38,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer { // TODO: Should this function be made gasless?
+    function initialize() external initializer { 
         __Ownable_init();
         __Pausable_init();
     }
@@ -70,12 +71,13 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         bytes32 s
     ) external whenNotPaused returns (address) {
         
-        Gasless._verifyTX(abi.encode(_workspaceId, _metadataHash, _rubricsMetadataHash, _workspaceReg, _applicationReg
+        _verifyTX(abi.encode(_workspaceId, _metadataHash, _rubricsMetadataHash, _workspaceReg, _applicationReg
         ), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
         
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender), "GrantCreate: Unauthorised");
+
         ERC1967Proxy grantProxy = new ERC1967Proxy(
             grantImplementation,
             abi.encodeWithSelector(
@@ -89,7 +91,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         );
         address _grantAddress = address(grantProxy);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
-        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash, "0x0", 0, "0x0", "0x0"); // TODO insert correct txHash, v, r, s
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash, "0x0", 0, "0x0", "0x0"); // TODO insert correct txHash, v, r, s SHOULD TEST IT
         return _grantAddress;
     }
 

@@ -3,11 +3,11 @@ pragma solidity 0.8.7;
 
 contract Gasless {
     
-    function _msgSender(bytes32 txHash, uint8 v, bytes32 r, bytes32 s) pure internal returns(address){
+    function _msgSender(bytes32 txHash, uint8 v, bytes32 r, bytes32 s) internal pure returns(address){
         return ecrecover(txHash, v, r, s);
     }
 
-    function _verifyTX(bytes memory paramsEncoded, bytes32 txHash) pure internal {
+    function _verifyTX(bytes memory paramsEncoded, bytes32 txHash) internal pure  {
         
         // calculate the hash of the encoded params
         bytes32 paramsHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", 

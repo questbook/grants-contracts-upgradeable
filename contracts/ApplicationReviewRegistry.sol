@@ -11,7 +11,7 @@ import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
 import "./utils/Gasless.sol";
 
-contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, Gasless {
     struct Review {
         uint96 id;
         uint96 workspaceId;
@@ -122,7 +122,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer { // TODO: Should this function be made gasless?
+    function initialize() external initializer { 
         __Ownable_init();
     }
 
@@ -176,8 +176,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) public onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _reviewers, _active), txHash);
+    ) public onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _reviewers, _active), txHash);
 
         require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
         require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
@@ -240,10 +240,10 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) public onlyWorkspaceAdminOrReviewer(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
-        Gasless._verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _metadataHash), txHash);
+    ) public onlyWorkspaceAdminOrReviewer(_workspaceId, _msgSender(txHash, v, r, s)) {
+        _verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _metadataHash), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
         
         Review storage review = reviews[originalMsgSender][_applicationId];
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
@@ -274,9 +274,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId, _msgSender(txHash, v, r, s)) {
         if(msg.sender != address(grantFactory)){
-            Gasless._verifyTX(abi.encode(_workspaceId, _grantAddress, _metadataHash), txHash);
+            _verifyTX(abi.encode(_workspaceId, _grantAddress, _metadataHash), txHash);
         }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
@@ -313,9 +313,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) public onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+    ) public onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
         
-        Gasless._verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
+        _verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
          _amount, _transactionHash), txHash);
 
         require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
@@ -355,12 +355,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint8 v,
         bytes32 r, 
         bytes32 s
-    ) external onlyWorkspaceAdmin(_workspaceId, Gasless._msgSender(txHash, v, r, s)) {
+    ) external onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
 
-        Gasless._verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
+        _verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
          _amount), txHash);
 
-        address originalMsgSender = Gasless._msgSender(txHash, v, r, s);
+        address originalMsgSender = _msgSender(txHash, v, r, s);
 
         markPaymentDone(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount, "");
         require(_erc20Interface.transferFrom(originalMsgSender, _reviewer, _amount), "Failed to transfer funds");
