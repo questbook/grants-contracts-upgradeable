@@ -1,68 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity >=0.8.1;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IWorkspaceRegistry.sol";
-import "./interfaces/IGrant.sol";
-import "./interfaces/IApplicationRegistry.sol";
+import "../interfaces/IWorkspaceRegistry.sol";
+import "../interfaces/IGrant.sol";
+import "../interfaces/IApplicationRegistry.sol";
+import { AppStorage, Application, ApplicationState, MilestoneState, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
-contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationRegistry {
-    /// @notice Number of applications submitted
-    uint96 public applicationCount;
-
-    /// @notice possible states of an application milestones
-    enum MilestoneState {
-        Submitted,
-        Requested,
-        Approved
-    }
-
-    /// @notice possible states of an application
-    enum ApplicationState {
-        Submitted,
-        Resubmit,
-        Approved,
-        Rejected,
-        Complete
-    }
-
-    /// @notice types of reward disbursals
-    enum DisbursalType {
-        LockedAmount,
-        P2P
-    }
-
-    /// @notice structure holding each application data
-    struct Application {
-        uint96 id;
-        uint96 workspaceId;
-        address grant;
-        address owner;
-        uint48 milestoneCount;
-        uint48 milestonesDone;
-        string metadataHash;
-        ApplicationState state;
-    }
-
-    /// @notice mapping to store applicationId along with application
-    mapping(uint96 => Application) public applications;
-
-    /// @dev mapping to store application owner along with grant address
-    /// ex: for application id - 0, grant addr - 0x0
-    /// applicantGrant[0][0x0] will be = true, this is used to prevent duplicate entry
-    mapping(address => mapping(address => bool)) private applicantGrant;
-
-    /// @notice mapping to store applicationId along with milestones
-    mapping(uint96 => mapping(uint48 => MilestoneState)) public applicationMilestones;
-
-    /// @notice interface for using external functionalities like checking workspace admin
-    IWorkspaceRegistry public workspaceReg;
-
+contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
     // --- Events ---
     /// @notice Emitted when a new application is submitted
     event ApplicationSubmitted(
@@ -87,38 +33,13 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
-    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
-        require(
-            workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender),
-            "Unauthorised: Neither an admin nor a reviewer"
-        );
-        _;
-    }
-
-    /**
-     * @notice Calls initialize on the base contracts
-     *
-     * @dev This acts as a constructor for the upgradeable proxy contract
-     */
-    function initialize() external initializer {
-        __Ownable_init();
-    }
-
-    /**
-     * @notice Override of UUPSUpgradeable virtual function
-     *
-     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
-     * {upgradeTo} and {upgradeToAndCall}.
-     */
-    function _authorizeUpgrade(address) internal view override onlyOwner {}
-
     /**
      * @notice sets workspace registry contract interface
      * @param _workspaceReg WorkspaceRegistry interface
      */
-    function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
-        workspaceReg = _workspaceReg;
-    }
+    // function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
+    //     workspaceReg = _workspaceReg;
+    // }
 
     /**
      * @notice Create/submit application
@@ -133,13 +54,13 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         string memory _metadataHash,
         uint48 _milestoneCount
     ) external {
-        require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
+        require(!appStorage.applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
         require(grantRef.active(), "ApplicationSubmit: Invalid grant");
-        uint96 _id = applicationCount;
-        assert(applicationCount + 1 > applicationCount);
-        applicationCount += 1;
-        applications[_id] = Application(
+        uint96 _id = appStorage.applicationCount;
+        assert(appStorage.applicationCount + 1 > appStorage.applicationCount);
+        appStorage.applicationCount += 1;
+        appStorage.applications[_id] = Application(
             _id,
             _workspaceId,
             _grant,
@@ -149,7 +70,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             _metadataHash,
             ApplicationState.Submitted
         );
-        applicantGrant[msg.sender][_grant] = true;
+        appStorage.applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
     }
@@ -164,7 +85,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         string memory _metadataHash,
         uint48 _milestoneCount
     ) external {
-        Application storage application = applications[_applicationId];
+        Application storage application = appStorage.applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
         require(
             application.state == ApplicationState.Resubmit || application.state == ApplicationState.Submitted,
@@ -172,7 +93,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         );
         /// @dev we need to reset milestone state of all the milestones set previously
         for (uint48 i = 0; i < application.milestoneCount; i++) {
-            applicationMilestones[_applicationId][i] = MilestoneState.Submitted;
+            appStorage.applicationMilestones[_applicationId][i] = MilestoneState.Submitted;
         }
         application.milestoneCount = _milestoneCount;
         application.metadataHash = _metadataHash;
@@ -199,8 +120,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
-        Application storage application = applications[_applicationId];
+    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
+    {
+        Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
         /// @notice Submitted => Resubmit
@@ -235,8 +157,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _applicationId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
-        Application storage application = applications[_applicationId];
+    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
+    {
+        Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(
             application.milestonesDone == application.milestoneCount,
@@ -266,15 +189,15 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint48 _milestoneId,
         string memory _reasonMetadataHash
     ) external {
-        Application memory application = applications[_applicationId];
+        Application memory application = appStorage.applications[_applicationId];
         require(application.owner == msg.sender, "MilestoneStateUpdate: Unauthorised");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
         require(
-            applicationMilestones[_applicationId][_milestoneId] == MilestoneState.Submitted,
+            appStorage.applicationMilestones[_applicationId][_milestoneId] == MilestoneState.Submitted,
             "MilestoneStateUpdate: Invalid state transition"
         );
-        applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Requested;
+        appStorage.applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Requested;
         emit MilestoneUpdated(
             _applicationId,
             _milestoneId,
@@ -296,17 +219,18 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint48 _milestoneId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdminOrReviewer(_workspaceId) {
-        Application storage application = applications[_applicationId];
+    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
+    {
+        Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");
         require(_milestoneId < application.milestoneCount, "MilestoneStateUpdate: Invalid milestone id");
-        MilestoneState currentState = applicationMilestones[_applicationId][_milestoneId];
+        MilestoneState currentState = appStorage.applicationMilestones[_applicationId][_milestoneId];
         /// @notice grant creator can only make below transitions
         /// @notice Submitted => Approved
         /// @notice Requested => Approved
         if (currentState == MilestoneState.Submitted || currentState == MilestoneState.Requested) {
-            applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Approved;
+            appStorage.applicationMilestones[_applicationId][_milestoneId] = MilestoneState.Approved;
         } else {
             revert("MilestoneStateUpdate: Invalid state transition");
         }
@@ -328,7 +252,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @return address of application owner
      */
     function getApplicationOwner(uint96 _applicationId) external view override returns (address) {
-        Application memory application = applications[_applicationId];
+        Application memory application = appStorage.applications[_applicationId];
         return application.owner;
     }
 
@@ -338,7 +262,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @return id of application's workspace
      */
     function getApplicationWorkspace(uint96 _applicationId) external view override returns (uint96) {
-        Application memory application = applications[_applicationId];
+        Application memory application = appStorage.applications[_applicationId];
         return application.workspaceId;
     }
 }

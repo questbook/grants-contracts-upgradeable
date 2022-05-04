@@ -10,6 +10,10 @@
     {
       "name": "Sahil Vasava",
       "url": "https://github.com/SahilVasava"
+    },
+    {
+      "name": "Charles OkaforMbah",
+      "url": "https://github.com/justcharlz"
     }
   ],
   "devDependencies": {
@@ -60,6 +64,7 @@
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.7.18",
+    "standard": "^16.0.3",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.4.0",
     "typechain": "^7.0.0",

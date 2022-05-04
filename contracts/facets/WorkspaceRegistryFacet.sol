@@ -1,35 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity >=0.8.1;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./interfaces/IWorkspaceRegistry.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "../interfaces/IWorkspaceRegistry.sol";
+import { AppStorage, Workspace, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
-contract WorkspaceRegistry is
-    Initializable,
-    UUPSUpgradeable,
-    OwnableUpgradeable,
-    PausableUpgradeable,
-    IWorkspaceRegistry
-{
-    /// @notice Number of workspace stored in this registry
-    uint96 public workspaceCount;
-
-    /// @notice structure holding each workspace data
-    struct Workspace {
-        uint96 id;
-        address owner;
-        string metadataHash;
-    }
-
-    /// @notice mapping to store workspaceId vs workspace data structure
-    mapping(uint96 => Workspace) public workspaces;
-
-    /// @notice mapping to store workspaceId vs members vs roles
-    mapping(uint96 => mapping(address => bytes32)) public memberRoles;
+contract WorkspaceRegistryFacet is Pausable, IWorkspaceRegistry, ModifierFacets {
+    /// @notice workspaceRegistry interface used for fetching fetching workspace admins and reviewers
+    IWorkspaceRegistry public workspaceReg;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -51,13 +30,13 @@ contract WorkspaceRegistry is
     );
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
-        require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
+        require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
         _;
     }
 
     modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
         require(
-            _checkRole(_workspaceId, msg.sender, 0) || _checkRole(_workspaceId, msg.sender, 1),
+            workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender),
             "Unauthorised: Neither an admin nor a reviewer"
         );
         _;
@@ -69,35 +48,17 @@ contract WorkspaceRegistry is
     }
 
     /**
-     * @notice Calls initialize on the base contracts
-     *
-     * @dev This acts as a constructor for the upgradeable proxy contract
-     */
-    function initialize() external initializer {
-        __Ownable_init();
-        __Pausable_init();
-    }
-
-    /**
-     * @notice Override of UUPSUpgradeable virtual function
-     *
-     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
-     * {upgradeTo} and {upgradeToAndCall}.
-     */
-    function _authorizeUpgrade(address) internal view override onlyOwner {}
-
-    /**
      * @notice Create a new workspace under which grants will be created,
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
      */
     function createWorkspace(string memory _metadataHash) external whenNotPaused {
-        uint96 _id = workspaceCount;
-        workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
+        uint96 _id = appStorage.workspaceCount;
+        appStorage.workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
         _setRole(_id, msg.sender, 0, true);
         emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
-        assert(workspaceCount + 1 > workspaceCount);
-        workspaceCount += 1;
+        assert(appStorage.workspaceCount + 1 > appStorage.workspaceCount);
+        appStorage.workspaceCount += 1;
     }
 
     /**
@@ -108,9 +69,9 @@ contract WorkspaceRegistry is
     function updateWorkspaceMetadata(uint96 _id, string memory _metadataHash)
         external
         whenNotPaused
-        onlyWorkspaceAdminOrReviewer(_id)
+    // onlyWorkspaceAdminOrReviewer(_id)
     {
-        Workspace storage workspace = workspaces[_id];
+        Workspace storage workspace = appStorage.workspaces[_id];
         workspace.metadataHash = _metadataHash;
         emit WorkspaceUpdated(workspace.id, workspace.owner, workspace.metadataHash, block.timestamp);
     }
@@ -135,8 +96,8 @@ contract WorkspaceRegistry is
         require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         for (uint256 i = 0; i < _members.length; i++) {
             address member = _members[i];
-            /// @notice The role 0 denotes an admin role
-            /// @notice The role 1 denotes a reviewer role
+            // @notice The role 0 denotes an admin role
+            // @notice The role 1 denotes a reviewer role
             uint8 role = _roles[i];
             bool enabled = _enabled[i];
             _setRole(_id, member, role, enabled);
@@ -177,7 +138,7 @@ contract WorkspaceRegistry is
         uint8 _role,
         bool _enabled
     ) internal {
-        Workspace memory workspace = workspaces[_workspaceId];
+        Workspace memory workspace = appStorage.workspaces[_workspaceId];
 
         /// @notice Do not allow anybody other than owner to set admin role false for workspace owner
         if (_address == workspace.owner && _enabled == false && msg.sender != workspace.owner) {
@@ -185,10 +146,10 @@ contract WorkspaceRegistry is
         }
         if (_enabled) {
             /// @notice Set _role'th bit in roles of _address in workspace
-            memberRoles[_workspaceId][_address] |= bytes32(1 << _role);
+            appStorage.memberRoles[_workspaceId][_address] |= bytes32(1 << _role);
         } else {
             /// @notice Unset _role'th bit in roles of _address in workspace
-            memberRoles[_workspaceId][_address] &= ~bytes32(1 << _role);
+            appStorage.memberRoles[_workspaceId][_address] &= ~bytes32(1 << _role);
         }
     }
 
@@ -205,14 +166,14 @@ contract WorkspaceRegistry is
         uint8 _role
     ) internal view returns (bool) {
         /// @notice Check if _address has _role'th bit set in roles of _address in workspace
-        return (uint256(memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
+        return (uint256(appStorage.memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
 
-    function pause() external onlyOwner {
+    function pauseWorkspaceRegistry() external onlyOwner {
         _pause();
     }
 
-    function unpause() external onlyOwner {
+    function unpauseWorkspaceRegistry() external onlyOwner {
         _unpause();
     }
 }

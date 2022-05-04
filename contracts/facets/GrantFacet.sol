@@ -1,26 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity >=0.8.1;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IWorkspaceRegistry.sol";
-import "./interfaces/IApplicationRegistry.sol";
+import "../interfaces/IWorkspaceRegistry.sol";
+import "../interfaces/IApplicationRegistry.sol";
+import "../facets/OwnershipFacet.sol";
+import { AppStorage, Workspace, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
-contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-    /// @notice workspaceId to which the grant belongs
-    uint96 public workspaceId;
-
-    /// @notice number of submitted applicantions
-    uint96 public numApplicants;
-
-    /// @notice grant metadata pointer to IPFS hash
-    string public metadataHash;
-
-    /// @notice denotes if grant is receiving applications
-    bool public active;
+contract GrantFacet is ModifierFacets {
+    OwnershipFacet internal ownership;
 
     /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
@@ -59,7 +48,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     );
 
     modifier onlyWorkspaceAdmin() {
-        require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "Unauthorised: Not an admin");
+        require(workspaceReg.isWorkspaceAdmin(appStorage.workspaceId, msg.sender), "Unauthorised: Not an admin");
         _;
     }
 
@@ -78,20 +67,20 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize(
+    constructor(
         uint96 _workspaceId,
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg,
         address _grantFactoryOwner
-    ) external initializer {
-        __Ownable_init();
-        workspaceId = _workspaceId;
-        active = true;
-        metadataHash = _metadataHash;
+    ) {
+        msg.sender;
+        appStorage.workspaceId = _workspaceId;
+        appStorage.active = true;
+        appStorage.metadataHash = _metadataHash;
         applicationReg = _applicationReg;
         workspaceReg = _workspaceReg;
-        transferOwnership(_grantFactoryOwner);
+        ownership.transferOwnership(_grantFactoryOwner);
     }
 
     /**
@@ -100,14 +89,14 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
      * {upgradeTo} and {upgradeToAndCall}.
      */
-    function _authorizeUpgrade(address) internal view override onlyOwner {}
+    // function _authorizeUpgrade(address) internal view override onlyOwner {}
 
     /**
      * @notice Update number of applications on grant, can be called by applicationRegistry contract
      */
     function incrementApplicant() external onlyApplicationRegistry {
-        assert(numApplicants + 1 > numApplicants);
-        numApplicants += 1;
+        assert(appStorage.numApplicants + 1 > appStorage.numApplicants);
+        appStorage.numApplicants += 1;
     }
 
     /**
@@ -115,9 +104,9 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @param _metadataHash New URL that points to grant metadata
      */
     function updateGrant(string memory _metadataHash) external onlyWorkspaceAdmin {
-        require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
-        metadataHash = _metadataHash;
-        emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
+        require(appStorage.numApplicants == 0, "GrantUpdate: Applicants have already started applying");
+        appStorage.metadataHash = _metadataHash;
+        emit GrantUpdated(appStorage.workspaceId, _metadataHash, appStorage.active, block.timestamp);
     }
 
     /**
@@ -125,8 +114,8 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @param _canAcceptApplication set to false for disabling grant from receiving new applications
      */
     function updateGrantAccessibility(bool _canAcceptApplication) external onlyWorkspaceAdmin {
-        active = _canAcceptApplication;
-        emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
+        appStorage.active = _canAcceptApplication;
+        emit GrantUpdated(appStorage.workspaceId, appStorage.metadataHash, _canAcceptApplication, block.timestamp);
     }
 
     /**

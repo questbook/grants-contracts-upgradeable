@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity >=0.8.1;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "./Grant.sol";
-import "./interfaces/IApplicationReviewRegistry.sol";
+import "../facets/GrantFacet.sol";
+import "../facets/OwnershipFacet.sol";
+import "../interfaces/IApplicationReviewRegistry.sol";
+import { AppStorage, Workspace, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 /// @title Factory contract used to create new grants,
 /// each grant is a new contract deployed using this factory
-contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+contract GrantFactoryFacet is ModifierFacets {
+    OwnershipFacet internal ownership;
+
+    bool paused;
+
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    address public immutable grantImplementation;
+    // address public immutable grantImplementation;
 
     /// @notice applicationReviewRegistry interface
     IApplicationReviewRegistry public applicationReviewReg;
@@ -24,31 +27,36 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
 
+    modifier whenNotPaused() {
+        require(!paused, "Unauthorised: Paused");
+        _;
+    }
+
     /**
      * @notice Constructor for initializing the Grant Implementation Contract
      */
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        grantImplementation = address(new Grant());
-    }
+    // constructor() {
+    //     grantFacet = new GrantFacet();
+    // }
 
-    /**
-     * @notice Calls initialize on the base contracts
-     *
-     * @dev This acts as a constructor for the upgradeable proxy contract
-     */
-    function initialize() external initializer {
-        __Ownable_init();
-        __Pausable_init();
-    }
+    // /**
+    //  * @notice Calls initialize on the base contracts
+    //  *
+    //  * @dev This acts as a constructor for the upgradeable proxy contract
+    //  */
+    // function initialize() external initializer {
+    //     __Ownable_init();
+    //     __Pausable_init();
+    // }
 
-    /**
-     * @notice Override of UUPSUpgradeable virtual function
-     *
-     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
-     * {upgradeTo} and {upgradeToAndCall}.
-     */
-    function _authorizeUpgrade(address) internal view override onlyOwner {}
+    // /**
+    //  * @notice Override of UUPSUpgradeable virtual function
+    //  *
+    //  * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
+    //  * {upgradeTo} and {upgradeToAndCall}.
+    //  */
+    // function _authorizeUpgrade(address) internal view override onlyOwner {}
 
     /**
      * @notice Create a new grant in the registry, can be called by workspace admins
@@ -66,18 +74,14 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         IApplicationRegistry _applicationReg
     ) external whenNotPaused returns (address) {
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantCreate: Unauthorised");
-        ERC1967Proxy grantProxy = new ERC1967Proxy(
-            grantImplementation,
-            abi.encodeWithSelector(
-                Grant.initialize.selector,
-                _workspaceId,
-                _metadataHash,
-                _workspaceReg,
-                _applicationReg,
-                owner()
-            )
+        GrantFacet grant = new GrantFacet(
+            _workspaceId,
+            _metadataHash,
+            _workspaceReg,
+            _applicationReg,
+            ownership.owner()
         );
-        address _grantAddress = address(grantProxy);
+        address _grantAddress = address(grant);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
         applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
         return _grantAddress;
@@ -97,5 +101,13 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function _pause() internal {
+        paused = true;
+    }
+
+    function _unpause() internal {
+        paused = false;
     }
 }
