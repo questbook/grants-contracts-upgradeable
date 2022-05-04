@@ -44,22 +44,15 @@ if (!infuraApiKey) {
 
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   let url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
-  let _privateKey = privateKey;
   if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
   if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
-  if (network === "neonlabs") {
-    url = "https://proxy.devnet.neonlabs.org/solana";
-    _privateKey = `0x${privateKey}`;
-  }
+  if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
+
   return {
-    accounts: {
-      count: 10,
-      mnemonic: _privateKey,
-      path: "m/44'/60'/0'/0",
-    },
+    accounts: [privateKey!],
     chainId: chainIds[network],
     url,
   };
@@ -75,9 +68,6 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic: privateKey,
-      },
       chainId: chainIds.hardhat,
     },
     goerli: getChainConfig("goerli"),
