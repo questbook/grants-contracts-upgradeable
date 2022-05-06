@@ -90,6 +90,7 @@
     "deploy:optimismkovan": "hardhat deploy:WorkspaceRegistry --network optimismkovan && hardhat deploy:GrantFactory  --network optimismkovan && hardhat deploy:ApplicationRegistry  --network optimismkovan && hardhat deploy:ApplicationReviewRegistry  --network optimismkovan",
     "deploy:optimism": "hardhat deploy:WorkspaceRegistry --network optimism && hardhat deploy:GrantFactory  --network optimism && hardhat deploy:ApplicationRegistry  --network optimism && hardhat deploy:ApplicationReviewRegistry  --network optimism",
     "deploy:harmonytestnet0": "hardhat deploy:WorkspaceRegistry --network harmonytestnet0 && hardhat deploy:GrantFactory  --network harmonytestnet0 && hardhat deploy:ApplicationRegistry  --network harmonytestnet0 && hardhat deploy:ApplicationReviewRegistry  --network harmonytestnet0",
+    "deploy:neonlabs": "hardhat deploy:WorkspaceRegistry --network neonlabs && hardhat deploy:GrantFactory  --network neonlabs && hardhat deploy:ApplicationRegistry  --network neonlabs && hardhat deploy:ApplicationReviewRegistry  --network neonlabs",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",

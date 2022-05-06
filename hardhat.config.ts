@@ -28,12 +28,13 @@ const chainIds = {
   optimismkovan: 69,
   optimism: 10,
   harmonytestnet0: 1666700000,
+  neonlabs: 245022926,
 };
 
 // Ensure that we have all the environment variables we need.
-const mnemonic: string | undefined = process.env.MNEMONIC;
-if (!mnemonic) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+const privateKey: string | undefined = process.env.MNEMONIC;
+if (!privateKey) {
+  throw new Error("Please set your private key in a .env file");
 }
 
 const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
@@ -48,12 +49,10 @@ function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
+  if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
+
   return {
-    accounts: {
-      count: 10,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
+    accounts: [privateKey!],
     chainId: chainIds[network],
     url,
   };
@@ -69,9 +68,6 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic,
-      },
       chainId: chainIds.hardhat,
     },
     goerli: getChainConfig("goerli"),
@@ -83,6 +79,7 @@ const config: HardhatUserConfig = {
     optimismkovan: getChainConfig("optimismkovan"),
     optimism: getChainConfig("optimism"),
     harmonytestnet0: getChainConfig("harmonytestnet0"),
+    neonlabs: getChainConfig("neonlabs"),
   },
   paths: {
     artifacts: "./artifacts",
