@@ -20,46 +20,45 @@ describe("Unit tests", function () {
   });
 
   describe("ApplicationRegistry", function () {
-    beforeEach(async function () {
-      this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
-      this.workspaceRegistry = <WorkspaceRegistry>(
-        await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
-      );
+    let diamondAddress;
+    let diamondCutFacet;
+    // let applicationRegistryFacet;
+    // let applicationReviewRegistryFacet;
+    // let grantFactoryFacet;
+    // let workspaceRegistryFacet;
+    let diamondLoupeFacet;
+    let ownershipFacet;
+    let tx;
+    let receipt;
+    let result;
+    const addresses = [];
 
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
-
-      this.applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
-      this.applicationRegistry = <ApplicationRegistry>(
-        await upgrades.deployProxy(this.applicationRegistryFactory, { kind: "uups" })
-      );
-
-      await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
-
-      this.grantFactory = await ethers.getContractFactory("Grant");
-      this.grant = <Grant>(
-        await upgrades.deployProxy(
-          this.grantFactory,
-          [
-            0,
-            "dummyGrantIpfsHash",
-            this.workspaceRegistry.address,
-            this.applicationRegistry.address,
-            this.signers.admin.address,
-          ],
-          { kind: "uups" },
-        )
-      );
-
-      this.applicationRegistryFactoryV2 = await ethers.getContractFactory("ApplicationRegistryV2");
+    before(async function () {
+      diamondAddress = await deployDiamond();
+      diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamondAddress);
+      diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamondAddress);
+      ownershipFacet = await ethers.getContractAt("OwnershipFacet", diamondAddress);
+      applicationRegistryFacet = await ethers.getContractAt("ApplicationRegistryFacet", diamondAddress);
+      // applicationReviewRegistryFacet = await ethers.getContractAt("ApplicationReviewRegistryFacet", diamondAddress);
+      // grantFactoryFacet = await ethers.getContractAt("GrantFactoryFacet", diamondAddress);
+      // workspaceRegistryFacet = await ethers.getContractAt("WorkspaceRegistryFacet", diamondAddress);
     });
 
-    it("test proxy deployment", async function () {
-      const applicationRegistyV2 = await upgrades.upgradeProxy(
-        this.applicationRegistry.address,
-        this.applicationRegistryFactoryV2,
-      );
-      expect(await applicationRegistyV2.version()).to.equal("v2!");
+    it("should have three facets -- call to facetAddresses function", async () => {
+      for (const address of await diamondLoupeFacet.facetAddresses()) {
+        addresses.push(address);
+      }
+
+      assert.equal(addresses.length, 3);
     });
+
+    // it("test proxy deployment", async function () {
+    //   const applicationRegistyV2 = await upgrades.upgradeProxy(
+    //     this.applicationRegistry.address,
+    //     this.applicationRegistryFactoryV2,
+    //   );
+    //   expect(await applicationRegistyV2.version()).to.equal("v2!");
+    // });
 
     shouldBehaveLikeApplicationRegistry();
   });

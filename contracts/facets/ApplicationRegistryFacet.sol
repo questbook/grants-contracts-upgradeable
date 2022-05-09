@@ -9,6 +9,9 @@ import { AppStorage, Application, ApplicationState, MilestoneState, ModifierFace
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
 contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
+    /// @notice interface for using external functionalities like checking workspace admin
+    IWorkspaceRegistry public workspaceRegApplicationRegistry;
+
     // --- Events ---
     /// @notice Emitted when a new application is submitted
     event ApplicationSubmitted(
@@ -33,13 +36,25 @@ contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
+    modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
+        require(
+            workspaceRegApplicationRegistry.isWorkspaceAdmin(_workspaceId, msg.sender),
+            "Unauthorised: Not an admin"
+        );
+        _;
+    }
+
+    function applicationCount() public view returns (uint256) {
+        return appStorage.applicationCount;
+    }
+
     /**
      * @notice sets workspace registry contract interface
      * @param _workspaceReg WorkspaceRegistry interface
      */
-    // function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
-    //     workspaceReg = _workspaceReg;
-    // }
+    function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
+        workspaceRegApplicationRegistry = _workspaceReg;
+    }
 
     /**
      * @notice Create/submit application
@@ -120,8 +135,7 @@ contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
         uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
-    {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
@@ -157,8 +171,7 @@ contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
         uint96 _applicationId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
-    {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(
@@ -219,8 +232,7 @@ contract ApplicationRegistryFacet is IApplicationRegistry, ModifierFacets {
         uint48 _milestoneId,
         uint96 _workspaceId,
         string memory _reasonMetadataHash
-    ) external // onlyWorkspaceAdminOrReviewer(_workspaceId)
-    {
+    ) external onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = appStorage.applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         require(application.state == ApplicationState.Approved, "MilestoneStateUpdate: Invalid application state");

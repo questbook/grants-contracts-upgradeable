@@ -9,6 +9,15 @@ import "../interfaces/IGrant.sol";
 import { AppStorage, Review, GrantReviewState, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 contract ApplicationReviewRegistryFacet is ModifierFacets {
+    /// @notice workspaceRegistry interface used for fetching fetching workspace admins and reviewers
+    IWorkspaceRegistry public workspaceRegReviewerRegistry;
+
+    /// @notice grantFactory interface used for authoriziing Grant Factory
+    IGrantFactory public grantFactory;
+
+    /// @notice applicationRegistry interface used for fetching application workspace id
+    IApplicationRegistry public applicationReg;
+
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
     event ReviewersAssigned(
@@ -31,9 +40,6 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         uint256 time
     );
 
-    /// @notice Emitted when rubric metadata is set
-    event RubricsSet(uint96 _workspaceId, address indexed _grantAddress, string _metadataHash, uint256 time);
-
     /// @notice Emitted when review payment is marked as done
     event ReviewPaymentMarkedDone(
         uint96[] indexed _reviewIds,
@@ -54,46 +60,54 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         uint256 time
     );
 
-    /**
-     * @notice Calls initialize on the base contracts
-     *
-     * @dev This acts as a constructor for the upgradeable proxy contract
-     */
-    // function initialize() external initializer {
-    //     __Ownable_init();
-    // }
+    /// @notice Emitted when rubric metadata is set
+    event RubricsSet(uint96 _workspaceId, address indexed _grantAddress, string _metadataHash, uint256 time);
 
-    /**
-     * @notice Override of UUPSUpgradeable virtual function
-     *
-     * @dev Function that should revert when `msg.sender` is not authorized to upgrade the contract. Called by
-     * {upgradeTo} and {upgradeToAndCall}.
-     */
-    // function _authorizeUpgrade(address) internal view override onlyOwner {}
+    modifier onlyWorkspaceAdminReview(uint96 _workspaceId) {
+        require(workspaceRegReviewerRegistry.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
+        _;
+    }
+
+    modifier onlyWorkspaceAdminOrReviewer(uint96 _workspaceId) {
+        require(
+            workspaceRegReviewerRegistry.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender),
+            "Unauthorised: Neither an admin nor a reviewer"
+        );
+        _;
+    }
+
+    modifier onlyWorkspaceAdminOrGrantFactory(uint96 _workspaceId) {
+        require(
+            workspaceRegReviewerRegistry.isWorkspaceAdmin(_workspaceId, msg.sender) ||
+                msg.sender == address(grantFactory),
+            "Unauthorised: Not an admin nor grantFactory"
+        );
+        _;
+    }
 
     /**
      * @notice sets workspace registry contract interface
      * @param _workspaceReg WorkspaceRegistry interface
      */
-    // function setWorkspaceReg(IWorkspaceRegistry _workspaceReg) external onlyOwner {
-    //     workspaceReg = _workspaceReg;
-    // }
+    function setWorkspaceRegReview(IWorkspaceRegistry _workspaceReg) external onlyOwner {
+        workspaceRegReviewerRegistry = _workspaceReg;
+    }
 
     /**
      * @notice sets grant factory contract interface
      * @param _grantFactory GrantFactory contract address
      */
-    // function setGrantFactory(IGrantFactory _grantFactory) external onlyOwner {
-    //     grantFactory = _grantFactory;
-    // }
+    function setGrantFactory(IGrantFactory _grantFactory) external onlyOwner {
+        grantFactory = _grantFactory;
+    }
 
     /**
      * @notice sets application registry contract interface
      * @param _applicationReg ApplicationRegistry contract address
      */
-    // function setApplicationReg(IApplicationRegistry _applicationReg) external onlyOwner {
-    //     applicationReg = _applicationReg;
-    // }
+    function setApplicationReg(IApplicationRegistry _applicationReg) external onlyOwner {
+        applicationReg = _applicationReg;
+    }
 
     /**
      * @notice assigns/unassign reviewers to an application
@@ -109,8 +123,7 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         address _grantAddress,
         address[] memory _reviewers,
         bool[] memory _active
-    ) public // onlyWorkspaceAdmin(_workspaceId)
-    {
+    ) public onlyWorkspaceAdminReview(_workspaceId) {
         // require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
         require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
@@ -163,8 +176,7 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         uint96 _applicationId,
         address _grantAddress,
         string memory _metadataHash
-    ) public // onlyWorkspaceAdminOrReviewer(_workspaceId)
-    {
+    ) public onlyWorkspaceAdminOrReviewer(_workspaceId) {
         Review storage review = appStorage.reviews[msg.sender][_applicationId];
         GrantReviewState storage grantReviewState = appStorage.grantReviewStates[_grantAddress];
 
@@ -191,8 +203,7 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         uint96 _workspaceId,
         address _grantAddress,
         string memory _metadataHash
-    ) external // onlyWorkspaceAdminOrGrantFactory(_workspaceId)
-    {
+    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         GrantReviewState storage grantReviewState = appStorage.grantReviewStates[_grantAddress];
 
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSet: Unauthorised");
@@ -223,8 +234,7 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         IERC20 _erc20Interface,
         uint256 _amount,
         string memory _transactionHash
-    ) public // onlyWorkspaceAdmin(_workspaceId)
-    {
+    ) public onlyWorkspaceAdminReview(_workspaceId) {
         require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
 
         for (uint256 i = 0; i < _reviewIds.length; i++) {
@@ -258,8 +268,7 @@ contract ApplicationReviewRegistryFacet is ModifierFacets {
         uint96[] memory _reviewIds,
         IERC20 _erc20Interface,
         uint256 _amount
-    ) external // onlyWorkspaceAdmin(_workspaceId)
-    {
+    ) external onlyWorkspaceAdminReview(_workspaceId) {
         markPaymentDone(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount, "");
         require(_erc20Interface.transferFrom(msg.sender, _reviewer, _amount), "Failed to transfer funds");
         emit ReviewPaymentFulfilled(

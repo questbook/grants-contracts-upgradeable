@@ -78,8 +78,8 @@ contract GrantFactoryFacet is ModifierFacets {
             _workspaceId,
             _metadataHash,
             _workspaceReg,
-            _applicationReg,
-            ownership.owner()
+            _applicationReg
+            // ownership.owner()
         );
         address _grantAddress = address(grant);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);

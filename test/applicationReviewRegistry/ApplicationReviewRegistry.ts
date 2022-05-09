@@ -40,18 +40,16 @@ describe("Unit tests", function () {
       await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
 
       this.grantFactory = await ethers.getContractFactory("Grant");
-      this.grant = <Grant>(
-        await upgrades.deployProxy(
-          this.grantFactory,
-          [
-            0,
-            "dummyGrantIpfsHash",
-            this.workspaceRegistry.address,
-            this.applicationRegistry.address,
-            this.signers.admin.address,
-          ],
-          { kind: "uups" },
-        )
+      this.grant = <Grant>await upgrades.deployProxy(
+        this.grantFactory,
+        [
+          0,
+          "dummyGrantIpfsHash",
+          this.workspaceRegistry.address,
+          this.applicationRegistry.address,
+          // this.signers.admin.address,
+        ],
+        { kind: "uups" },
       );
 
       await this.applicationRegistry

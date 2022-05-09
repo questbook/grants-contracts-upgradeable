@@ -95,7 +95,7 @@ library LibAppStorage {
 }
 
 contract ModifierFacets {
-    AppStorage internal appStorage;
+    AppStorage appStorage;
 
     modifier onlyOwner() {
         LibDiamond.enforceIsContractOwner();

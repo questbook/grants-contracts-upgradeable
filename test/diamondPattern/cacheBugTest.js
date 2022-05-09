@@ -1,9 +1,9 @@
 /* global ethers describe before it */
 /* eslint-disable prefer-const */
 
-const { deployDiamond } = require("../scripts/deploy.js");
+const { deployDiamond } = require("../../scripts/deploy.js");
 
-const { FacetCutAction } = require("../scripts/libraries/diamond.js");
+const { FacetCutAction } = require("../../scripts/libraries/diamond.js");
 
 const { assert } = require("chai");
 

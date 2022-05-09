@@ -8,7 +8,7 @@ import "../facets/OwnershipFacet.sol";
 import { AppStorage, Workspace, ModifierFacets } from "../libraries/LibAppStorage.sol";
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
-contract GrantFacet is ModifierFacets {
+contract GrantFacet is OwnershipFacet, ModifierFacets {
     OwnershipFacet internal ownership;
 
     /// @notice applicationRegistry interface used for fetching application owner
@@ -71,16 +71,16 @@ contract GrantFacet is ModifierFacets {
         uint96 _workspaceId,
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
-        IApplicationRegistry _applicationReg,
-        address _grantFactoryOwner
-    ) {
-        msg.sender;
+        IApplicationRegistry _applicationReg
+    ) // address _grantFactoryOwner
+    {
+        // msg.sender;
         appStorage.workspaceId = _workspaceId;
         appStorage.active = true;
         appStorage.metadataHash = _metadataHash;
         applicationReg = _applicationReg;
         workspaceReg = _workspaceReg;
-        ownership.transferOwnership(_grantFactoryOwner);
+        // ownership.transferOwnership(_grantFactoryOwner);
     }
 
     /**

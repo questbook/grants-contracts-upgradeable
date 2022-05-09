@@ -5,15 +5,19 @@ const {
   FacetCutAction,
   removeSelectors,
   findAddressPositionInFacets,
-} = require("../scripts/libraries/diamond.js");
+} = require("../../scripts/libraries/diamond.js");
 
-const { deployDiamond } = require("../scripts/deploy.js");
+const { deployDiamond } = require("../../scripts/deploy.js");
 
 const { assert } = require("chai");
 
 describe("DiamondTest", async function () {
   let diamondAddress;
   let diamondCutFacet;
+  // let applicationRegistryFacet;
+  // let applicationReviewRegistryFacet;
+  // let grantFactoryFacet;
+  // let workspaceRegistryFacet;
   let diamondLoupeFacet;
   let ownershipFacet;
   let tx;
@@ -26,6 +30,10 @@ describe("DiamondTest", async function () {
     diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamondAddress);
     diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamondAddress);
     ownershipFacet = await ethers.getContractAt("OwnershipFacet", diamondAddress);
+    // applicationRegistryFacet = await ethers.getContractAt("ApplicationRegistryFacet", diamondAddress);
+    // applicationReviewRegistryFacet = await ethers.getContractAt("ApplicationReviewRegistryFacet", diamondAddress);
+    // grantFactoryFacet = await ethers.getContractAt("GrantFactoryFacet", diamondAddress);
+    // workspaceRegistryFacet = await ethers.getContractAt("WorkspaceRegistryFacet", diamondAddress);
   });
 
   it("should have three facets -- call to facetAddresses function", async () => {
@@ -46,6 +54,14 @@ describe("DiamondTest", async function () {
     selectors = getSelectors(ownershipFacet);
     result = await diamondLoupeFacet.facetFunctionSelectors(addresses[2]);
     assert.sameMembers(result, selectors);
+    // result = await diamondLoupeFacet.facetFunctionSelectors(addresses[3]);
+    // assert.sameMembers(result, selectors);
+    // result = await diamondLoupeFacet.facetFunctionSelectors(addresses[4]);
+    // assert.sameMembers(result, selectors);
+    // result = await diamondLoupeFacet.facetFunctionSelectors(addresses[5]);
+    // assert.sameMembers(result, selectors);
+    // result = await diamondLoupeFacet.facetFunctionSelectors(addresses[6]);
+    // assert.sameMembers(result, selectors);
   });
 
   it("selectors should be associated to facets correctly -- multiple calls to facetAddress function", async () => {
@@ -53,18 +69,23 @@ describe("DiamondTest", async function () {
     assert.equal(addresses[1], await diamondLoupeFacet.facetAddress("0xcdffacc6"));
     assert.equal(addresses[1], await diamondLoupeFacet.facetAddress("0x01ffc9a7"));
     assert.equal(addresses[2], await diamondLoupeFacet.facetAddress("0xf2fde38b"));
+    // assert.equal(addresses[3], await diamondLoupeFacet.facetAddress("0x689b748f"));
+    // assert.equal(addresses[4], await diamondLoupeFacet.facetAddress("0x013a9d81"));
+    // assert.equal(addresses[5], await diamondLoupeFacet.facetAddress("0x3f4ba83a"));
+    // assert.equal(addresses[6], await diamondLoupeFacet.facetAddress("0xfcdd9280"));
   });
 
-  it("should add test1 functions", async () => {
-    const Test1Facet = await ethers.getContractFactory("Test1Facet");
-    const test1Facet = await Test1Facet.deploy();
-    await test1Facet.deployed();
-    addresses.push(test1Facet.address);
-    const selectors = getSelectors(test1Facet).remove(["supportsInterface(bytes4)"]);
+  it("should add ApplicationRegistryFacet functions", async () => {
+    const ApplicationRegistryFacet = await ethers.getContractFactory("ApplicationRegistryFacet");
+    const applicationRegistryFacet = await ApplicationRegistryFacet.deploy();
+    await applicationRegistryFacet.deployed();
+    addresses.push(applicationRegistryFacet.address);
+    console.log(applicationRegistryFacet.address);
+    const selectors = getSelectors(applicationRegistryFacet).remove(["getApplicationOwner(uint96)"]);
     tx = await diamondCutFacet.diamondCut(
       [
         {
-          facetAddress: test1Facet.address,
+          facetAddress: applicationRegistryFacet.address,
           action: FacetCutAction.Add,
           functionSelectors: selectors,
         },
@@ -77,23 +98,25 @@ describe("DiamondTest", async function () {
     if (!receipt.status) {
       throw Error(`Diamond upgrade failed: ${tx.hash}`);
     }
-    result = await diamondLoupeFacet.facetFunctionSelectors(test1Facet.address);
+    result = await diamondLoupeFacet.facetFunctionSelectors(applicationRegistryFacet.address);
     assert.sameMembers(result, selectors);
   });
 
   it("should test function call", async () => {
-    const test1Facet = await ethers.getContractAt("Test1Facet", diamondAddress);
-    await test1Facet.test1Func10();
+    const applicationRegistryFacet = await ethers.getContractAt("ApplicationRegistryFacet", diamondAddress);
+    await applicationRegistryFacet.test1Func10();
   });
 
-  it("should replace supportsInterface function", async () => {
-    const Test1Facet = await ethers.getContractFactory("Test1Facet");
-    const selectors = getSelectors(Test1Facet).get(["supportsInterface(bytes4)"]);
-    const testFacetAddress = addresses[3];
+  it("should replace getApplicationOwner function", async () => {
+    const applicationRegistryFacet = await ethers.getContractFactory("ApplicationRegistryFacet");
+    const selectors = getSelectors(applicationRegistryFacet).get(["getApplicationOwner(uint96)"]);
+    console.log(addresses[3]);
+
+    const applicationRegistryFacetAddress = addresses[3];
     tx = await diamondCutFacet.diamondCut(
       [
         {
-          facetAddress: testFacetAddress,
+          facetAddress: applicationRegistryFacetAddress,
           action: FacetCutAction.Replace,
           functionSelectors: selectors,
         },
@@ -106,8 +129,8 @@ describe("DiamondTest", async function () {
     if (!receipt.status) {
       throw Error(`Diamond upgrade failed: ${tx.hash}`);
     }
-    result = await diamondLoupeFacet.facetFunctionSelectors(testFacetAddress);
-    assert.sameMembers(result, getSelectors(Test1Facet));
+    result = await diamondLoupeFacet.facetFunctionSelectors(applicationRegistryFacetAddress);
+    assert.sameMembers(result, getSelectors(applicationRegistryFacet));
   });
 
   it("should add test2 functions", async () => {
@@ -161,8 +184,8 @@ describe("DiamondTest", async function () {
   });
 
   it("should remove some test1 functions", async () => {
-    const test1Facet = await ethers.getContractAt("Test1Facet", diamondAddress);
-    const functionsToKeep = ["test1Func2()", "test1Func11()", "test1Func12()"];
+    const test1Facet = await ethers.getContractAt("ApplicationRegistryFacet", diamondAddress);
+    const functionsToKeep = ["getApplicationOwner(uint96)", "getApplicationWorkspace(uint96)"];
     const selectors = getSelectors(test1Facet).remove(functionsToKeep);
     tx = await diamondCutFacet.diamondCut(
       [
