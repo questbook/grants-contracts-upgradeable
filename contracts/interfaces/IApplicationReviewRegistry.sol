@@ -7,6 +7,10 @@ interface IApplicationReviewRegistry {
     function setRubrics(
         uint96 _workspaceId,
         address _grantAddress,
-        string memory _metadataHash
+        string memory _metadataHash,
+        bytes32 txHash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external;
 }

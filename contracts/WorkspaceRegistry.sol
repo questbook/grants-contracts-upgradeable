@@ -93,11 +93,21 @@ contract WorkspaceRegistry is
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
      */
-    function createWorkspace(string memory _metadataHash) external whenNotPaused { // TODO: Should this function be made gasless? 
+    function createWorkspace(
+        string memory _metadataHash,
+        bytes32 txHash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external whenNotPaused {
+        _verifyTX(abi.encode(_metadataHash), txHash);
+
+        address originalMsgSender = _msgSender(txHash, v, r, s);
+
         uint96 _id = workspaceCount;
-        workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
-        _setRole(_id, msg.sender, 0, true);
-        emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
+        workspaces[_id] = Workspace(_id, originalMsgSender, _metadataHash);
+        _setRole(_id, originalMsgSender, 0, true, txHash, v, r, s); //TODO
+        emit WorkspaceCreated(_id, originalMsgSender, _metadataHash, block.timestamp);
         assert(workspaceCount + 1 > workspaceCount);
         workspaceCount += 1;
     }
@@ -108,14 +118,13 @@ contract WorkspaceRegistry is
      * @param _metadataHash New IPFS hash that points to workspace metadata
      */
     function updateWorkspaceMetadata(
-        uint96 _id, 
+        uint96 _id,
         string memory _metadataHash,
-        bytes32 txHash, 
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_id, _msgSender(txHash, v, r, s)) {
-
         _verifyTX(abi.encode(_id, _metadataHash), txHash);
 
         Workspace storage workspace = workspaces[_id];
@@ -137,12 +146,11 @@ contract WorkspaceRegistry is
         uint8[] memory _roles,
         bool[] memory _enabled,
         string[] memory _emails,
-        bytes32 txHash, 
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) external whenNotPaused onlyWorkspaceAdmin(_id, _msgSender(txHash, v, r, s)) withinLimit(_members.length) {
-
         _verifyTX(abi.encode(_id, _members, _roles, _enabled, _emails), txHash);
 
         require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
@@ -154,7 +162,7 @@ contract WorkspaceRegistry is
             /// @notice The role 1 denotes a reviewer role
             uint8 role = _roles[i];
             bool enabled = _enabled[i];
-            _setRole(_id, member, role, enabled);
+            _setRole(_id, member, role, enabled, txHash, v, r, s);
         }
         emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
     }
@@ -186,16 +194,24 @@ contract WorkspaceRegistry is
      * @param _role Role to be set
      * @param _enabled Whether to enable or disable the role
      */
-    function _setRole( 
+    function _setRole(
         uint96 _workspaceId,
         address _address,
         uint8 _role,
-        bool _enabled
+        bool _enabled,
+        bytes32 txHash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) internal {
+        _verifyTX(abi.encode(_workspaceId, _address, _role, _enabled), txHash);
+
+        address originalMsgSender = _msgSender(txHash, v, r, s);
+
         Workspace memory workspace = workspaces[_workspaceId];
 
         /// @notice Do not allow anybody other than owner to set admin role false for workspace owner
-        if (_address == workspace.owner && _enabled == false && msg.sender != workspace.owner) {
+        if (_address == workspace.owner && _enabled == false && originalMsgSender != workspace.owner) {
             revert("WorkspaceOwner: Cannot disable owner admin role");
         }
         if (_enabled) {

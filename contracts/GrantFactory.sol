@@ -38,7 +38,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer { 
+    function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
     }
@@ -64,18 +64,19 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         string memory _metadataHash,
         string memory _rubricsMetadataHash,
         IWorkspaceRegistry _workspaceReg,
-        IApplicationRegistry _applicationReg, 
-        bytes32 txHash, 
+        IApplicationRegistry _applicationReg,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) external whenNotPaused returns (address) {
-        
-        _verifyTX(abi.encode(_workspaceId, _metadataHash, _rubricsMetadataHash, _workspaceReg, _applicationReg
-        ), txHash);
+        _verifyTX(
+            abi.encode(_workspaceId, _metadataHash, _rubricsMetadataHash, _workspaceReg, _applicationReg),
+            txHash
+        );
 
         address originalMsgSender = _msgSender(txHash, v, r, s);
-        
+
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender), "GrantCreate: Unauthorised");
 
         ERC1967Proxy grantProxy = new ERC1967Proxy(
@@ -91,7 +92,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         );
         address _grantAddress = address(grantProxy);
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
-        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash, "0x0", 0, "0x0", "0x0"); // TODO insert correct txHash, v, r, s SHOULD TEST IT
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash, txHash, v, r, s); // TODO insert correct txHash, v, r, s SHOULD TEST IT
         return _grantAddress;
     }
 

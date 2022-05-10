@@ -110,8 +110,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     modifier onlyWorkspaceAdminOrGrantFactory(uint96 _workspaceId, address originalMsgSender) {
         require(
-            workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender) || 
-            msg.sender == address(grantFactory),
+            workspaceReg.isWorkspaceAdmin(_workspaceId, originalMsgSender) || msg.sender == address(grantFactory),
             "Unauthorised: Not an admin nor grantFactory"
         );
         _;
@@ -122,7 +121,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      *
      * @dev This acts as a constructor for the upgradeable proxy contract
      */
-    function initialize() external initializer { 
+    function initialize() external initializer {
         __Ownable_init();
     }
 
@@ -171,10 +170,10 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active, 
-        bytes32 txHash, 
+        bool[] memory _active,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) public onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
         _verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _reviewers, _active), txHash);
@@ -235,16 +234,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress,
-        string memory _metadataHash, 
-        bytes32 txHash, 
+        string memory _metadataHash,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) public onlyWorkspaceAdminOrReviewer(_workspaceId, _msgSender(txHash, v, r, s)) {
         _verifyTX(abi.encode(_workspaceId, _applicationId, _grantAddress, _metadataHash), txHash);
 
         address originalMsgSender = _msgSender(txHash, v, r, s);
-        
+
         Review storage review = reviews[originalMsgSender][_applicationId];
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
@@ -269,13 +268,13 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     function setRubrics(
         uint96 _workspaceId,
         address _grantAddress,
-        string memory _metadataHash, 
-        bytes32 txHash, 
+        string memory _metadataHash,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId, _msgSender(txHash, v, r, s)) {
-        if(msg.sender != address(grantFactory)){
+        if (msg.sender != address(grantFactory)) {
             _verifyTX(abi.encode(_workspaceId, _grantAddress, _metadataHash), txHash);
         }
 
@@ -308,15 +307,24 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96[] memory _reviewIds,
         IERC20 _erc20Interface,
         uint256 _amount,
-        string memory _transactionHash, 
-        bytes32 txHash, 
+        string memory _transactionHash,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) public onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
-        
-        _verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
-         _amount, _transactionHash), txHash);
+        _verifyTX(
+            abi.encode(
+                _workspaceId,
+                _applicationIds,
+                _reviewer,
+                _reviewIds,
+                _erc20Interface,
+                _amount,
+                _transactionHash
+            ),
+            txHash
+        );
 
         require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
 
@@ -350,19 +358,29 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _reviewer,
         uint96[] memory _reviewIds,
         IERC20 _erc20Interface,
-        uint256 _amount, 
-        bytes32 txHash, 
+        uint256 _amount,
+        bytes32 txHash,
         uint8 v,
-        bytes32 r, 
+        bytes32 r,
         bytes32 s
     ) external onlyWorkspaceAdmin(_workspaceId, _msgSender(txHash, v, r, s)) {
-
-        _verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface,
-         _amount), txHash);
+        _verifyTX(abi.encode(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount), txHash);
 
         address originalMsgSender = _msgSender(txHash, v, r, s);
 
-        markPaymentDone(_workspaceId, _applicationIds, _reviewer, _reviewIds, _erc20Interface, _amount, "");
+        markPaymentDone(
+            _workspaceId,
+            _applicationIds,
+            _reviewer,
+            _reviewIds,
+            _erc20Interface,
+            _amount,
+            "",
+            txHash,
+            v,
+            r,
+            s
+        ); //TODO put correct txhash, v, r, s
         require(_erc20Interface.transferFrom(originalMsgSender, _reviewer, _amount), "Failed to transfer funds");
         emit ReviewPaymentFulfilled(
             _reviewIds,
