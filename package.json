@@ -10,6 +10,10 @@
     {
       "name": "Sahil Vasava",
       "url": "https://github.com/SahilVasava"
+    },
+    {
+      "name": "Sweta Shaw",
+      "url": "https://twitter.com/swetashaw_"
     }
   ],
   "devDependencies": {
@@ -91,6 +95,8 @@
     "deploy:optimism": "hardhat deploy:WorkspaceRegistry --network optimism && hardhat deploy:GrantFactory  --network optimism && hardhat deploy:ApplicationRegistry  --network optimism && hardhat deploy:ApplicationReviewRegistry  --network optimism",
     "deploy:harmonytestnet0": "hardhat deploy:WorkspaceRegistry --network harmonytestnet0 && hardhat deploy:GrantFactory  --network harmonytestnet0 && hardhat deploy:ApplicationRegistry  --network harmonytestnet0 && hardhat deploy:ApplicationReviewRegistry  --network harmonytestnet0",
     "deploy:neonlabs": "hardhat deploy:WorkspaceRegistry --network neonlabs && hardhat deploy:GrantFactory  --network neonlabs && hardhat deploy:ApplicationRegistry  --network neonlabs && hardhat deploy:ApplicationReviewRegistry  --network neonlabs",
+    "deploy:celo": "hardhat deploy:WorkspaceRegistry --network celo && hardhat deploy:GrantFactory  --network celo && hardhat deploy:ApplicationRegistry  --network celo && hardhat deploy:ApplicationReviewRegistry  --network celo",
+    "deploy:alfajores": "hardhat deploy:WorkspaceRegistry --network alfajores && hardhat deploy:GrantFactory  --network alfajores && hardhat deploy:ApplicationRegistry  --network alfajores && hardhat deploy:ApplicationReviewRegistry  --network alfajores",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",

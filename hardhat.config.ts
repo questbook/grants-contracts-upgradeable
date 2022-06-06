@@ -29,6 +29,8 @@ const chainIds = {
   optimism: 10,
   harmonytestnet0: 1666700000,
   neonlabs: 245022926,
+  celo_alfajores_testnet: 44787,
+  celo_mainnet: 42220,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -50,6 +52,8 @@ function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
   if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
   if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
   if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
+  if (network === "celo_alfajores_testnet") url = "https://alfajores-forno.celo-testnet.org";
+  if (network === "celo_mainnet") url = "https://forno.celo.org";
 
   return {
     accounts: [privateKey!],
@@ -80,6 +84,8 @@ const config: HardhatUserConfig = {
     optimism: getChainConfig("optimism"),
     harmonytestnet0: getChainConfig("harmonytestnet0"),
     neonlabs: getChainConfig("neonlabs"),
+    alfajores: getChainConfig("celo_alfajores_testnet"),
+    celo: getChainConfig("celo_mainnet"),
   },
   paths: {
     artifacts: "./artifacts",
