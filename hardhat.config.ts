@@ -13,52 +13,42 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
+import chains from "./chains.json";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
-const chainIds = {
-  goerli: 5,
-  hardhat: 31337,
-  kovan: 42,
-  mainnet: 1,
-  rinkeby: 4,
-  ropsten: 3,
-  mumbai: 80001,
-  polygon: 137,
-  optimismkovan: 69,
-  optimism: 10,
-  harmonytestnet0: 1666700000,
-  neonlabs: 245022926,
-  celo_alfajores_testnet: 44787,
-  celo_mainnet: 42220,
-};
+type Chain = keyof typeof chains;
+
+const HARDHAT_CHAIN_ID = 31337;
 
 // Ensure that we have all the environment variables we need.
-const privateKey: string | undefined = process.env.MNEMONIC;
+// Private key is a must for any deployment
+const privateKey = process.env.MNEMONIC!;
+// If the network you want to deploy to requires an Infura key
+// specify it in the environment variable INFURA_KEY
+const infuraApiKey = process.env.INFURA_API_KEY;
+// If the network to deploy to is specified
+// only that specific network will be used in the hardhat config
+const selectedNetwork = process.env.NETWORK;
 if (!privateKey) {
   throw new Error("Please set your private key in a .env file");
 }
 
-const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
-if (!infuraApiKey) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
-}
+const CHAIN_LIST = (selectedNetwork ? [selectedNetwork] : Object.keys(chains)) as Chain[];
 
-function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  let url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
-  if (network === "mumbai") url = "https://rpc-mumbai.matic.today";
-  if (network === "polygon") url = "https://polygon-mainnet.infura.io/v3/" + infuraApiKey;
-  if (network === "optimismkovan") url = "https://optimism-kovan.infura.io/v3/" + infuraApiKey;
-  if (network === "optimism") url = "https://optimism-mainnet.infura.io/v3/" + infuraApiKey;
-  if (network === "harmonytestnet0") url = "https://api.s0.b.hmny.io";
-  if (network === "neonlabs") url = "https://proxy.devnet.neonlabs.org/solana";
-  if (network === "celo_alfajores_testnet") url = "https://alfajores-forno.celo-testnet.org";
-  if (network === "celo_mainnet") url = "https://forno.celo.org";
+function getChainConfig(network: Chain): NetworkUserConfig {
+  let rpcUrl = chains[network].rpcUrl;
+  if (rpcUrl.includes("{{infura_key}}")) {
+    if (!infuraApiKey) {
+      throw new Error("Infura key required to connect to " + network);
+    }
+    rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
+  }
 
   return {
     accounts: [privateKey!],
-    chainId: chainIds[network],
-    url,
+    chainId: chains[network].id,
+    url: rpcUrl,
   };
 }
 
@@ -71,21 +61,13 @@ const config: HardhatUserConfig = {
     src: "./contracts",
   },
   networks: {
+    ...CHAIN_LIST.reduce((dict, chainName) => {
+      dict[chainName] = getChainConfig(chainName);
+      return dict;
+    }, {} as { [C in Chain]: NetworkUserConfig }),
     hardhat: {
-      chainId: chainIds.hardhat,
+      chainId: HARDHAT_CHAIN_ID,
     },
-    goerli: getChainConfig("goerli"),
-    kovan: getChainConfig("kovan"),
-    rinkeby: getChainConfig("rinkeby"),
-    ropsten: getChainConfig("ropsten"),
-    mumbai: getChainConfig("mumbai"),
-    polygon: getChainConfig("polygon"),
-    optimismkovan: getChainConfig("optimismkovan"),
-    optimism: getChainConfig("optimism"),
-    harmonytestnet0: getChainConfig("harmonytestnet0"),
-    neonlabs: getChainConfig("neonlabs"),
-    alfajores: getChainConfig("celo_alfajores_testnet"),
-    celo: getChainConfig("celo_mainnet"),
   },
   paths: {
     artifacts: "./artifacts",

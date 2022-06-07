@@ -1,0 +1,10 @@
+{
+  "goerli": {
+    "id": 5,
+    "rpcUrl": "https://goerli.infura.io/v3/{{infura_key}}"
+  },
+  "harmony_testnet": {
+    "id": 1666700000,
+    "rpcUrl": "https://api.s0.b.hmny.io"
+  }
+}
