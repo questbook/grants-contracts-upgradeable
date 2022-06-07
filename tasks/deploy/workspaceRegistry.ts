@@ -4,6 +4,8 @@ import { TaskArguments } from "hardhat/types";
 import { WorkspaceRegistry } from "../../src/types/WorkspaceRegistry";
 import { WorkspaceRegistry__factory } from "../../src/types/factories/WorkspaceRegistry__factory";
 
+const fs = require("fs");
+
 task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
   const workspaceRegistryFactory: WorkspaceRegistry__factory = <WorkspaceRegistry__factory>(
     await ethers.getContractFactory("WorkspaceRegistry")
@@ -14,8 +16,26 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
   const tx = await workspaceRegistry.deployed();
   const res = await tx.deployTransaction.wait();
   // @ts-expect-error events
+  const implAddress = res.events[0].args[0];
+  // @ts-expect-error events
   console.log("WorkspaceRegistry Implementation deployed to:", res.events[0].args[0]);
   console.log("WorkspaceRegistry Proxy deployed to: ", workspaceRegistry.address);
+  const workspaceRegistryAddress = {
+    workspaceRegistryAddress: {
+      proxy: workspaceRegistry.address,
+      implementation: implAddress,
+    },
+  };
+  const jsonData = JSON.stringify(workspaceRegistryAddress);
+
+  if (fs.existsSync("config.json")) {
+    let contractsData = fs.readFileSync("config.json");
+    let contractAddresses = JSON.parse(contractsData);
+    contractAddresses = { ...contractAddresses, ...workspaceRegistryAddress };
+    fs.writeFileSync("config.json", JSON.stringify(contractAddresses));
+  } else {
+    fs.writeFileSync("config.json", jsonData);
+  }
 });
 
 task("upgrade:WorkspaceRegistry")

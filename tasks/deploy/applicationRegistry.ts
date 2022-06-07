@@ -4,6 +4,8 @@ import { TaskArguments } from "hardhat/types";
 import { ApplicationRegistry } from "../../src/types/ApplicationRegistry";
 import { ApplicationRegistry__factory } from "../../src/types/factories/ApplicationRegistry__factory";
 
+const fs = require("fs");
+
 task("deploy:ApplicationRegistry").setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
   const applicationRegistryFactory: ApplicationRegistry__factory = <ApplicationRegistry__factory>(
     await ethers.getContractFactory("ApplicationRegistry")
@@ -14,8 +16,26 @@ task("deploy:ApplicationRegistry").setAction(async function (taskArguments: Task
   const tx = await applicationRegistry.deployed();
   const res = await tx.deployTransaction.wait();
   // @ts-expect-error events
+  const implAddress = res.events[0].args[0];
+  // @ts-expect-error events
   console.log("ApplicationRegistry Implementation deployed to:", res.events[0].args[0]);
   console.log("ApplicationRegistry Proxy deployed to: ", applicationRegistry.address);
+  const applicationRegistryAddress = {
+    applicationRegistryAddress: {
+      proxy: applicationRegistry.address,
+      implementation: implAddress,
+    },
+  };
+  const jsonData = JSON.stringify(applicationRegistryAddress);
+
+  if (fs.existsSync("config.json")) {
+    let contractsData = fs.readFileSync("config.json");
+    let contractAddresses = JSON.parse(contractsData);
+    contractAddresses = { ...contractAddresses, ...applicationRegistryAddress };
+    fs.writeFileSync("config.json", JSON.stringify(contractAddresses));
+  } else {
+    fs.writeFileSync("config.json", jsonData);
+  }
 });
 
 task("upgrade:ApplicationRegistry")
