@@ -34,7 +34,7 @@ if (!privateKey) {
   throw new Error("Please set your private key in a .env file");
 }
 
-const CHAIN_LIST = (selectedNetwork ? [selectedNetwork] : Object.keys(chains)) as Chain[];
+const CHAIN_LIST = Object.keys(chains) as Chain[];
 
 function getChainConfig(network: Chain): NetworkUserConfig {
   let rpcUrl = chains[network].rpcUrl;
@@ -61,13 +61,13 @@ const config: HardhatUserConfig = {
     src: "./contracts",
   },
   networks: {
+    hardhat: {
+      chainId: HARDHAT_CHAIN_ID,
+    },
     ...CHAIN_LIST.reduce((dict, chainName) => {
       dict[chainName] = getChainConfig(chainName);
       return dict;
     }, {} as { [C in Chain]: NetworkUserConfig }),
-    hardhat: {
-      chainId: HARDHAT_CHAIN_ID,
-    },
   },
   paths: {
     artifacts: "./artifacts",
