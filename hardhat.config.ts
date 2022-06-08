@@ -36,20 +36,23 @@ if (!privateKey) {
 
 const CHAIN_LIST = (selectedNetwork ? [selectedNetwork] : Object.keys(chains)) as Chain[];
 
-function getChainConfig(network: Chain): NetworkUserConfig {
-  let rpcUrl = chains[network].rpcUrl;
-  if (rpcUrl.includes("{{infura_key}}")) {
-    if (!infuraApiKey) {
-      throw new Error("Infura key required to connect to " + network);
+function getChainConfig(network: Chain): NetworkUserConfig | undefined {
+  const chainData = chains[network];
+  if (chainData) {
+    let rpcUrl = chains[network].rpcUrl;
+    if (rpcUrl.includes("{{infura_key}}")) {
+      if (!infuraApiKey) {
+        throw new Error("Infura key required to connect to " + network);
+      }
+      rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
     }
-    rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
-  }
 
-  return {
-    accounts: [privateKey!],
-    chainId: chains[network].id,
-    url: rpcUrl,
-  };
+    return {
+      accounts: [privateKey!],
+      chainId: chains[network].id,
+      url: rpcUrl,
+    };
+  }
 }
 
 const config: HardhatUserConfig = {
@@ -62,10 +65,13 @@ const config: HardhatUserConfig = {
   },
   networks: {
     ...CHAIN_LIST.reduce((dict, chainName) => {
-      dict[chainName] = getChainConfig(chainName);
+      const config = getChainConfig(chainName);
+      if (config) {
+        dict[chainName] = config;
+      }
+
       return dict;
     }, {} as { [C in Chain]: NetworkUserConfig }),
-
     hardhat: {
       chainId: HARDHAT_CHAIN_ID,
     },

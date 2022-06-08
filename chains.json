@@ -30,9 +30,5 @@
   "rinkeby": {
     "id": 4,
     "rpcUrl": "https://rinkeby.infura.io/v3/{{infura_key}}"
-  },
-  "hardhat": {
-    "id": 31337,
-    "rpcUrl": ""
   }
 }
