@@ -30,7 +30,6 @@ async function main() {
 
 main()
   .then(() => {
-    fs.unlinkSync("./config.json");
     process.exit(0);
   })
   .catch(error => {
