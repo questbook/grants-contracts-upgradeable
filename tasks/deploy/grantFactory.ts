@@ -22,6 +22,7 @@ task("deploy:GrantFactory").setAction(async function (taskArguments: TaskArgumen
     grantFactoryAddress: {
       proxy: grantFactory.address,
       implementation: implAddress,
+      blockNumber: tx.deployTransaction.blockNumber,
     },
   };
   const jsonData = JSON.stringify(grantFactoryAddress);

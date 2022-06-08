@@ -20,10 +20,12 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
   // @ts-expect-error events
   console.log("WorkspaceRegistry Implementation deployed to:", res.events[0].args[0]);
   console.log("WorkspaceRegistry Proxy deployed to: ", workspaceRegistry.address);
+  console.log("Block number", tx.deployTransaction.blockNumber);
   const workspaceRegistryAddress = {
     workspaceRegistryAddress: {
       proxy: workspaceRegistry.address,
       implementation: implAddress,
+      blockNumber: tx.deployTransaction.blockNumber,
     },
   };
   const jsonData = JSON.stringify(workspaceRegistryAddress);

@@ -26,6 +26,7 @@ task("deploy:ApplicationReviewRegistry").setAction(async function (taskArguments
     applicationReviewRegistryAddress: {
       proxy: applicationReviewRegistry.address,
       implementation: implAddress,
+      blockNumber: tx.deployTransaction.blockNumber,
     },
   };
   const jsonData = JSON.stringify(applicationReviewRegistryAddress);
