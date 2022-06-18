@@ -11,6 +11,10 @@
     "id": 1666700000,
     "rpcUrl": "https://api.s0.pops.one"
   },
+  "klaytn-testnet": {
+    "id": 1001,
+    "rpcUrl": "https://api.baobab.klaytn.net:8651"
+  },
   "neon-devnet": {
     "id": 245022926,
     "rpcUrl": "http://neon-devnet-rpc.questbook.app:9090/solana"
