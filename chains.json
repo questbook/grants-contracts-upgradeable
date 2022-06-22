@@ -3,6 +3,10 @@
     "id": 44787,
     "rpcUrl": "https://alfajores-forno.celo-testnet.org"
   },
+  "findora-testnet": {
+    "id": 2153,
+    "rpcUrl": "https://prod-testnet.prod.findora.org:8545"
+  },
   "harmony-mainnet": {
     "id": 1666600000,
     "rpcUrl": "https://api.harmony.one"
