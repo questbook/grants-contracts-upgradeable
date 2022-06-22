@@ -11,6 +11,10 @@
     "id": 1666700000,
     "rpcUrl": "https://api.s0.pops.one"
   },
+  "klaytn-mainnet": {
+    "id": 8217,
+    "rpcUrl": "https://public-node-api.klaytnapi.com/v1/cypress"
+  },
   "klaytn-testnet": {
     "id": 1001,
     "rpcUrl": "https://api.baobab.klaytn.net:8651"
