@@ -5,7 +5,7 @@
   },
   "findora-testnet": {
     "id": 2153,
-    "rpcUrl": "https://prod-testnet.prod.findora.org:8545"
+    "rpcUrl": "https://ev2awpyss5.execute-api.ap-south-1.amazonaws.com/v0/findora"
   },
   "harmony-mainnet": {
     "id": 1666600000,
