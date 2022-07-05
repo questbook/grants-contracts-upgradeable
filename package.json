@@ -16,6 +16,9 @@
       "url": "https://twitter.com/swetashaw_"
     }
   ],
+  "dependencies": {
+    "@questbook/anon-authoriser": "git+https://github.com/questbook/anon-authoriser"
+  },
   "devDependencies": {
     "@codechecks/client": "^0.1.12",
     "@commitlint/cli": "^14.1.0",

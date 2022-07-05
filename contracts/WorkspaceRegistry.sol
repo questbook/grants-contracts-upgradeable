@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
+import "@questbook/anon-authoriser/contracts/anon-authoriser.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
 contract WorkspaceRegistry is
@@ -15,6 +16,7 @@ contract WorkspaceRegistry is
     PausableUpgradeable,
     IWorkspaceRegistry
 {
+    address constant ANON_AUTHORISER_ADDRESS = 0x0000000000000000000000000000000000000000;
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
@@ -145,6 +147,34 @@ contract WorkspaceRegistry is
     }
 
     /**
+     * @notice Create an invite link for someone to join with
+     * @param _id ID of workspace to create invite link for
+     * @param publicKeyAddress Generated public key address for the invite link
+     * (corresponding private key should be sent to invitee)
+     */
+    function createInviteLink(uint96 _id, address publicKeyAddress) external whenNotPaused onlyWorkspaceAdmin(_id) {
+        bytes32 apiFlag = _apiFlagForWorkspaceId(_id);
+        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).generateAnonAuthorisation(publicKeyAddress, apiFlag);
+    }
+
+    /**
+     * @notice Join a workspace with an invite link
+     * @param _id ID of workspace to join
+     * @param inviter Address of the person that sent the invite
+     * Remaining params are of the signature to be sent to AnonAuthoriser
+     */
+    function joinViaInviteLink(
+        uint96 _id,
+        address inviter,
+        uint8 signatureV,
+        bytes32 signatureR,
+        bytes32 signatureS
+    ) external whenNotPaused {
+        bytes32 apiFlag = _apiFlagForWorkspaceId(_id);
+        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).anonAuthorise(inviter, apiFlag, signatureV, signatureR, signatureS);
+    }
+
+    /**
      * @notice Check if an address is admin of specified workspace, can be called by anyone
      * @param _id ID of target workspace
      * @param _address Address to validate role
@@ -214,5 +244,9 @@ contract WorkspaceRegistry is
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function _apiFlagForWorkspaceId(uint96 workspaceId) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("workspace-invite-", abi.encodePacked(workspaceId)));
     }
 }
