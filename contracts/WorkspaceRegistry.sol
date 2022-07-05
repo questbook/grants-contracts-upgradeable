@@ -132,46 +132,61 @@ contract WorkspaceRegistry is
         bool[] memory _enabled,
         string[] memory _emails
     ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
-        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        for (uint256 i = 0; i < _members.length; i++) {
-            address member = _members[i];
-            /// @notice The role 0 denotes an admin role
-            /// @notice The role 1 denotes a reviewer role
-            uint8 role = _roles[i];
-            bool enabled = _enabled[i];
-            _setRole(_id, member, role, enabled);
-        }
-        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
+        _updateWorkspaceMembers(_id, _members, _roles, _enabled, _emails);
     }
 
     /**
      * @notice Create an invite link for someone to join with
      * @param _id ID of workspace to create invite link for
+     * @param _role what the role of the invited member should be
      * @param publicKeyAddress Generated public key address for the invite link
      * (corresponding private key should be sent to invitee)
      */
-    function createInviteLink(uint96 _id, address publicKeyAddress) external whenNotPaused onlyWorkspaceAdmin(_id) {
-        bytes32 apiFlag = _apiFlagForWorkspaceId(_id);
+    function createInviteLink(
+        uint96 _id,
+        uint8 _role,
+        address publicKeyAddress
+    ) external whenNotPaused onlyWorkspaceAdmin(_id) {
+        bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
         AnonAuthoriser(ANON_AUTHORISER_ADDRESS).generateAnonAuthorisation(publicKeyAddress, apiFlag);
     }
 
     /**
      * @notice Join a workspace with an invite link
      * @param _id ID of workspace to join
+     * @param _email email of the user that is requesting to join (optional, can be empty)
+     * @param _role the role the user was invited for
      * @param inviter Address of the person that sent the invite
      * Remaining params are of the signature to be sent to AnonAuthoriser
      */
     function joinViaInviteLink(
         uint96 _id,
+        string memory _email,
+        uint8 _role,
         address inviter,
         uint8 signatureV,
         bytes32 signatureR,
         bytes32 signatureS
     ) external whenNotPaused {
-        bytes32 apiFlag = _apiFlagForWorkspaceId(_id);
-        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).anonAuthorise(inviter, apiFlag, signatureV, signatureR, signatureS);
+        bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
+        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).anonAuthorise(
+            inviter,
+            apiFlag,
+            msg.sender,
+            signatureV,
+            signatureR,
+            signatureS
+        );
+
+        address[] memory addrs = new address[](1);
+        uint8[] memory roles = new uint8[](1);
+        bool[] memory enabled = new bool[](1);
+        string[] memory emails = new string[](1);
+        addrs[0] = msg.sender;
+        roles[0] = _role;
+        enabled[0] = true;
+        emails[0] = _email;
+        _updateWorkspaceMembers(_id, addrs, roles, enabled, emails);
     }
 
     /**
@@ -246,7 +261,28 @@ contract WorkspaceRegistry is
         _unpause();
     }
 
-    function _apiFlagForWorkspaceId(uint96 workspaceId) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("workspace-invite-", abi.encodePacked(workspaceId)));
+    function _updateWorkspaceMembers(
+        uint96 _id,
+        address[] memory _members,
+        uint8[] memory _roles,
+        bool[] memory _enabled,
+        string[] memory _emails
+    ) internal whenNotPaused withinLimit(_members.length) {
+        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        for (uint256 i = 0; i < _members.length; i++) {
+            address member = _members[i];
+            /// @notice The role 0 denotes an admin role
+            /// @notice The role 1 denotes a reviewer role
+            uint8 role = _roles[i];
+            bool enabled = _enabled[i];
+            _setRole(_id, member, role, enabled);
+        }
+        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
+    }
+
+    function _apiFlagForWorkspaceId(uint96 workspaceId, uint8 role) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("workspace-invite-", abi.encodePacked(workspaceId), abi.encodePacked(role)));
     }
 }
