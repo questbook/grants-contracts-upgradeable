@@ -10,6 +10,7 @@ import { shouldBehaveLikeApplicationReviewRegistry } from "./ApplicationReviewRe
 import { expect } from "chai";
 import { GrantFactory } from "../../src/types/GrantFactory";
 import { Artifact } from "hardhat/types";
+import { creatingWorkpsace } from "../utils";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -30,7 +31,7 @@ describe("Unit tests", function () {
         await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
       );
 
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
 
       this.applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
       this.applicationRegistry = <ApplicationRegistry>(

@@ -8,6 +8,7 @@ import type { WorkspaceRegistry } from "../../src/types/WorkspaceRegistry";
 import { Signers } from "../types";
 import { shouldBehaveLikeGrant } from "./Grant.behavior";
 import { expect } from "chai";
+import { creatingWorkpsace } from "../utils";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -27,7 +28,7 @@ describe("Unit tests", function () {
         await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
       );
 
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHash");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
 
       const applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
       this.applicationRegistry = <ApplicationRegistry>(

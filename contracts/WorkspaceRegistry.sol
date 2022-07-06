@@ -18,11 +18,20 @@ contract WorkspaceRegistry is
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
+    /// @notice Optional safe used by a workspace
+    struct Safe {
+        /// The address of the safe
+        bytes32 _address;
+        /// ID of the chain, where it is stored
+        uint256 chainId;
+    }
+
     /// @notice structure holding each workspace data
     struct Workspace {
         uint96 id;
         address owner;
         string metadataHash;
+        Safe safe;
     }
 
     /// @notice mapping to store workspaceId vs workspace data structure
@@ -34,6 +43,9 @@ contract WorkspaceRegistry is
     // --- Events ---
     /// @notice Emitted when a new workspace is created
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
+
+    /// @notice Emitted when a workspace's safe is updated
+    event WorkspaceSafeUpdated(uint96 indexed id, bytes32 safeAddress, uint256 safeChainId, uint256 time);
 
     /// @notice Emitted when a workspace is updated
     event WorkspaceUpdated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -90,18 +102,29 @@ contract WorkspaceRegistry is
      * @notice Create a new workspace under which grants will be created,
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
+     * @param _safeAddress address of the safe used by the workspace (optional)
+     * @param _safeChainId chain id of the safe used by the workspace (optional -- specify 0 if not used)
      */
-    function createWorkspace(string memory _metadataHash) external whenNotPaused {
+    function createWorkspace(
+        string memory _metadataHash,
+        bytes32 _safeAddress,
+        uint256 _safeChainId
+    ) external whenNotPaused {
         uint96 _id = workspaceCount;
-        workspaces[_id] = Workspace(_id, msg.sender, _metadataHash);
+        workspaces[_id] = Workspace(_id, msg.sender, _metadataHash, Safe(_safeAddress, _safeChainId));
         _setRole(_id, msg.sender, 0, true);
         emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
+        // emit safe update if safe was specified
+        if (_safeChainId > 0) {
+            emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
+        }
         assert(workspaceCount + 1 > workspaceCount);
         workspaceCount += 1;
     }
 
     /**
-     * @notice Update the metadata pointer of a workspace, can be called by workspace admins
+     * @notice Update the metadata pointer of a workspace,
+     * can be called by workspace admins or reviewers
      * @param _id ID of workspace to update
      * @param _metadataHash New IPFS hash that points to workspace metadata
      */
@@ -113,6 +136,23 @@ contract WorkspaceRegistry is
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
         emit WorkspaceUpdated(workspace.id, workspace.owner, workspace.metadataHash, block.timestamp);
+    }
+
+    /**
+     * @notice Update the workspace safe address and chain id, admin only
+     *
+     * @param _id ID of workspace to update
+     * @param _safeAddress address of the safe used by the workspace (optional)
+     * @param _safeChainId chain id of the safe used by the workspace (set to 0 to remove)
+     */
+    function updateWorkspaceSafe(
+        uint96 _id,
+        bytes32 _safeAddress,
+        uint256 _safeChainId
+    ) external whenNotPaused onlyWorkspaceAdmin(_id) {
+        Workspace storage workspace = workspaces[_id];
+        workspace.safe = Safe(_safeAddress, _safeChainId);
+        emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
     }
 
     /**

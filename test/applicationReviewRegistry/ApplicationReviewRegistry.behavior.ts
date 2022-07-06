@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
+import { creatingWorkpsace } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -48,7 +49,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await this.workspaceRegistry
         .connect(this.signers.admin)
         .updateWorkspaceMembers(0, [this.signers.reviewer.address], [1], [true], [""]);
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHashAnother");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
@@ -193,7 +194,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
 
     it("admin of one workspace should not be able to set rubrics another workspace", async function () {
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyWorkspaceIpfsHashAnother");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
       const grant = await upgrades.deployProxy(
         this.grantFactory,
         [
@@ -245,7 +246,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
 
     it("admin of one workspace should not be able to change payment status of another workspace review", async function () {
-      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHashNonAdmin");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.nonAdmin)
@@ -279,7 +280,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
 
     it("admin of one workspace should not be able to fulfill payment of another workspace review", async function () {
-      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHashNonAdmin");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.nonAdmin)
