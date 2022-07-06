@@ -78,7 +78,7 @@ describe("Unit tests", function () {
       const safeChainId = 123;
       const result = await creatingWorkpsace(workspaceRegistry, safeAddress, safeChainId);
       const recp = await result.wait();
-      const [{ args: eventArgs }] = recp.events!;
+      const { args: eventArgs } = recp.events!.find(e => e.event === "WorkspaceSafeUpdated")!;
       expect(eventArgs!.id).to.eq(0);
       // check safe address was input correctly
       expect(eventArgs!.safeAddress.slice(2)).to.eq(safeAddress.toString("hex"));
@@ -93,10 +93,8 @@ describe("Unit tests", function () {
 
       const result = await workspaceRegistry.updateWorkspaceSafe(0, safeAddress, safeChainId);
       const recp = await result.wait();
-      const [{ args: eventArgs }] = recp.events!;
+      const { args: eventArgs } = recp.events!.find(e => e.event === "WorkspaceSafeUpdated")!;
       expect(eventArgs!.id).to.eq(0);
-      // check hash has remained the same
-      expect(eventArgs!.metadataHash).to.eq(DUMMY_IPFS_HASH);
       // check safe address was input correctly
       expect(eventArgs!.safeAddress.slice(2)).to.eq(safeAddress.toString("hex"));
       expect(eventArgs!.safeChainId.toNumber()).to.eq(safeChainId);

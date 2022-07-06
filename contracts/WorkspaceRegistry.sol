@@ -42,24 +42,13 @@ contract WorkspaceRegistry is
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
-    event WorkspaceCreated(
-        uint96 indexed id,
-        address indexed owner,
-        string metadataHash,
-        bytes32 safeAddress,
-        uint256 safeChainId,
-        uint256 time
-    );
+    event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
+
+    /// @notice Emitted when a workspace's safe is updated
+    event WorkspaceSafeUpdated(uint96 indexed id, bytes32 safeAddress, uint256 safeChainId, uint256 time);
 
     /// @notice Emitted when a workspace is updated
-    event WorkspaceUpdated(
-        uint96 indexed id,
-        address indexed owner,
-        string metadataHash,
-        bytes32 safeAddress,
-        uint256 safeChainId,
-        uint256 time
-    );
+    event WorkspaceUpdated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
 
     /// @notice Emitted when workspace members are updated
     /// @notice The role 0 denotes an admin role
@@ -124,7 +113,11 @@ contract WorkspaceRegistry is
         uint96 _id = workspaceCount;
         workspaces[_id] = Workspace(_id, msg.sender, _metadataHash, Safe(_safeAddress, _safeChainId));
         _setRole(_id, msg.sender, 0, true);
-        emit WorkspaceCreated(_id, msg.sender, _metadataHash, _safeAddress, _safeChainId, block.timestamp);
+        emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
+        // emit safe update if safe was specified
+        if (_safeChainId > 0) {
+            emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
+        }
         assert(workspaceCount + 1 > workspaceCount);
         workspaceCount += 1;
     }
@@ -142,14 +135,7 @@ contract WorkspaceRegistry is
     {
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
-        emit WorkspaceUpdated(
-            workspace.id,
-            workspace.owner,
-            workspace.metadataHash,
-            workspace.safe._address,
-            workspace.safe.chainId,
-            block.timestamp
-        );
+        emit WorkspaceUpdated(workspace.id, workspace.owner, workspace.metadataHash, block.timestamp);
     }
 
     /**
@@ -166,14 +152,7 @@ contract WorkspaceRegistry is
     ) external whenNotPaused onlyWorkspaceAdmin(_id) {
         Workspace storage workspace = workspaces[_id];
         workspace.safe = Safe(_safeAddress, _safeChainId);
-        emit WorkspaceUpdated(
-            workspace.id,
-            workspace.owner,
-            workspace.metadataHash,
-            workspace.safe._address,
-            workspace.safe.chainId,
-            block.timestamp
-        );
+        emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
     }
 
     /**
