@@ -9,6 +9,7 @@ import { Signers } from "../types";
 import { shouldBehaveLikeGrantFactory } from "./GrantFactory.behavior";
 import { expect } from "chai";
 import { ApplicationReviewRegistry } from "../../src/types/ApplicationReviewRegistry";
+import { creatingWorkpsace } from "../utils";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -28,7 +29,7 @@ describe("Unit tests", function () {
         await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
       );
 
-      await this.workspaceRegistry.connect(this.signers.admin).createWorkspace("dummyIpfsHash");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
 
       this.applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
       this.applicationReviewRegistry = <ApplicationReviewRegistry>(

@@ -4,7 +4,7 @@ import type { WorkspaceRegistry, WorkspaceRegistryV2__factory } from "../src/typ
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { Signer } from "ethers";
-import { randomWallet } from "./utils";
+import { creatingWorkpsace, DUMMY_IPFS_HASH, randomWallet } from "./utils";
 
 describe("Unit tests", function () {
   describe("WorkspaceRegistry", function () {
@@ -95,6 +95,8 @@ describe("Unit tests", function () {
       const recp = await result.wait();
       const [{ args: eventArgs }] = recp.events!;
       expect(eventArgs!.id).to.eq(0);
+      // check hash has remained the same
+      expect(eventArgs!.metadataHash).to.eq(DUMMY_IPFS_HASH);
       // check safe address was input correctly
       expect(eventArgs!.safeAddress.slice(2)).to.eq(safeAddress.toString("hex"));
       expect(eventArgs!.safeChainId.toNumber()).to.eq(safeChainId);
@@ -222,12 +224,6 @@ describe("Unit tests", function () {
         expect(await _workspaceRegistry.workspaceCount()).to.equal(1);
       });
     });
-
-    function creatingWorkpsace(contract: WorkspaceRegistry, safeAddress?: Buffer, safeChainId?: number) {
-      safeAddress = safeAddress || Buffer.alloc(32);
-      safeChainId = safeChainId || 0;
-      return contract.createWorkspace("dummyIpfsHash", safeAddress, safeChainId);
-    }
   });
 });
 
