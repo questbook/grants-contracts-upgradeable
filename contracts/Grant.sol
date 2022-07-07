@@ -64,7 +64,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint96 milestoneId,
         address asset,
         address sender,
-        bytes32 transactionHash,
+        bytes transactionHash,
         uint256 amount,
         uint256 time
     );
@@ -214,7 +214,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function recordTransaction(
         uint96 _applicationId,
         uint96 _milestoneId,
-        bytes32 _transactionHash,
+        bytes memory _transactionHash,
         uint256 _amount
     ) external onlyWorkspaceAdmin {
         // TODO

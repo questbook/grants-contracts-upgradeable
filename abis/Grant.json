@@ -271,9 +271,9 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
+        "internalType": "bytes",
         "name": "transactionHash",
-        "type": "bytes32"
+        "type": "bytes"
       },
       {
         "indexed": false,
@@ -491,9 +491,9 @@
         "type": "uint96"
       },
       {
-        "internalType": "bytes32",
+        "internalType": "bytes",
         "name": "_transactionHash",
-        "type": "bytes32"
+        "type": "bytes"
       },
       {
         "internalType": "uint256",
