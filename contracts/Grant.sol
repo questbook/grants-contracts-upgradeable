@@ -216,7 +216,6 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         bytes memory _transactionHash,
         uint256 _amount
     ) external onlyWorkspaceAdmin {
-        // TODO
         emit TransactionRecord(_applicationId, _milestoneId, msg.sender, _transactionHash, _amount, block.timestamp);
     }
 }
