@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import { assert } from "console";
 import { ethers, upgrades } from "hardhat";
 
 export function shouldBehaveLikeGrant(): void {
