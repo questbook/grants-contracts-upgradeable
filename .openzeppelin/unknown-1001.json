@@ -148,7 +148,7 @@
             "label": "workspaces",
             "offset": 0,
             "slot": "252",
-            "type": "t_mapping(t_uint96,t_struct(Workspace)4931_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Workspace)1284_storage)",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:38"
           },
@@ -190,7 +190,7 @@
             "label": "mapping(uint96 => mapping(address => bytes32))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Workspace)4931_storage)": {
+          "t_mapping(t_uint96,t_struct(Workspace)1284_storage)": {
             "label": "mapping(uint96 => struct WorkspaceRegistry.Workspace)",
             "numberOfBytes": "32"
           },
@@ -198,7 +198,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Safe)4921_storage": {
+          "t_struct(Safe)1274_storage": {
             "label": "struct WorkspaceRegistry.Safe",
             "members": [
               {
@@ -216,7 +216,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Workspace)4931_storage": {
+          "t_struct(Workspace)1284_storage": {
             "label": "struct WorkspaceRegistry.Workspace",
             "members": [
               {
@@ -239,7 +239,7 @@
               },
               {
                 "label": "safe",
-                "type": "t_struct(Safe)4921_storage",
+                "type": "t_struct(Safe)1274_storage",
                 "offset": 0,
                 "slot": "2"
               }
