@@ -62,7 +62,6 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     event TransactionRecord(
         uint96 indexed applicationId,
         uint96 milestoneId,
-        address asset,
         address sender,
         bytes transactionHash,
         uint256 amount,
@@ -218,5 +217,6 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 _amount
     ) external onlyWorkspaceAdmin {
         // TODO
+        emit TransactionRecord(_applicationId, _milestoneId, msg.sender, _transactionHash, _amount, block.timestamp);
     }
 }

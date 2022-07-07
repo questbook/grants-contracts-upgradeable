@@ -1,9 +1,25 @@
 import { expect } from "chai";
+import { assert } from "console";
 import { ethers, upgrades } from "hardhat";
 
 export function shouldBehaveLikeGrant(): void {
   it("Application count can only be modified by applicationRegistry", async function () {
     expect(this.grant.connect(this.signers.admin).incrementApplicant()).to.be.reverted;
+  });
+
+  describe("Recording a transaction", async function () {
+    it("record transaction successful, initiated by admin", async function () {
+      let tx = await this.grant.connect(this.signers.admin).recordTransaction(0, 0, "0x12", 100);
+      tx = await tx.wait();
+      const { events } = tx;
+      expect(events[0].event).to.equal("TransactionRecord");
+    });
+
+    it("record transaction should not be successful if initiated by non admin", async function () {
+      expect(this.grant.connect(this.signers.nonAdmin).recordTransaction(0, 0, "0x12", 100)).to.revertedWith(
+        "Unauthorised: Not an admin",
+      );
+    });
   });
 
   describe("Updating a grant is", async function () {
