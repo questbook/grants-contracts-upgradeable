@@ -16,9 +16,11 @@ contract WorkspaceRegistry is
     PausableUpgradeable,
     IWorkspaceRegistry
 {
-    address public anonAuthoriserAddress;
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
+
+    /// @notice Address of the anon authoriser contract
+    address public anonAuthoriserAddress;
 
     /// @notice Optional safe used by a workspace
     struct Safe {
