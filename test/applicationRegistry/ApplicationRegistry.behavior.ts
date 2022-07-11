@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
+import { creatingWorkpsace } from "../utils";
 
 export function shouldBehaveLikeApplicationRegistry(): void {
   // it("deployer can pause the contract", async function () {
@@ -225,7 +226,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     });
 
     it("application state cannot be updated if wrong workspace id is passed", async function () {
-      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
@@ -371,7 +372,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     // });
 
     it("application cannot be completed if wrong workspaceId is passed", async function () {
-      await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+      await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
@@ -473,7 +474,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       });
 
       it("Milestone state can not approved if invalid workspaceId provided", async function () {
-        await this.workspaceRegistry.connect(this.signers.nonAdmin).createWorkspace("dummyWorkspaceIpfsHash");
+        await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
         expect(
           this.applicationRegistry.connect(this.signers.nonAdmin).approveMilestone(0, 0, 1, "dummyApplicationIpfsHash"),
         ).to.be.revertedWith("ApplicationStateUpdate: Invalid workspace");

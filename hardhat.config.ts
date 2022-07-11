@@ -47,6 +47,16 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
       rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
     }
 
+    if (network === "klaytn-testnet") {
+      return {
+        accounts: [privateKey!],
+        chainId: chains[network].id,
+        url: rpcUrl,
+        minGasPrice: 250000000000,
+        gasPrice: 250000000000,
+      };
+    }
+
     return {
       accounts: [privateKey!],
       chainId: chains[network].id,

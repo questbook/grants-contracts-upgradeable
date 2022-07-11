@@ -56,12 +56,13 @@ export function shouldBehaveLikeGrantFactory(): void {
         this.applicationRegistry.address,
       );
     const tx = await create.wait();
-    expect(tx.events[3].args[0]).to.equal(expectedGrantAddress);
-    expect(parseInt(tx.events[3].args[1], 16)).to.equal(0);
-    expect(tx.events[3].args[2]).to.equal("dummyIpfsHash");
+    const grantCreatedEvent = tx.events.find(({ event }: any) => event === "GrantCreated");
+    expect(grantCreatedEvent.args.grantAddress).to.equal(expectedGrantAddress);
+    expect(grantCreatedEvent.args.workspaceId.toNumber()).to.equal(0);
+    expect(grantCreatedEvent.args.metadataHash).to.equal("dummyIpfsHash");
   });
 
-  it("workspace admin should be able to create new grant alongwith rubrics", async function () {
+  it("workspace admin should be able to create new grant with rubrics", async function () {
     const nonce = await waffle.provider.getTransactionCount(this.grantFactory.address);
     const transaction = {
       from: this.grantFactory.address,
@@ -78,9 +79,11 @@ export function shouldBehaveLikeGrantFactory(): void {
         this.applicationRegistry.address,
       );
     const tx = await create.wait();
-    expect(tx.events[3].args[0]).to.equal(expectedGrantAddress);
-    expect(parseInt(tx.events[3].args[1], 16)).to.equal(0);
-    expect(tx.events[3].args[2]).to.equal("dummyIpfsHash");
+    const grantCreatedEvent = tx.events.find(({ event }: any) => event === "GrantCreated");
+    expect(grantCreatedEvent.args.grantAddress).to.equal(expectedGrantAddress);
+    expect(grantCreatedEvent.args.workspaceId.toNumber()).to.equal(0);
+    expect(grantCreatedEvent.args.metadataHash).to.equal("dummyIpfsHash");
+
     const grantReviewState = await this.applicationReviewRegistry.grantReviewStates(expectedGrantAddress);
     expect(grantReviewState[3]).to.equal("dummyRubricsIpfsHash");
   });
@@ -134,11 +137,12 @@ export function shouldBehaveLikeGrantFactory(): void {
     });
 
     it("deployer should be able to upgrade the grant implementation deployed using createGrant function", async function () {
+      const otherAdmin = this.signers.otherAdmin;
       await this.workspaceRegistry
         .connect(this.signers.admin)
-        .updateWorkspaceMembers(0, [this.signers.otherAdmin.address], [0], [true], [""]);
+        .updateWorkspaceMembers(0, [otherAdmin.address], [0], [true], [""]);
       const create = await this.grantFactory
-        .connect(this.signers.otherAdmin)
+        .connect(otherAdmin)
         .createGrant(
           0,
           "dummyIpfsHash",
@@ -147,8 +151,10 @@ export function shouldBehaveLikeGrantFactory(): void {
           this.applicationRegistry.address,
         );
       const tx = await create.wait();
-      await upgrades.forceImport(tx.events[3].args[0], this.grantFactoryV1, { kind: "uups" });
-      const grantv2 = await upgrades.upgradeProxy(tx.events[3].args[0], this.grantFactoryV2);
+      const grantCreatedEvent = tx.events.find(({ event }: any) => event === "GrantCreated");
+      const grantAddress = grantCreatedEvent.args.grantAddress;
+      await upgrades.forceImport(grantAddress, this.grantFactoryV1, { kind: "uups" });
+      const grantv2 = await upgrades.upgradeProxy(grantAddress, this.grantFactoryV2);
       expect(await grantv2.version()).to.equal("v2!");
     });
 
@@ -166,9 +172,11 @@ export function shouldBehaveLikeGrantFactory(): void {
           this.applicationRegistry.address,
         );
       const tx = await create.wait();
-      await upgrades.forceImport(tx.events[3].args[0], this.grantFactoryV1, { kind: "uups" });
+      const grantCreatedEvent = tx.events.find(({ event }: any) => event === "GrantCreated");
+      const grantAddress = grantCreatedEvent.args.grantAddress;
+      await upgrades.forceImport(grantAddress, this.grantFactoryV1, { kind: "uups" });
       const grantFactoryV2NonAdmin = await ethers.getContractFactory("GrantV2", this.signers.nonAdmin);
-      await expect(upgrades.upgradeProxy(tx.events[3].args[0], grantFactoryV2NonAdmin)).to.be.revertedWith(
+      await expect(upgrades.upgradeProxy(grantAddress, grantFactoryV2NonAdmin)).to.be.revertedWith(
         "Ownable: caller is not the owner",
       );
     });
