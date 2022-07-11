@@ -308,7 +308,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "251",
-            "type": "t_contract(IApplicationReviewRegistry)5562",
+            "type": "t_contract(IApplicationReviewRegistry)2786",
             "contract": "GrantFactory",
             "src": "contracts/GrantFactory.sol:19"
           }
@@ -330,7 +330,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)5562": {
+          "t_contract(IApplicationReviewRegistry)2786": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
