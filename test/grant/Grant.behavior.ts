@@ -6,6 +6,21 @@ export function shouldBehaveLikeGrant(): void {
     expect(this.grant.connect(this.signers.admin).incrementApplicant()).to.be.reverted;
   });
 
+  describe("Recording a transaction", async function () {
+    it("record transaction successful, initiated by admin", async function () {
+      let tx = await this.grant.connect(this.signers.admin).recordTransaction(0, 0, "0x12", 100);
+      tx = await tx.wait();
+      const { events } = tx;
+      expect(events[0].event).to.equal("TransactionRecord");
+    });
+
+    it("record transaction should not be successful if initiated by non admin", async function () {
+      expect(this.grant.connect(this.signers.nonAdmin).recordTransaction(0, 0, "0x12", 100)).to.revertedWith(
+        "Unauthorised: Not an admin",
+      );
+    });
+  });
+
   describe("Updating a grant is", async function () {
     it("possible if no one applied to grant yet and admin is updating", async function () {
       expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");

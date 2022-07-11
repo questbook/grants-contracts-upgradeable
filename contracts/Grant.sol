@@ -58,6 +58,16 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 time
     );
 
+    /// @notice Emitted when a transaction is simply recorded
+    event TransactionRecord(
+        uint96 indexed applicationId,
+        uint96 milestoneId,
+        address sender,
+        bytes transactionHash,
+        uint256 amount,
+        uint256 time
+    );
+
     modifier onlyWorkspaceAdmin() {
         require(workspaceReg.isWorkspaceAdmin(workspaceId, msg.sender), "Unauthorised: Not an admin");
         _;
@@ -198,5 +208,14 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
             "Failed to transfer funds"
         );
+    }
+
+    function recordTransaction(
+        uint96 _applicationId,
+        uint96 _milestoneId,
+        bytes memory _transactionHash,
+        uint256 _amount
+    ) external onlyWorkspaceAdmin {
+        emit TransactionRecord(_applicationId, _milestoneId, msg.sender, _transactionHash, _amount, block.timestamp);
     }
 }
