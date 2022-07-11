@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import { Signer } from "ethers";
+import { ethers, upgrades } from "hardhat";
 import type { WorkspaceRegistry } from "../src/types";
 
 export async function randomWallet() {
@@ -15,4 +16,14 @@ export function creatingWorkpsace(contract: WorkspaceRegistry, safeAddress?: Buf
   safeAddress = safeAddress || Buffer.alloc(32);
   safeChainId = safeChainId || 0;
   return contract.createWorkspace(DUMMY_IPFS_HASH, safeAddress, safeChainId);
+}
+
+export async function deployWorkspaceContract(signer?: Signer) {
+  const factory = await ethers.getContractFactory("WorkspaceRegistry");
+  let workspaceRegistry = (await upgrades.deployProxy(factory, { kind: "uups" })) as WorkspaceRegistry;
+  if (signer) {
+    workspaceRegistry = workspaceRegistry.connect(signer);
+  }
+
+  return workspaceRegistry;
 }

@@ -3,8 +3,7 @@ import type {} from "../src/types/hardhat";
 import type { WorkspaceRegistry, WorkspaceRegistryV2__factory } from "../src/types";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
-import { Signer } from "ethers";
-import { creatingWorkpsace, DUMMY_IPFS_HASH, randomWallet } from "./utils";
+import { creatingWorkpsace, deployWorkspaceContract, randomWallet } from "./utils";
 
 describe("Unit tests", function () {
   describe("WorkspaceRegistry", function () {
@@ -224,13 +223,3 @@ describe("Unit tests", function () {
     });
   });
 });
-
-async function deployWorkspaceContract(signer?: Signer) {
-  const factory = await ethers.getContractFactory("WorkspaceRegistry");
-  let workspaceRegistry = (await upgrades.deployProxy(factory, { kind: "uups" })) as WorkspaceRegistry;
-  if (signer) {
-    workspaceRegistry = workspaceRegistry.connect(signer);
-  }
-
-  return workspaceRegistry;
-}
