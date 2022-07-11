@@ -1554,14 +1554,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@questbook/anon-authoriser@git+https://github.com/questbook/anon-authoriser":
+"@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser":
   version: 1.0.0
-  resolution: "@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser.git#commit=5e1afa9e2c1d5d4d12e3255b905f504b168980c3"
+  resolution: "@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser.git#commit=0aba5a92c71281cf3a946a34de298c4d7fbcf106"
   dependencies:
     dotenv: ^16.0.1
     elliptic: ^6.5.4
     ethers: ^5.6.9
-  checksum: 034a0c4db0b15db1c07514e19e7698eb301704ef149ce1ecd84df26da4262c3422c07b3b3723ef9d0b551ad5db6cc53a18a7b6cf83b9d255ee89a15b713fac14
+  checksum: b007774808991a3a408d0260f2291e0a91a0a69369cb28597a27ba1f35853531de35fca37adb2c8e85addf0c09c3652e26d1aaa28a0bf9175c00e55829951e82
   languageName: node
   linkType: hard
 
@@ -2298,7 +2298,7 @@ __metadata:
     "@openzeppelin/contracts": ^4.4.2
     "@openzeppelin/contracts-upgradeable": ^4.5.2
     "@openzeppelin/hardhat-upgrades": ^1.17.0
-    "@questbook/anon-authoriser": "git+https://github.com/questbook/anon-authoriser"
+    "@questbook/anon-authoriser": "https://github.com/questbook/anon-authoriser"
     "@typechain/ethers-v5": ^9.0.0
     "@typechain/hardhat": ^4.0.0
     "@types/chai": ^4.3.0
