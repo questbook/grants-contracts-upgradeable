@@ -16,7 +16,7 @@ contract WorkspaceRegistry is
     PausableUpgradeable,
     IWorkspaceRegistry
 {
-    address constant ANON_AUTHORISER_ADDRESS = 0x0000000000000000000000000000000000000000;
+    address public anonAuthoriserAddress;
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
@@ -99,6 +99,13 @@ contract WorkspaceRegistry is
      * {upgradeTo} and {upgradeToAndCall}.
      */
     function _authorizeUpgrade(address) internal view override onlyOwner {}
+
+    /**
+     * @notice Change the address of the anon authoriser contract
+     */
+    function updateAnonAuthoriserAddress(address addr) external onlyOwner {
+        anonAuthoriserAddress = addr;
+    }
 
     /**
      * @notice Create a new workspace under which grants will be created,
@@ -188,7 +195,7 @@ contract WorkspaceRegistry is
         address publicKeyAddress
     ) external whenNotPaused onlyWorkspaceAdmin(_id) {
         bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
-        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).generateAnonAuthorisation(publicKeyAddress, apiFlag);
+        AnonAuthoriser(anonAuthoriserAddress).generateAnonAuthorisation(publicKeyAddress, apiFlag);
     }
 
     /**
@@ -196,21 +203,19 @@ contract WorkspaceRegistry is
      * @param _id ID of workspace to join
      * @param _email email of the user that is requesting to join (optional, can be empty)
      * @param _role the role the user was invited for
-     * @param inviter Address of the person that sent the invite
      * Remaining params are of the signature to be sent to AnonAuthoriser
      */
     function joinViaInviteLink(
         uint96 _id,
         string memory _email,
         uint8 _role,
-        address inviter,
         uint8 signatureV,
         bytes32 signatureR,
         bytes32 signatureS
     ) external whenNotPaused {
         bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
-        AnonAuthoriser(ANON_AUTHORISER_ADDRESS).anonAuthorise(
-            inviter,
+        AnonAuthoriser(anonAuthoriserAddress).anonAuthorise(
+            address(this),
             apiFlag,
             msg.sender,
             signatureV,
