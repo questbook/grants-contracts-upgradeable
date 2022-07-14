@@ -20,6 +20,26 @@
       "address": "0xCbFD79d3Fd1FE493fDC87CF8809805978F9a83d0",
       "txHash": "0x5a5d6dba63e983feb8e496ebfa9dd148bc543339b83c9ef1f69c4fe9e9582070",
       "kind": "uups"
+    },
+    {
+      "address": "0x85d6F1C1129778e87eD3671E332AA364d0beb5D1",
+      "txHash": "0xab13cc36dad596f15c9f037ff23ceb6d7dc1795da56fd60ccf34a0289c18f286",
+      "kind": "uups"
+    },
+    {
+      "address": "0xB6E5b2faBe68B7212d1c25f44480a4B75812B901",
+      "txHash": "0x7461e2056fe197fcc58371c9c104e044f2b02f3eda1c4451474184dee7f02740",
+      "kind": "uups"
+    },
+    {
+      "address": "0x3f718a42d1E7EDE928b81A72eE9eF3d63607d999",
+      "txHash": "0x9f47340dbf43d77657e6b91dbed895011848ff81dd95cd702a9067b6bd29cabf",
+      "kind": "uups"
+    },
+    {
+      "address": "0xfbFeEc614A6468BF29888B1591D6bb2fde223Ae5",
+      "txHash": "0x45636ece1426eff7e072613b127a71d9276ccd97377e1a7926694180157414d3",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -833,6 +853,125 @@
           "t_uint96": {
             "label": "uint96",
             "numberOfBytes": "12"
+          }
+        }
+      }
+    },
+    "843fd0bfb884c2f28932b875b78d6aff31a2659e0b6726792fe863c5001acb2d": {
+      "address": "0x41B472C218d60A23507782Ff8fB8AFA388fc869C",
+      "txHash": "0x8454d1a9522d47d09f2c310dc1e6886dd20805fe7b068124bf281c375e472532",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:102"
+          },
+          {
+            "label": "applicationReviewReg",
+            "offset": 0,
+            "slot": "251",
+            "type": "t_contract(IApplicationReviewRegistry)2791",
+            "contract": "GrantFactory",
+            "src": "contracts/GrantFactory.sol:19"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IApplicationReviewRegistry)2791": {
+            "label": "contract IApplicationReviewRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
           }
         }
       }
