@@ -18,13 +18,14 @@ async function main() {
     config.applicationReviewRegistryAddress.proxy,
   );
   tx = await ApplicationReviewRegistryContract.setApplicationReg(config.applicationRegistryAddress.proxy);
-  tx.wait();
+  await tx.wait();
 
   tx = await ApplicationReviewRegistryContract.setGrantFactory(config.grantFactoryAddress.proxy);
   await tx.wait();
 
   tx = await ApplicationReviewRegistryContract.setWorkspaceReg(config.workspaceRegistryAddress.proxy);
   await tx.wait();
+
   console.log(config);
 }
 
