@@ -19,9 +19,6 @@ contract WorkspaceRegistry is
     /// @notice Number of workspace stored in this registry
     uint96 public workspaceCount;
 
-    /// @notice Address of the anon authoriser contract
-    address public anonAuthoriserAddress;
-
     /// @notice Optional safe used by a workspace
     struct Safe {
         /// The address of the safe
@@ -43,6 +40,9 @@ contract WorkspaceRegistry is
 
     /// @notice mapping to store workspaceId vs members vs roles
     mapping(uint96 => mapping(address => bytes32)) public memberRoles;
+
+    /// @notice Address of the anon authoriser contract
+    address public anonAuthoriserAddress;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created

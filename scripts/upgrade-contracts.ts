@@ -13,6 +13,9 @@ async function main() {
 
   console.log(`upgrading contracts on ${network}`);
 
+  console.log("compiling contracts first...");
+  await execPromise("yarn compile");
+
   console.log("fetching proxy addresses...");
 
   const url = CHAINS_JSON_URL.replace("{{network}}", network);
