@@ -106,6 +106,7 @@
     "prettier:check": "prettier --check --config ./.prettierrc.yaml \"**/*.{js,json,md,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain",
-    "upgrade": "ts-node scripts/upgrade-contracts.ts"
+    "upgrade:contracts": "ts-node scripts/upgrade-contracts.ts",
+    "upgrade:contracts:all": "ts-node scripts/upgrade-all.ts"
   }
 }
