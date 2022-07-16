@@ -159,15 +159,20 @@ describe("Integration tests", function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
       expect(
-        this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 10000),
+        this.workspaceRegistry
+          .connect(this.signers.admin)
+          .disburseRewardP2P(0, "0x0000000000000000000000000000000000000000", 0, this.myToken.address, 10000, 0),
       ).to.be.revertedWith("ERC20: insufficient allowance");
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
 
     it("Should not work if no balance in user wallet", async function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
-      expect(this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 20000)).to.be
-        .reverted;
+      expect(
+        this.workspaceRegistry
+          .connect(this.signers.admin)
+          .disburseRewardP2P(0, "0x0000000000000000000000000000000000000000", 0, this.myToken.address, 20000, 0),
+      ).to.be.reverted;
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
     });
@@ -178,7 +183,9 @@ describe("Integration tests", function () {
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
       await this.myToken.connect(this.signers.reviewer).approve(this.grant.address, 10000);
       expect(
-        this.grant.connect(this.signers.reviewer).disburseRewardP2P(0, 0, this.myToken.address, 1000),
+        this.workspaceRegistry
+          .connect(this.signers.reviewer)
+          .disburseRewardP2P(0, "0x0000000000000000000000000000000000000000", 0, this.myToken.address, 1000, 0),
       ).to.be.revertedWith("Unauthorised: Not an admin");
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
       expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(10000);
@@ -188,7 +195,9 @@ describe("Integration tests", function () {
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(10000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(0);
       await this.myToken.connect(this.signers.admin).approve(this.grant.address, 10000);
-      await this.grant.connect(this.signers.admin).disburseRewardP2P(0, 0, this.myToken.address, 1000);
+      await this.grant
+        .connect(this.signers.admin)
+        .disburseRewardP2P(0, "0x0000000000000000000000000000000000000000", 0, this.myToken.address, 1000);
       expect((await this.myToken.balanceOf(this.signers.applicantAdmin.address)).toNumber()).to.equal(1000);
       expect((await this.myToken.balanceOf(this.signers.admin.address)).toNumber()).to.equal(9000);
     });

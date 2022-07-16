@@ -5,8 +5,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
+import "./interfaces/IApplicationRegistry.sol";
 import "@questbook/anon-authoriser/contracts/anon-authoriser.sol";
+import "hardhat/console.sol";
 
 /// @title Registry for all the workspaces used to create and update workspaces
 contract WorkspaceRegistry is
@@ -44,6 +47,9 @@ contract WorkspaceRegistry is
     /// @notice Address of the anon authoriser contract
     address public anonAuthoriserAddress;
 
+    /// @notice applicationRegistry interface used for fetching application owner
+    IApplicationRegistry public applicationReg;
+
     // --- Events ---
     /// @notice Emitted when a new workspace is created
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -66,6 +72,17 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    /// @notice Emitted when grant reward is disbursed
+    event DisburseReward(
+        uint96 indexed applicationId,
+        uint96 milestoneId,
+        address asset,
+        address sender,
+        uint256 amount,
+        bool isP2P,
+        uint256 time
+    );
+
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
         _;
@@ -81,6 +98,15 @@ contract WorkspaceRegistry is
 
     modifier withinLimit(uint256 _membersLength) {
         require(_membersLength <= 1000, "WorkspaceMembers: Limit exceeded");
+        _;
+    }
+
+    modifier checkBalance(
+        IERC20 _erc20Interface,
+        address _sender,
+        uint256 _amount
+    ) {
+        require(_erc20Interface.balanceOf(_sender) > _amount, "Insufficient Balance");
         _;
     }
 
@@ -331,5 +357,46 @@ contract WorkspaceRegistry is
 
     function _apiFlagForWorkspaceId(uint96 workspaceId, uint8 role) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("workspace-invite-", abi.encodePacked(workspaceId), abi.encodePacked(role)));
+    }
+
+    /**
+     * @notice Disburses grant reward, can be called by applicationRegistry contract
+     * @param _applicationId application id for which the funds are disbursed
+     * @param _applicantWalletAddress wallet address of the applicant to disburse rewards to
+     * @param _milestoneId milestone id for which the funds are disbursed
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param _amount amount disbursed
+     * @param _workspaceId workspace that the application belongs to
+     */
+    function disburseRewardP2P(
+        uint96 _applicationId,
+        address _applicantWalletAddress,
+        uint96 _milestoneId,
+        IERC20 _erc20Interface,
+        uint256 _amount,
+        uint96 _workspaceId
+    ) external onlyWorkspaceAdmin(_workspaceId) checkBalance(_erc20Interface, msg.sender, _amount) {
+        emit DisburseReward(
+            _applicationId,
+            _milestoneId,
+            address(_erc20Interface),
+            msg.sender,
+            _amount,
+            true,
+            block.timestamp
+        );
+        require(_applicantWalletAddress != address(this), "This transfer is prohibited");
+        console.log("Inside disburse reward");
+        if (_applicantWalletAddress == address(0)) {
+            require(
+                _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+                "Failed to transfer funds"
+            );
+        } else {
+            require(
+                _erc20Interface.transferFrom(msg.sender, _applicantWalletAddress, _amount),
+                "Failed to transfer funds to applicant wallet address"
+            );
+        }
     }
 }
