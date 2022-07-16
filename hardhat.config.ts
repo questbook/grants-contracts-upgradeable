@@ -66,7 +66,7 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
 }
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: selectedNetwork || "hardhat",
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,

@@ -1,10 +1,11 @@
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
+import { getAnonAuthoriserAddress } from "@questbook/anon-authoriser";
 
 import { WorkspaceRegistry } from "../../src/types/WorkspaceRegistry";
 import { WorkspaceRegistry__factory } from "../../src/types/factories/WorkspaceRegistry__factory";
 
-const fs = require("fs");
+import fs from "fs";
 
 task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
   const workspaceRegistryFactory: WorkspaceRegistry__factory = <WorkspaceRegistry__factory>(
@@ -31,7 +32,7 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
   const jsonData = JSON.stringify(workspaceRegistryAddress);
 
   if (fs.existsSync("config.json")) {
-    let contractsData = fs.readFileSync("config.json");
+    const contractsData = fs.readFileSync("config.json", "utf-8");
     let contractAddresses = JSON.parse(contractsData);
     contractAddresses = { ...contractAddresses, ...workspaceRegistryAddress };
     fs.writeFileSync("config.json", JSON.stringify(contractAddresses));
@@ -43,6 +44,12 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
 task("upgrade:WorkspaceRegistry")
   .addParam("address", "address of the implementation instance")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
+    const networkName = process.env.NETWORK;
+    const anonAuthoriserAddress = getAnonAuthoriserAddress(networkName as any);
+    if (!anonAuthoriserAddress) {
+      throw new Error(`Anon authoriser is not deployed on this "${networkName}"`);
+    }
+
     const { address } = taskArguments;
     console.log("upgrading WorkspaceRegistry at address: ", address);
     const workspaceRegistryFactoryV2: WorkspaceRegistry__factory = <WorkspaceRegistry__factory>(
@@ -52,5 +59,11 @@ task("upgrade:WorkspaceRegistry")
       await upgrades.upgradeProxy(address, workspaceRegistryFactoryV2)
     );
     await workspaceRegistry.deployed();
+    if (anonAuthoriserAddress !== (await workspaceRegistry.anonAuthoriserAddress())) {
+      const tx = await workspaceRegistry.updateAnonAuthoriserAddress(anonAuthoriserAddress);
+      await tx.wait();
+
+      console.log(`updated WorkpsaceRegistry anon authoriser address to: ${anonAuthoriserAddress}`);
+    }
     console.log("WorkspaceRegistryV2 Proxy deployed to: ", workspaceRegistry.address);
   });
