@@ -79,6 +79,15 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         _;
     }
 
+    modifier checkBalance(
+        IERC20 _erc20Interface,
+        address _sender,
+        uint256 _amount
+    ) {
+        require(_erc20Interface.balanceOf(_sender) > _amount, "Insufficient Balance");
+        _;
+    }
+
     /**
      * @notice Set grant details on contract deployment
      *
@@ -186,16 +195,18 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /**
      * @notice Disburses grant reward, can be called by applicationRegistry contract
      * @param _applicationId application id for which the funds are disbursed
+     * @param _applicantWalletAddress wallet address of the applicant to disburse rewards to
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
      */
     function disburseRewardP2P(
         uint96 _applicationId,
+        address _applicantWalletAddress,
         uint96 _milestoneId,
         IERC20 _erc20Interface,
         uint256 _amount
-    ) external onlyWorkspaceAdmin {
+    ) external onlyWorkspaceAdmin checkBalance(_erc20Interface, msg.sender, _amount) {
         emit DisburseReward(
             _applicationId,
             _milestoneId,
@@ -205,10 +216,19 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             true,
             block.timestamp
         );
-        require(
-            _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
-            "Failed to transfer funds"
-        );
+        require(_applicantWalletAddress != address(this), "This transfer is prohibited");
+
+        if (_applicantWalletAddress == address(0)) {
+            require(
+                _erc20Interface.transferFrom(msg.sender, applicationReg.getApplicationOwner(_applicationId), _amount),
+                "Failed to transfer funds"
+            );
+        } else {
+            require(
+                _erc20Interface.transferFrom(msg.sender, _applicantWalletAddress, _amount),
+                "Failed to transfer funds to applicant wallet address"
+            );
+        }
     }
 
     function recordTransaction(
