@@ -69,5 +69,12 @@ describe("Unit tests", function () {
         workspaceRegistry.connect(invitee).joinViaInviteLink(workspaceId2, "", role, sig.v, sig.r, sig.s),
       ).to.be.revertedWith("API flag mismatch");
     });
+
+    it("should forbid another user from changing the anon-authoriser address", async () => {
+      const user = await randomWallet();
+      await expect(workspaceRegistry.connect(user).updateAnonAuthoriserAddress(user.address)).to.be.revertedWith(
+        "Ownable: caller is not the owner",
+      );
+    });
   });
 });
