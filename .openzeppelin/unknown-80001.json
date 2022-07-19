@@ -2206,7 +2206,7 @@
             "label": "applications",
             "offset": 0,
             "slot": "202",
-            "type": "t_mapping(t_uint96,t_struct(Application)2895_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Application)3082_storage)",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:53"
           },
@@ -2222,7 +2222,7 @@
             "label": "applicationMilestones",
             "offset": 0,
             "slot": "204",
-            "type": "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2868))",
+            "type": "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)3055))",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:61"
           },
@@ -2230,7 +2230,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "205",
-            "type": "t_contract(IWorkspaceRegistry)5598",
+            "type": "t_contract(IWorkspaceRegistry)6250",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:64"
           }
@@ -2252,16 +2252,16 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IWorkspaceRegistry)5598": {
+          "t_contract(IWorkspaceRegistry)6250": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
-          "t_enum(ApplicationState)2874": {
+          "t_enum(ApplicationState)3061": {
             "label": "enum ApplicationRegistry.ApplicationState",
             "members": ["Submitted", "Resubmit", "Approved", "Rejected", "Complete"],
             "numberOfBytes": "1"
           },
-          "t_enum(MilestoneState)2868": {
+          "t_enum(MilestoneState)3055": {
             "label": "enum ApplicationRegistry.MilestoneState",
             "members": ["Submitted", "Requested", "Approved"],
             "numberOfBytes": "1"
@@ -2274,15 +2274,15 @@
             "label": "mapping(address => mapping(address => bool))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint48,t_enum(MilestoneState)2868)": {
+          "t_mapping(t_uint48,t_enum(MilestoneState)3055)": {
             "label": "mapping(uint48 => enum ApplicationRegistry.MilestoneState)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2868))": {
+          "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)3055))": {
             "label": "mapping(uint96 => mapping(uint48 => enum ApplicationRegistry.MilestoneState))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Application)2895_storage)": {
+          "t_mapping(t_uint96,t_struct(Application)3082_storage)": {
             "label": "mapping(uint96 => struct ApplicationRegistry.Application)",
             "numberOfBytes": "32"
           },
@@ -2290,7 +2290,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Application)2895_storage": {
+          "t_struct(Application)3082_storage": {
             "label": "struct ApplicationRegistry.Application",
             "members": [
               {
@@ -2337,7 +2337,7 @@
               },
               {
                 "label": "state",
-                "type": "t_enum(ApplicationState)2874",
+                "type": "t_enum(ApplicationState)3061",
                 "offset": 0,
                 "slot": "4"
               }
