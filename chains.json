@@ -39,6 +39,10 @@
     "id": 42,
     "rpcUrl": "https://kovan.infura.io/v3/{{infura_key}}"
   },
+  "moonbase-alpha": {
+    "id": 1287,
+    "rpcUrl": "https://rpc.api.moonbase.moonbeam.network"
+  },
   "neon-devnet": {
     "id": 245022926,
     "rpcUrl": "http://neon-devnet-rpc.questbook.app:9090/solana"
