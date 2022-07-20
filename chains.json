@@ -1,4 +1,8 @@
 {
+  "aurora-testnet": {
+    "id": 1313161555,
+    "rpcUrl": "https://testnet.aurora.dev/"
+  },
   "celo-alfajores-testnet": {
     "id": 44787,
     "rpcUrl": "https://alfajores-forno.celo-testnet.org"
