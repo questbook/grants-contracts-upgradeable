@@ -35,3 +35,4 @@ src/types/factories/*
 !src/types/factories/Greeter__factory.ts
 
 .openzeppelin/unknown-31337.json
+.DS_Store

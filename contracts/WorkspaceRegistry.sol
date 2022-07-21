@@ -72,6 +72,19 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    /// @notice Emitted when a workspace member's profile is updated
+    /// @notice The role 0 denotes an admin role
+    /// @notice The role 1 denotes a reviewer role
+    /// @notice enabled => member is active, otherwise removed from workspace
+    event WorkspaceMemberUpdated(
+        uint96 indexed id,
+        address member,
+        uint8 role,
+        bool enabled,
+        string metadataHash,
+        uint256 time
+    );
+
     /// @notice Emitted when grant reward is disbursed
     event DisburseReward(
         uint96 indexed applicationId,
@@ -207,7 +220,18 @@ contract WorkspaceRegistry is
         bool[] memory _enabled,
         string[] memory _emails
     ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
-        _updateWorkspaceMembers(_id, _members, _roles, _enabled, _emails);
+        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        for (uint256 i = 0; i < _members.length; i++) {
+            address member = _members[i];
+            /// @notice The role 0 denotes an admin role
+            /// @notice The role 1 denotes a reviewer role
+            uint8 role = _roles[i];
+            bool enabled = _enabled[i];
+            _setRole(_id, member, role, enabled);
+        }
+        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
     }
 
     /**
@@ -222,26 +246,26 @@ contract WorkspaceRegistry is
         uint8 _role,
         address publicKeyAddress
     ) external whenNotPaused onlyWorkspaceAdmin(_id) {
-        bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
+        bytes32 apiFlag = apiFlagForWorkspaceId(_id, _role);
         AnonAuthoriser(anonAuthoriserAddress).generateAnonAuthorisation(publicKeyAddress, apiFlag);
     }
 
     /**
      * @notice Join a workspace with an invite link
      * @param _id ID of workspace to join
-     * @param _email email of the user that is requesting to join (optional, can be empty)
+     * @param _metadataHash metadata for the member
      * @param _role the role the user was invited for
      * Remaining params are of the signature to be sent to AnonAuthoriser
      */
     function joinViaInviteLink(
         uint96 _id,
-        string memory _email,
+        string memory _metadataHash,
         uint8 _role,
         uint8 signatureV,
         bytes32 signatureR,
         bytes32 signatureS
     ) external whenNotPaused {
-        bytes32 apiFlag = _apiFlagForWorkspaceId(_id, _role);
+        bytes32 apiFlag = apiFlagForWorkspaceId(_id, _role);
         AnonAuthoriser(anonAuthoriserAddress).anonAuthorise(
             address(this),
             apiFlag,
@@ -251,15 +275,8 @@ contract WorkspaceRegistry is
             signatureS
         );
 
-        address[] memory addrs = new address[](1);
-        uint8[] memory roles = new uint8[](1);
-        bool[] memory enabled = new bool[](1);
-        string[] memory emails = new string[](1);
-        addrs[0] = msg.sender;
-        roles[0] = _role;
-        enabled[0] = true;
-        emails[0] = _email;
-        _updateWorkspaceMembers(_id, addrs, roles, enabled, emails);
+        _setRole(_id, msg.sender, _role, true);
+        emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
     }
 
     /**
@@ -334,28 +351,7 @@ contract WorkspaceRegistry is
         _unpause();
     }
 
-    function _updateWorkspaceMembers(
-        uint96 _id,
-        address[] memory _members,
-        uint8[] memory _roles,
-        bool[] memory _enabled,
-        string[] memory _emails
-    ) internal whenNotPaused withinLimit(_members.length) {
-        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        for (uint256 i = 0; i < _members.length; i++) {
-            address member = _members[i];
-            /// @notice The role 0 denotes an admin role
-            /// @notice The role 1 denotes a reviewer role
-            uint8 role = _roles[i];
-            bool enabled = _enabled[i];
-            _setRole(_id, member, role, enabled);
-        }
-        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
-    }
-
-    function _apiFlagForWorkspaceId(uint96 workspaceId, uint8 role) internal pure returns (bytes32) {
+    function apiFlagForWorkspaceId(uint96 workspaceId, uint8 role) public pure returns (bytes32) {
         return keccak256(abi.encodePacked("workspace-invite-", abi.encodePacked(workspaceId), abi.encodePacked(role)));
     }
 

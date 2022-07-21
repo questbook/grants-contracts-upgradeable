@@ -33,8 +33,8 @@ describe("Unit tests", function () {
         .joinViaInviteLink(workspaceId, "", role, sig.v, sig.r, sig.s);
       const data = await result.wait();
       // check event was correctly emitted
-      const event = data.events?.find(e => e.event === "WorkspaceMembersUpdated");
-      expect(event?.args?.members?.[0]).to.eq(invitee.address);
+      const event = data.events?.find(e => e.event === "WorkspaceMemberUpdated");
+      expect(event?.args?.member).to.eq(invitee.address);
 
       expect(await workspaceRegistry.isWorkspaceAdminOrReviewer(0, invitee.address)).to.equal(true);
     });
