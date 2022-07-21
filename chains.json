@@ -13,7 +13,7 @@
   },
   "evmos-testnet": {
     "id": 9000,
-    "rpcUrl": "https://eth.bd.evmos.dev:8545"
+    "rpcUrl": "https://41d67fdgs4.execute-api.ap-south-1.amazonaws.com/v0/evmos"
   },
   "findora-testnet": {
     "id": 2153,
