@@ -8,4 +8,7 @@ interface IApplicationRegistry {
 
     /// @notice returns application workspace id
     function getApplicationWorkspace(uint96 _applicationId) external view returns (uint96);
+
+    /// @notice returns application grant address
+    function getApplicationGrant(uint96 _applicationId) external view returns (address);
 }
