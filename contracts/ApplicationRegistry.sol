@@ -338,4 +338,13 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         Application memory application = applications[_applicationId];
         return application.workspaceId;
     }
+
+    /**
+     * @notice returns application grant
+     * @return id of the application grant
+     */
+    function getApplicationGrant(uint96 _applicationId) external view override returns (address) {
+        Application memory application = applications[_applicationId];
+        return application.grant;
+    }
 }

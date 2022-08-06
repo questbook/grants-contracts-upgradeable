@@ -26,6 +26,17 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 workspaceId;
         uint96 numOfReviews;
         string rubricsMetadataHash;
+
+        /// @notice list of reviewers who have been assigned to a grant
+        /// if list non empty => grant auto assigning is enabled
+        address[] reviewersAvailable;
+        /// @notice number of reviewers required per application
+        uint8 numOfReviewersPerApplication;
+    }
+
+    struct AssignedReviewerLoad {
+        bool exists;
+        uint64 totalApplicationsAssigned;
     }
 
     /// @notice workspaceRegistry interface used for fetching fetching workspace admins and reviewers
@@ -48,6 +59,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice mapping to store review id vs review payment status
     mapping(uint96 => bool) public reviewPaymentsStatus;
+
+    /// @notice mapping from workspace ID to number of applications assigned to each reviewer
+    mapping(uint96 => mapping(address => AssignedReviewerLoad)) public assignedReviewers;
 
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
@@ -241,6 +255,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         review.metadataHash = _metadataHash;
 
+        // subtract number of applications this reviewer is assignment
+        AssignedReviewerLoad storage load = assignedReviewers[_workspaceId][msg.sender];
+        if(load.totalApplicationsAssigned > 0) {
+            load -= 1;
+        }
+
         emit ReviewSubmitted(review.id, _workspaceId, _applicationId, _grantAddress, _metadataHash, block.timestamp);
     }
 
@@ -265,6 +285,80 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         grantReviewState.grant = _grantAddress;
 
         emit RubricsSet(_workspaceId, _grantAddress, _metadataHash, block.timestamp);
+    }
+
+    /**
+     * @notice Sets if a grant is available for auto assignment (only available for admins)
+     * @param _grantAddress grant to disable/enable auto assignment
+     * @param _reviewersAvailable list of reviewers available for auto assignment, pass empty to diable auto assignment
+     */
+    function setAutoAssignment(
+        address _grantAddress,
+        address[] _reviewersAvailable,
+        uint8 _numOfReviewersPerApplication,
+    ) external {
+        uint96 workspaceId = IGrant(_grantAddress).workspaceId();
+        // assert msg.sender is admin of workspace
+        require(workspaceReg.isAdmin(workspaceId, msg.sender), "SetAutoAssignment: Unauthorized");
+        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        // check grant actually exists in our map
+        require(grantReviewState.grant != address(0), "Grant does not exist");
+        grantReviewState.reviewersAvailable = _reviewersAvailable;
+        if(_reviewersAvailable.length > 0) {
+            require(_reviewersAvailable >= _numOfReviewersPerApplication, "Expected number of reviewers per app > 0");
+        }
+        grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
+        // TODO: fetch all applications of the grant & call autoAssignApplicationIfRequired()
+        // TODO: auto assignment event
+    }
+
+    function autoAssignApplicationIfRequired(uint96 _applicationId) external {
+        uint96 workspaceId = applicationReg.getApplicationWorkspace(_applicationId);
+        address grant = applicationReg.getApplicationGrant(_applicationId);
+        // assert msg.sender is admin of workspace or grant factory itself
+        require(
+            workspaceReg.isAdmin(workspaceId, msg.sender) || msg.sender == _grantAddress,
+            "DidReceiveApplication: Unauthorized"
+        );
+
+        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        address[] storage reviewersAvailable = grantReviewState.reviewersAvailable;
+        // reviewers we need to assign
+        uint8 reviewersToAssign = grantReviewState.numOfReviewersPerApplication;
+        // TODO: check how many reviewers already assigned to this app
+        // we have auto assignment enabled for this grant
+        // and we need to assign some number of reviewers
+        if(reviewersAvailable.length > 0 && reviewersToAssign > 0) {
+            // the list of the reviewers that will be assigned to this application
+            address[] memory reviewersToAssignList = new address[](reviewersToAssign);
+            bool[] memory redundantActiveList = new bool[](reviewersToAssign);
+
+            address leastAssignedReviewer = reviewersAvailable[0];
+            for(uint64 i = 1;i < reviewersAvailable.length;i++) {
+                uint64 thisReviewerCount =
+                    assignedReviewers[workspaceId][reviewersAvailable[i]].totalApplicationsAssigned;
+                uint64 leastAssignedReviewerCount =
+                    assignedReviewers[workspaceId][leastAssignedReviewer].totalApplicationsAssigned;
+                if(
+                    thisReviewerCount < leastAssignedReviewerCount
+                    && !_isAssignedToReviewer(reviewersAvailable[i], _applicationId)
+                ) {
+                    leastAssignedReviewer = reviewersAvailable[i];
+                }
+            }
+            // actually load balance and assign
+            AssignedReviewerLoad storage load = assignedReviewers[_workspaceId][leastAssignedReviewer];
+            load.totalApplicationsAssigned += 1;
+            // store back in map if didn't exist before
+            if(!load.exists) {
+                load.exists = true;
+                assignedReviewers[_workspaceId][leastAssignedReviewer] = load;
+            }
+
+            // TODO: append to array
+
+            assignReviewers(workspaceId, applicationId, grant, reviewersToAssignList, redundantActiveList);
+        }
     }
 
     /**
@@ -330,6 +424,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             _amount,
             block.timestamp
         );
+    }
+
+    /// @notice check if reviewer is already assigned to an application
+    function _isAssignedToApplication(address reviewer, uint96 applicationId) internal view returns (bool) {
+        return reviews[reviewer][applicationId].active;
     }
 
     /**
