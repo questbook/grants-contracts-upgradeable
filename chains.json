@@ -19,6 +19,10 @@
     "id": 2153,
     "rpcUrl": "https://ev2awpyss5.execute-api.ap-south-1.amazonaws.com/v0/findora"
   },
+  "gnosis-mainnet": {
+    "id": 100,
+    "rpcUrl": "https://rpc.gnosischain.com/"
+  },
   "harmony-mainnet": {
     "id": 1666600000,
     "rpcUrl": "https://api.harmony.one"
