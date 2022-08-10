@@ -1556,12 +1556,12 @@ __metadata:
 
 "@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser":
   version: 1.0.0
-  resolution: "@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser.git#commit=81b4275583a711636fbbcbbe9c759a3185302836"
+  resolution: "@questbook/anon-authoriser@https://github.com/questbook/anon-authoriser.git#commit=421bc9bfe203c0328d59a54b1b1e6a463242c60d"
   dependencies:
     dotenv: ^16.0.1
     elliptic: ^6.5.4
     ethers: ^5.6.9
-  checksum: da56f8405c6663c2b31a6ed564dbed76675f4142dcd07e231efd22dcfd592baa989dcf3c82576fa3d154f76f1765620281e5a617e0b95aacf80c7c4117c2eb2b
+  checksum: 94953c757c047cc71beb61bc8e30a7c8657a11b4802bfc613b17bcdc10dee3f5bd87487c4b582596f84004527083b4bc9a9744ca644c8db35199fe62ef03317c
   languageName: node
   linkType: hard
 
