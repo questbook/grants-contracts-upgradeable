@@ -196,7 +196,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _workspaceId,
         ApplicationState _state,
         string memory _reasonMetadataHash
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+    ) public onlyWorkspaceAdmin(_workspaceId) {
         Application storage application = applications[_applicationId];
         require(application.workspaceId == _workspaceId, "ApplicationStateUpdate: Invalid workspace");
         /// @notice grant creator can only make below transitions
@@ -220,6 +220,20 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             application.milestoneCount,
             block.timestamp
         );
+    }
+
+    function batchUpdateApplicationState(
+        uint96[] memory _applicationIds,
+        ApplicationState[] memory _applicationStates,
+        uint96 _workspaceId
+    ) external onlyWorkspaceAdmin(_workspaceId) {
+        require(
+            _applicationIds.length == _applicationStates.length,
+            "applicationIds and applicationStates array length mismatch"
+        );
+        for (uint256 i = 0; i < _applicationIds.length; i++) {
+            updateApplicationState(_applicationIds[i], _workspaceId, _applicationStates[i], " ");
+        }
     }
 
     /**
