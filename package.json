@@ -17,6 +17,7 @@
     }
   ],
   "dependencies": {
+    "@gnosis.pm/safe-deployments": "^1.15.0",
     "@questbook/anon-authoriser": "https://github.com/questbook/anon-authoriser"
   },
   "devDependencies": {
