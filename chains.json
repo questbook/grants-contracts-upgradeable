@@ -47,6 +47,14 @@
     "id": 42,
     "rpcUrl": "https://kovan.infura.io/v3/{{infura_key}}"
   },
+  "metis-mainnet": {
+    "id": 1088,
+    "rpcUrl": "https://andromeda.metis.io/?owner=1088"
+  },
+  "metis-testnet": {
+    "id": 588,
+    "rpcUrl": "https://stardust.metis.io/?owner=588"
+  },
   "moonbase-alpha": {
     "id": 1287,
     "rpcUrl": "https://rpc.api.moonbase.moonbeam.network"
