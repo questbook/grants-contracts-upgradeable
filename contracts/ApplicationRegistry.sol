@@ -224,7 +224,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
 
     /**
      * @notice Batch update application state
-     * @param _applicationsIds an array of target applicationIds for which state needs to be updated
+     * @param _applicationIds an array of target applicationIds for which state needs to be updated
      * @param _applicationStates an array of updated states for the applications
      * @param _workspaceId workspace id of application's grant
      */
