@@ -25,19 +25,11 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
 
-    /// @notice Emitted when a Grant is updated
-    event GrantUpdated(
-        address indexed grantAddress,
-        uint96 indexed workspaceId,
-        string metadataHash,
-        bool active,
-        uint256 time
-    );
-
     event GrantUpdatedFromFactory(
         address indexed grantAddress,
         uint96 indexed workspaceId,
         string metadataHash,
+        bool active,
         uint256 time
     );
 
@@ -112,7 +104,18 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         string memory _metadataHash
     ) external onlyOwner {
         IGrant(grantAddress).updateGrant(_metadataHash);
-        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, block.timestamp);
+        bool active = IGrant(grantAddress).active();
+        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
+    }
+
+    function updateGrantAccessibility(
+        address grantAddress,
+        uint96 _workspaceId,
+        bool _canAcceptApplication
+    ) external onlyOwner {
+        IGrant(grantAddress).updateGrantAccessibility(_canAcceptApplication);
+        string memory metadataHash = IGrant(grantAddress).metadataHash();
+        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }
 
     /**

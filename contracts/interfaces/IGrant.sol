@@ -10,6 +10,8 @@ interface IGrant {
     /// and is invoked at the time of submitting application
     function incrementApplicant() external;
 
+    function metadataHash() external view returns (string memory);
+
     /// @notice It disburses reward to application owner using locked funds
     function disburseReward(
         uint96 _applicationId,
@@ -33,4 +35,6 @@ interface IGrant {
 
     /// @notice Update grant
     function updateGrant(string memory _metadataHash) external;
+
+    function updateGrantAccessibility(bool _canAcceptApplication) external;
 }

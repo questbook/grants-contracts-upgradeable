@@ -146,7 +146,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      */
     function updateGrantAccessibility(bool _canAcceptApplication) external onlyWorkspaceAdmin {
         active = _canAcceptApplication;
-        emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
+        // emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }
 
     /**
