@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./Grant.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
+import "./interfaces/IGrant.sol";
 
 /// @title Factory contract used to create new grants,
 /// each grant is a new contract deployed using this factory
@@ -23,6 +24,22 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
 
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
+
+    /// @notice Emitted when a Grant is updated
+    event GrantUpdated(
+        address indexed grantAddress,
+        uint96 indexed workspaceId,
+        string metadataHash,
+        bool active,
+        uint256 time
+    );
+
+    event GrantUpdatedFromFactory(
+        address indexed grantAddress,
+        uint96 indexed workspaceId,
+        string metadataHash,
+        uint256 time
+    );
 
     /**
      * @notice Constructor for initializing the Grant Implementation Contract
@@ -81,6 +98,21 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
         applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
         return _grantAddress;
+    }
+
+    /**
+     * @notice Function to update grant
+     * @param grantAddress Address of the grant contract that needs to be updated
+     * @param _workspaceId Workspace Id that the grant belongs to
+     * @param _metadataHash New URL that points to grant metadata
+     */
+    function updateGrant(
+        address grantAddress,
+        uint96 _workspaceId,
+        string memory _metadataHash
+    ) external onlyOwner {
+        IGrant(grantAddress).updateGrant(_metadataHash);
+        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, block.timestamp);
     }
 
     /**

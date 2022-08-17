@@ -30,4 +30,7 @@ interface IGrant {
 
     /// @notice Return the workspace id to which the grant belongs
     function workspaceId() external view returns (uint96);
+
+    /// @notice Update grant
+    function updateGrant(string memory _metadataHash) external;
 }

@@ -137,7 +137,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function updateGrant(string memory _metadataHash) external onlyWorkspaceAdmin {
         require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
         metadataHash = _metadataHash;
-        emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
+        // emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
     }
 
     /**
