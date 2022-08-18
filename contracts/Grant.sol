@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./interfaces/IGrantFactory.sol";
 
 /// @title Singleton grant contract used for updating a grant, depositing and disbursal of reward funds
 contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
@@ -27,6 +28,8 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     /// @notice workspaceRegistry interface used for fetching fetching workspace admin
     IWorkspaceRegistry public workspaceReg;
+
+    IGrantFactory public grantFactory;
 
     /// @notice Emitted when a grant is updated
     event GrantUpdated(uint96 indexed workspaceId, string metadataHash, bool active, uint256 time);
@@ -79,6 +82,11 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         _;
     }
 
+    modifier onlyGrantFactory() {
+        require(msg.sender == address(grantFactory), "Unauthorised: Not being called from GrantFactory");
+        _;
+    }
+
     modifier checkBalance(
         IERC20 _erc20Interface,
         address _sender,
@@ -103,6 +111,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string memory _metadataHash,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg,
+        IGrantFactory _grantFactory,
         address _grantFactoryOwner
     ) external initializer {
         __Ownable_init();
@@ -111,6 +120,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         metadataHash = _metadataHash;
         applicationReg = _applicationReg;
         workspaceReg = _workspaceReg;
+        grantFactory = _grantFactory;
         transferOwnership(_grantFactoryOwner);
     }
 
@@ -134,7 +144,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Update the metadata pointer of a grant, can be called by workspace admins
      * @param _metadataHash New URL that points to grant metadata
      */
-    function updateGrant(string memory _metadataHash) external onlyWorkspaceAdmin {
+    function updateGrant(string memory _metadataHash) external onlyGrantFactory {
         require(numApplicants == 0, "GrantUpdate: Applicants have already started applying");
         metadataHash = _metadataHash;
         // emit GrantUpdated(workspaceId, _metadataHash, active, block.timestamp);
@@ -144,7 +154,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Update grant accessibility, can be called by workspace admins
      * @param _canAcceptApplication set to false for disabling grant from receiving new applications
      */
-    function updateGrantAccessibility(bool _canAcceptApplication) external onlyWorkspaceAdmin {
+    function updateGrantAccessibility(bool _canAcceptApplication) external onlyGrantFactory {
         active = _canAcceptApplication;
         // emit GrantUpdated(workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }

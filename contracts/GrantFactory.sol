@@ -83,6 +83,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
                 _metadataHash,
                 _workspaceReg,
                 _applicationReg,
+                address(this),
                 owner()
             )
         );
@@ -101,18 +102,23 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     function updateGrant(
         address grantAddress,
         uint96 _workspaceId,
+        IWorkspaceRegistry _workspaceReg,
         string memory _metadataHash
-    ) external onlyOwner {
+    ) external {
+        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
         IGrant(grantAddress).updateGrant(_metadataHash);
         bool active = IGrant(grantAddress).active();
+
         emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
     }
 
     function updateGrantAccessibility(
         address grantAddress,
         uint96 _workspaceId,
+        IWorkspaceRegistry _workspaceReg,
         bool _canAcceptApplication
-    ) external onlyOwner {
+    ) external {
+        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
         IGrant(grantAddress).updateGrantAccessibility(_canAcceptApplication);
         string memory metadataHash = IGrant(grantAddress).metadataHash();
         emit GrantUpdatedFromFactory(grantAddress, _workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
