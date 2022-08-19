@@ -141,7 +141,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Update the metadata pointer of a grant, can be called by workspace admins
+     * @notice Update the metadata pointer of a grant, can be called by GrantFactory contract
      * @param _metadataHash New URL that points to grant metadata
      */
     function updateGrant(string memory _metadataHash) external onlyGrantFactory {
@@ -151,7 +151,7 @@ contract Grant is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Update grant accessibility, can be called by workspace admins
+     * @notice Update grant accessibility, can be called by GrantFactory contract
      * @param _canAcceptApplication set to false for disabling grant from receiving new applications
      */
     function updateGrantAccessibility(bool _canAcceptApplication) external onlyGrantFactory {

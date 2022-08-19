@@ -25,6 +25,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
 
+    /// @notice Emitted when a grant is updated
     event GrantUpdatedFromFactory(
         address indexed grantAddress,
         uint96 indexed workspaceId,

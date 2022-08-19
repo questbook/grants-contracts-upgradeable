@@ -33,8 +33,9 @@ interface IGrant {
     /// @notice Return the workspace id to which the grant belongs
     function workspaceId() external view returns (uint96);
 
-    /// @notice Update grant
+    /// @notice Update the metadata pointer of a grant, can be called by GrantFactory contract
     function updateGrant(string memory _metadataHash) external;
 
+    /// @notice Update grant accessibility, can be called by GrantFactory contract
     function updateGrantAccessibility(bool _canAcceptApplication) external;
 }
