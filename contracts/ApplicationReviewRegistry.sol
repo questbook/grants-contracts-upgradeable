@@ -288,7 +288,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     }
 
     /**
-     * @notice auto assigns reviewers to all applications to a grant and enables it for all applications that come after it
+     * @notice auto assigns reviewers to all existing applications to a grant
+     * @notice and enables it for all applications that come after it
      * @param _workspaceId Workspace id
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
@@ -302,10 +303,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         bool[] memory _active,
         uint96 _numOfReviewersPerApplication
     ) external onlyWorkspaceAdmin(_workspaceId) {
-        require(
-            _numOfReviewersPerApplication > 0,
-            "AutoAssignReviewers: Number of reviewers per application must be greater than zero"
-        );
+        require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
         require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
