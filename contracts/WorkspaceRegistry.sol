@@ -96,6 +96,16 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    event DisburseRewardFromSafe(
+        uint96 indexed applicationId,
+        uint96 milestoneId,
+        address asset,
+        address sender,
+        uint256 amount,
+        bool isP2P,
+        uint256 time
+    );
+
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
         _;
@@ -394,5 +404,32 @@ contract WorkspaceRegistry is
                 "Failed to transfer funds to applicant wallet address"
             );
         }
+    }
+
+    /**
+     * @notice Emits event when funds disbursed through the safe
+     * @param _applicationId application id for which the funds are disbursed
+     * @param _applicantWalletAddress wallet address of the applicant to disburse rewards to
+     * @param _milestoneId milestone id for which the funds are disbursed
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param _amount amount disbursed
+     * @param _workspaceId workspace that the application belongs to
+     */
+    function disburseRewardFromSafe(
+        uint96 _applicationId,
+        uint96 _milestoneId,
+        IERC20 _erc20Interface,
+        uint256 _amount,
+        uint96 _workspaceId
+    ) external onlyWorkspaceAdmin(_workspaceId) {
+        emit DisburseRewardFromSafe(
+            _applicationId,
+            _milestoneId,
+            address(_erc20Interface),
+            msg.sender,
+            _amount,
+            true,
+            block.timestamp
+        );
     }
 }
