@@ -125,7 +125,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @notice sets application review registry contract interface
      * @param _applicationReviewReg ApplicationReviewRegistry interface
      */
-    function setApplicationReviewRegistry(IApplicationReviewRegistry _applicationReviewReg) external onlyOwner {
+    function setApplicationReviewReg(IApplicationReviewRegistry _applicationReviewReg) external onlyOwner {
         applicationReviewReg = _applicationReviewReg;
     }
 
