@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./Grant.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
+import "./interfaces/IGrant.sol";
 
 /// @title Factory contract used to create new grants,
 /// each grant is a new contract deployed using this factory
@@ -23,6 +24,15 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
 
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
+
+    /// @notice Emitted when a grant is updated
+    event GrantUpdatedFromFactory(
+        address indexed grantAddress,
+        uint96 indexed workspaceId,
+        string metadataHash,
+        bool active,
+        uint256 time
+    );
 
     /**
      * @notice Constructor for initializing the Grant Implementation Contract
@@ -74,6 +84,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
                 _metadataHash,
                 _workspaceReg,
                 _applicationReg,
+                address(this),
                 owner()
             )
         );
@@ -81,6 +92,37 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
         applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
         return _grantAddress;
+    }
+
+    /**
+     * @notice Function to update grant
+     * @param grantAddress Address of the grant contract that needs to be updated
+     * @param _workspaceId Workspace Id that the grant belongs to
+     * @param _metadataHash New URL that points to grant metadata
+     */
+    function updateGrant(
+        address grantAddress,
+        uint96 _workspaceId,
+        IWorkspaceRegistry _workspaceReg,
+        string memory _metadataHash
+    ) external {
+        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
+        IGrant(grantAddress).updateGrant(_metadataHash);
+        bool active = IGrant(grantAddress).active();
+
+        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
+    }
+
+    function updateGrantAccessibility(
+        address grantAddress,
+        uint96 _workspaceId,
+        IWorkspaceRegistry _workspaceReg,
+        bool _canAcceptApplication
+    ) external {
+        require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
+        IGrant(grantAddress).updateGrantAccessibility(_canAcceptApplication);
+        string memory metadataHash = IGrant(grantAddress).metadataHash();
+        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, metadataHash, _canAcceptApplication, block.timestamp);
     }
 
     /**
