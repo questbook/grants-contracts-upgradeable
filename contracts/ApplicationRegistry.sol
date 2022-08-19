@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IGrant.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./interfaces/IApplicationReviewRegistry.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
@@ -62,6 +63,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
 
     /// @notice interface for using external functionalities like checking workspace admin
     IWorkspaceRegistry public workspaceReg;
+
+    /// @notice interface for using external functionalities like assigning reviewers
+    IApplicationReviewRegistry public applicationReviewReg;
 
     // --- Events ---
     /// @notice Emitted when a new application is submitted
@@ -118,6 +122,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     /**
+     * @notice sets application review registry contract interface
+     * @param _applicationReviewReg ApplicationReviewRegistry interface
+     */
+    function setApplicationReviewRegistry(IApplicationReviewRegistry _applicationReviewReg) external onlyOwner {
+        applicationReviewReg = _applicationReviewReg;
+    }
+
+    /**
      * @notice Create/submit application
      * @param _grant address of Grant for which the application is submitted
      * @param _workspaceId workspaceId to which the grant belongs
@@ -149,6 +161,11 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
+
+        /// @notice Whenever a new application is received, assign reviewers to it if auto-assigning is enabled
+        if (applicationReviewReg.hasAutoAssigningEnabled(_grant)) {
+            applicationReviewReg.assignReviewersRoundRobin(_workspaceId, _id, _grant);
+        }
     }
 
     /**

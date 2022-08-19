@@ -9,4 +9,12 @@ interface IApplicationReviewRegistry {
         address _grantAddress,
         string memory _metadataHash
     ) external;
+
+    function assignReviewersRoundRobin(
+        uint96 _workspaceId,
+        uint96 _applicationId,
+        address _grantAddress
+    ) external;
+
+    function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool);
 }
