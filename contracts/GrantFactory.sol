@@ -98,6 +98,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
      * @notice Function to update grant
      * @param grantAddress Address of the grant contract that needs to be updated
      * @param _workspaceId Workspace Id that the grant belongs to
+     * @param _workspaceReg Workspace registry interface
      * @param _metadataHash New URL that points to grant metadata
      */
     function updateGrant(
@@ -113,6 +114,13 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
     }
 
+    /**
+     * @notice Update grant accessibility, can be called by GrantFactory contract
+     * @param grantAddress Address of the grant contract that needs to be updated
+     * @param _workspaceId Workspace Id that the grant belongs to
+     * @param _workspaceReg Workspace registry interface
+     * @param _canAcceptApplication set to false for disabling grant from receiving new applications
+     */
     function updateGrantAccessibility(
         address grantAddress,
         uint96 _workspaceId,
