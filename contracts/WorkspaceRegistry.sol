@@ -409,7 +409,6 @@ contract WorkspaceRegistry is
     /**
      * @notice Emits event when funds disbursed through the safe
      * @param _applicationId application id for which the funds are disbursed
-     * @param _applicantWalletAddress wallet address of the applicant to disburse rewards to
      * @param _milestoneId milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
      * @param _amount amount disbursed
