@@ -3,6 +3,9 @@ pragma solidity 0.8.7;
 
 /// @title Interface of the grant contract
 interface IGrant {
+    /// @notice number of submitted applications
+    function numApplicants() external view returns (uint96);
+
     /// @notice Returns a boolean value indicating whether a grant is active
     function active() external view returns (bool);
 

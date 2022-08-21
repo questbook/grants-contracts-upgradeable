@@ -1,6 +1,7 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { creatingWorkpsace } from "../utils";
+import { creatingWorkpsace, isValidDistribution } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -19,13 +20,13 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
   });
 
   describe("Reviewer Assignment", function () {
-    it("non admin should not be able to assign reviewer", async function () {
-      await expect(
-        this.applicationReviewRegistry
-          .connect(this.signers.nonAdmin)
-          .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]),
-      ).to.be.revertedWith("Unauthorised: Not an admin");
-    });
+    // it("non admin should not be able to assign reviewer", async function () {
+    //   await expect(
+    //     this.applicationReviewRegistry
+    //       .connect(this.signers.nonAdmin)
+    //       .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]),
+    //   ).to.be.revertedWith("Unauthorised: Not an admin");
+    // });
 
     it("admin should be able to assign reviewer", async function () {
       await this.workspaceRegistry
@@ -96,6 +97,123 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       expect(review[6]).to.equal(false);
     });
   });
+
+  describe.only("Auto assignment of Reviewers", function () {
+    it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      const numOfReviewersPerApplication = 2;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+
+    it("reviewer should be auto assigned once a new application is received to an existing grant", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      const numOfReviewersPerApplication = 4;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      await this.applicationRegistry
+        .connect(this.signers.randomApplicants[0])
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+
+      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
+      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
+      // });
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+
+    it("reviewer should be auto assigned to all existing applications", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      this.signers.randomApplicants.map(async (applicant: SignerWithAddress) => {
+        await this.applicationRegistry
+          .connect(applicant)
+          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+      });
+
+      const numOfReviewersPerApplication = 4;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+
+      // console.log("Total number of applications:", this.signers.randomApplicants.length + 1);
+      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
+      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
+      // })
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+  });
+
   describe("Review Submission", function () {
     it("not assigned reviewer should not be able to review", async function () {
       await expect(
