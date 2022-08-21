@@ -98,7 +98,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
-  describe("Auto assignment of Reviewers", function () {
+  describe.only("Auto assignment of Reviewers", function () {
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
@@ -109,7 +109,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       );
 
       const numOfReviewersPerApplication = 2;
-      await this.applicationReviewRegistry.connect(this.signers.admin).autoAssignReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
@@ -117,13 +117,16 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         numOfReviewersPerApplication,
       );
 
-      expect(await this.applicationReviewRegistry.shouldAutoAssignReviewers(this.grant.address)).to.equals(true);
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
       const arr: number[] = [];
-      this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
         arr.push(
-          await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address),
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
         );
-      });
+      }
       expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
     });
 
@@ -137,7 +140,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       );
 
       const numOfReviewersPerApplication = 4;
-      await this.applicationReviewRegistry.connect(this.signers.admin).autoAssignReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
@@ -154,13 +157,16 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
       // });
 
-      expect(await this.applicationReviewRegistry.shouldAutoAssignReviewers(this.grant.address)).to.equals(true);
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
       const arr: number[] = [];
-      this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
         arr.push(
-          await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address),
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
         );
-      });
+      }
       expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
     });
 
@@ -180,7 +186,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       });
 
       const numOfReviewersPerApplication = 4;
-      await this.applicationReviewRegistry.connect(this.signers.admin).autoAssignReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
@@ -188,7 +194,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         numOfReviewersPerApplication,
       );
 
-      expect(await this.applicationReviewRegistry.shouldAutoAssignReviewers(this.grant.address)).to.equals(true);
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
 
       // console.log("Total number of applications:", this.signers.randomApplicants.length + 1);
       // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
@@ -196,11 +202,14 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
       // })
       const arr: number[] = [];
-      this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
         arr.push(
-          await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address),
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
         );
-      });
+      }
       expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
     });
   });

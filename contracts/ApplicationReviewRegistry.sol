@@ -56,7 +56,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     mapping(uint96 => bool) public reviewPaymentsStatus;
 
     /// @notice mapping to store which grants have auto-assigning of reviewers enabled
-    mapping(address => bool) public shouldAutoAssignReviewers;
+    mapping(address => bool) public isAutoAssigningEnabled;
 
     /// @notice mapping from grant address to reviewer address to the number of applications assigned to the reviewer
     mapping(address => mapping(address => uint96)) public reviewerAssignmentCounts;
@@ -303,7 +303,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _active Array of boolean values indicating whether the reviewers are active or not
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
      */
-    function autoAssignReviewers(
+    function enableAutoAssignmentOfReviewers(
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
@@ -314,11 +314,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         IGrant grantRef = IGrant(_grantAddress);
         require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
-        require(
-            shouldAutoAssignReviewers[_grantAddress] == false,
-            "AutoAssignReviewers: Auto assignment already enabled"
-        );
-        shouldAutoAssignReviewers[_grantAddress] = true;
+        require(isAutoAssigningEnabled[_grantAddress] == false, "AutoAssignReviewers: Auto assignment already enabled");
+        isAutoAssigningEnabled[_grantAddress] = true;
 
         uint96 trueCount = 0;
         for (uint256 i = 0; i < _active.length; i++) {
@@ -477,7 +474,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         return (metadataHashBytes.length != 0);
     }
 
+    /**
+     * @notice Function to check is auto assigning has been enabled for a grant or not
+     * @param _grantAddress Grant address
+     */
     function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool) {
-        return shouldAutoAssignReviewers[_grantAddress];
+        return isAutoAssigningEnabled[_grantAddress];
     }
 }
