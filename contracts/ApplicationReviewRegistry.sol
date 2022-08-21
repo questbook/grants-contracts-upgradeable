@@ -27,7 +27,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 numOfReviews;
         string rubricsMetadataHash;
         uint96 numOfReviewersPerApplication;
-        address[] reviewers;
     }
 
     struct RoundRobinNode {
@@ -61,6 +60,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice mapping from grant address to reviewer address to the number of applications assigned to the reviewer
     mapping(address => mapping(address => uint96)) public reviewerAssignmentCounts;
+
+    /// @notice mapping from grant address to list of reviewers
+    mapping(address => address[]) public reviewers;
 
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
@@ -183,7 +185,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _grantAddress,
         address[] memory _reviewers,
         bool[] memory _active
-    ) public onlyWorkspaceAdmin(_workspaceId) {
+    ) public {
         require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
         require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
@@ -217,10 +219,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
                 _active[i]
             );
 
-            uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
-            assert(_assignmentCount + 1 > _assignmentCount);
-            _assignmentCount += 1;
-            reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
+            if (_active[i]) {
+                uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
+                assert(_assignmentCount + 1 > _assignmentCount);
+                _assignmentCount += 1;
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
+            }
         }
 
         emit ReviewersAssigned(
@@ -244,32 +248,33 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress
-    ) public onlyWorkspaceAdmin(_workspaceId) {
+    ) public {
         require(
             applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
             "AssignReviewers (Batch): Unauthorized"
         );
         require(_grantAddress != address(0), "AssignReviewers (Batch): Grant address is zero address");
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        address[] memory _reviewers = reviewers[_grantAddress];
 
         // Step - 1: Get the number of reviewers that need to be there per application
         uint96 numOfReviewersPerApplication = grantReviewState.numOfReviewersPerApplication;
         require(numOfReviewersPerApplication > 0, "AssignReviewers (Batch): Cannot assign reviewers");
-        require(grantReviewState.reviewers.length > 0, "AssignReviewers (Batch): No reviewers assigned");
+        require(_reviewers.length > 0, "AssignReviewers (Batch): No reviewers assigned");
 
         // Step - 2: Get the number of applications associated with each reviewer.
-        RoundRobinNode[] memory _assignmentCounts = new RoundRobinNode[](grantReviewState.reviewers.length);
-        for (uint256 i = 0; i < grantReviewState.reviewers.length; i++) {
+        RoundRobinNode[] memory _assignmentCounts = new RoundRobinNode[](_reviewers.length);
+        for (uint256 i = 0; i < _reviewers.length; i++) {
             _assignmentCounts[i] = RoundRobinNode(
-                grantReviewState.reviewers[i],
-                reviewerAssignmentCounts[_grantAddress][grantReviewState.reviewers[i]]
+                _reviewers[i],
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]]
             );
         }
 
         // Step - 3: Sort the reviewers based on the number of applications they have been assigned.
         for (uint256 i = 0; i < _assignmentCounts.length; i++) {
             for (uint256 j = i + 1; j < _assignmentCounts.length; j++) {
-                if (_assignmentCounts[i].applicationsAssigned < _assignmentCounts[j].applicationsAssigned) {
+                if (_assignmentCounts[i].applicationsAssigned > _assignmentCounts[j].applicationsAssigned) {
                     RoundRobinNode memory temp = _assignmentCounts[i];
                     _assignmentCounts[i] = _assignmentCounts[j];
                     _assignmentCounts[j] = temp;
@@ -278,13 +283,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         }
 
         // Step - 4: Filter out that number of reviewers from the list of reviewers from step - 1
-        bool[] memory _activeReviewers = new bool[](grantReviewState.reviewers.length);
-        for (uint256 i = 0; i < grantReviewState.reviewers.length; i++) {
-            _activeReviewers[i] = i < numOfReviewersPerApplication;
+        address[] memory _leastBusyReviewers = new address[](numOfReviewersPerApplication);
+        bool[] memory _activeReviewers = new bool[](numOfReviewersPerApplication);
+        for (uint256 i = 0; i < numOfReviewersPerApplication; i++) {
+            _leastBusyReviewers[i] = _assignmentCounts[i].reviewer;
+            _activeReviewers[i] = true;
         }
 
         // Step - 5: Assign the filtered list of reviewers to the application
-        assignReviewers(_workspaceId, _applicationId, _grantAddress, grantReviewState.reviewers, _activeReviewers);
+        assignReviewers(_workspaceId, _applicationId, _grantAddress, _leastBusyReviewers, _activeReviewers);
     }
 
     /**
@@ -302,7 +309,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address[] memory _reviewers,
         bool[] memory _active,
         uint96 _numOfReviewersPerApplication
-    ) external onlyWorkspaceAdmin(_workspaceId) {
+    ) public onlyWorkspaceAdmin(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
@@ -311,6 +318,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             shouldAutoAssignReviewers[_grantAddress] == false,
             "AutoAssignReviewers: Auto assignment already enabled"
         );
+        shouldAutoAssignReviewers[_grantAddress] = true;
 
         uint96 trueCount = 0;
         for (uint256 i = 0; i < _active.length; i++) {
@@ -321,6 +329,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         }
         require(trueCount >= _numOfReviewersPerApplication, "AutoAssignReviewers: Not enough reviewers selected");
 
+        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
+
         address[] memory _activeReviewers = new address[](trueCount);
         uint256 j = 0;
         for (uint256 i = 0; i < trueCount; i++) {
@@ -330,9 +341,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             }
         }
 
-        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
-        grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
-        grantReviewState.reviewers = _activeReviewers;
+        reviewers[_grantAddress] = _activeReviewers;
 
         /// @notice Assign reviewers to already existing applications
         for (uint96 i = 0; i < grantRef.numApplicants(); i++) {
@@ -468,7 +477,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         return (metadataHashBytes.length != 0);
     }
 
-    function hasAutoAssigningEnabled(address _grantAddress) public view returns (bool) {
+    function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool) {
         return shouldAutoAssignReviewers[_grantAddress];
     }
 }

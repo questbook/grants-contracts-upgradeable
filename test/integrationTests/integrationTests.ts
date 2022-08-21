@@ -19,6 +19,7 @@ describe("Integration tests", function () {
     this.signers.applicantAdmin = signers[2];
     this.signers.erc20 = signers[3];
     this.signers.reviewer = signers[4];
+    this.signers.autoAssignReviewers = signers.slice(5);
   });
 
   beforeEach(async function () {

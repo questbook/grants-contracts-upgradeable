@@ -22,6 +22,8 @@ describe("Unit tests", function () {
     this.signers.applicantAdmin = signers[2];
     this.signers.reviewer = signers[3];
     this.signers.erc20 = signers[4];
+    this.signers.autoAssignReviewers = signers.slice(5, 10);
+    this.signers.randomApplicants = signers.slice(11);
   });
 
   describe("ApplicationReviewRegistry", function () {
