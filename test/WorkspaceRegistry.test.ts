@@ -87,7 +87,7 @@ describe("Unit tests", function () {
       await creatingWorkpsace(workspaceRegistry.connect(this.signers.admin));
       const result = await workspaceRegistry
         .connect(this.signers.admin)
-        .disburseRewardFromSafe(0, 0, "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", 100, 0);
+        .disburseRewardFromSafe([0, 1, 2], [0, 0, 0], "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", [100, 200, 300], 0);
       const data = await result.wait();
       const { events } = data;
       if (events) {

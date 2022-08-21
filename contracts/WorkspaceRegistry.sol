@@ -411,7 +411,7 @@ contract WorkspaceRegistry is
      * @param _applicationIds[] application id for which the funds are disbursed
      * @param _milestoneIds[] milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
-     * @param _amount[] amount disbursed
+     * @param _amounts[] amount disbursed
      * @param _workspaceId workspace that the application belongs to
      */
     function disburseRewardFromSafe(
