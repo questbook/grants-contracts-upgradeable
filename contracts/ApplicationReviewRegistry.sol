@@ -64,6 +64,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice Emitted when a new review is submitted
     event ReviewSubmitted(
         uint96 indexed _reviewId,
+        address _reviewerAddress,
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress,
@@ -224,6 +225,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _metadataHash IPFS hash of the review metadata
      */
     function submitReview(
+        address _reviewerAddress,
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress,
@@ -241,7 +243,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         review.metadataHash = _metadataHash;
 
-        emit ReviewSubmitted(review.id, _workspaceId, _applicationId, _grantAddress, _metadataHash, block.timestamp);
+        emit ReviewSubmitted(
+            review.id,
+            _reviewerAddress,
+            _workspaceId,
+            _applicationId,
+            _grantAddress,
+            _metadataHash,
+            block.timestamp
+        );
     }
 
     /**

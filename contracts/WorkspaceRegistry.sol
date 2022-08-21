@@ -408,27 +408,29 @@ contract WorkspaceRegistry is
 
     /**
      * @notice Emits event when funds disbursed through the safe
-     * @param _applicationId application id for which the funds are disbursed
-     * @param _milestoneId milestone id for which the funds are disbursed
+     * @param _applicationIds[] application id for which the funds are disbursed
+     * @param _milestoneIds[] milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
-     * @param _amount amount disbursed
+     * @param _amount[] amount disbursed
      * @param _workspaceId workspace that the application belongs to
      */
     function disburseRewardFromSafe(
-        uint96 _applicationId,
-        uint96 _milestoneId,
+        uint96[] memory _applicationIds,
+        uint96[] memory _milestoneIds,
         IERC20 _erc20Interface,
-        uint256 _amount,
+        uint256[] memory _amounts,
         uint96 _workspaceId
     ) external onlyWorkspaceAdmin(_workspaceId) {
-        emit DisburseRewardFromSafe(
-            _applicationId,
-            _milestoneId,
-            address(_erc20Interface),
-            msg.sender,
-            _amount,
-            true,
-            block.timestamp
-        );
+        for (uint256 i = 0; i < _applicationIds.length; i++) {
+            emit DisburseRewardFromSafe(
+                _applicationIds[i],
+                _milestoneIds[i],
+                address(_erc20Interface),
+                msg.sender,
+                _amounts[i],
+                true,
+                block.timestamp
+            );
+        }
     }
 }

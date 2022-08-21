@@ -66,7 +66,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(0, "0x839u98dncjbhncdc87D", 0, this.grant.address, "dummyIpfsHash");
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
