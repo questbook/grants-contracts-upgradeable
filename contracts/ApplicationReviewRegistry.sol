@@ -314,7 +314,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address[] memory _reviewers,
         bool[] memory _active,
         uint96 _numOfReviewersPerApplication
-    ) public onlyWorkspaceAdmin(_workspaceId) {
+    ) private onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
@@ -398,7 +398,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         address _grantAddress,
         string memory _metadataHash
-    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+    ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSet: Unauthorised");
@@ -409,6 +409,34 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         grantReviewState.grant = _grantAddress;
 
         emit RubricsSet(_workspaceId, _grantAddress, _metadataHash, block.timestamp);
+    }
+
+    /**
+     * @notice Sets the rubrics metadata hash for a grant, and enables auto assigning of reviewers at one go
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     * @param _reviewers Array of reviewer addresses
+     * @param _active Array of boolean values indicating whether the reviewers are active or not
+     * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
+     * @param _rubricMetadataHash IPFS hash of the rubrics metadata
+     */
+    function setRubricsAndEnableAutoAssign(
+        uint96 _workspaceId,
+        address _grantAddress,
+        address[] memory _reviewers,
+        bool[] memory _active,
+        uint96 _numOfReviewersPerApplication,
+        string memory _rubricMetadataHash
+    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSetAndEnableAutoAssign: Unauthorised");
+        setRubrics(_workspaceId, _grantAddress, _rubricMetadataHash);
+        enableAutoAssignmentOfReviewers(
+            _workspaceId,
+            _grantAddress,
+            _reviewers,
+            _active,
+            _numOfReviewersPerApplication
+        );
     }
 
     /**
