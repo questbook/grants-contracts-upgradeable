@@ -22,6 +22,8 @@ describe("Unit tests", function () {
     this.signers.applicantAdmin = signers[2];
     this.signers.reviewer = signers[3];
     this.signers.erc20 = signers[4];
+    this.signers.autoAssignReviewers = signers.slice(5, 10);
+    this.signers.randomApplicants = signers.slice(11);
   });
 
   describe("ApplicationReviewRegistry", function () {
@@ -38,7 +40,15 @@ describe("Unit tests", function () {
         await upgrades.deployProxy(this.applicationRegistryFactory, { kind: "uups" })
       );
 
+      this.applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
+      this.applicationReviewRegistry = <ApplicationReviewRegistry>(
+        await upgrades.deployProxy(this.applicationReviewRegistryFactory, { kind: "uups" })
+      );
+
       await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
+      await this.applicationRegistry
+        .connect(this.signers.admin)
+        .setApplicationReviewReg(this.applicationReviewRegistry.address);
 
       this.grantFactory = await ethers.getContractFactory("Grant");
       this.grant = <Grant>(
@@ -49,6 +59,7 @@ describe("Unit tests", function () {
             "dummyGrantIpfsHash",
             this.workspaceRegistry.address,
             this.applicationRegistry.address,
+            this.signers.admin.address,
             this.signers.admin.address,
           ],
           { kind: "uups" },
@@ -61,11 +72,6 @@ describe("Unit tests", function () {
 
       this.grantFactoryFactory = await ethers.getContractFactory("GrantFactory");
       this.grantFactoryContract = <GrantFactory>await upgrades.deployProxy(this.grantFactoryFactory, { kind: "uups" });
-
-      this.applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
-      this.applicationReviewRegistry = <ApplicationReviewRegistry>(
-        await upgrades.deployProxy(this.applicationReviewRegistryFactory, { kind: "uups" })
-      );
 
       await this.applicationReviewRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
       await this.applicationReviewRegistry

@@ -19,6 +19,7 @@ describe("Integration tests", function () {
     this.signers.applicantAdmin = signers[2];
     this.signers.erc20 = signers[3];
     this.signers.reviewer = signers[4];
+    this.signers.autoAssignReviewers = signers.slice(5);
   });
 
   beforeEach(async function () {
@@ -34,7 +35,15 @@ describe("Integration tests", function () {
       await upgrades.deployProxy(applicationRegistryFactory, { kind: "uups" })
     );
 
+    this.applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
+    this.applicationReviewRegistry = <ApplicationRegistry>(
+      await upgrades.deployProxy(this.applicationReviewRegistryFactory, { kind: "uups" })
+    );
+
     await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
+    await this.applicationRegistry
+      .connect(this.signers.admin)
+      .setApplicationReviewReg(this.applicationReviewRegistry.address);
 
     this.grantFactory = await ethers.getContractFactory("Grant");
     this.grant = <Grant>(
@@ -45,6 +54,7 @@ describe("Integration tests", function () {
           "dummyGrantIpfsHash",
           this.workspaceRegistry.address,
           this.applicationRegistry.address,
+          this.signers.admin.address,
           this.signers.admin.address,
         ],
         { kind: "uups" },
