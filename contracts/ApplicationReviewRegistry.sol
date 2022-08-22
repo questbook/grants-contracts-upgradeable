@@ -9,6 +9,7 @@ import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
+import "hardhat/console.sol";
 
 contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     struct Review {

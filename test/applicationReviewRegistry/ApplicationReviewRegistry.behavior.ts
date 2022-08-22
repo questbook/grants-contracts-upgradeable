@@ -67,7 +67,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, "0x839u98dncjbhncdc87D", 0, this.grant.address, "dummyIpfsHash");
+        .submitReview("0x4e35fF1872A720695a741B00f2fA4D1883440baC", 0, 0, this.grant.address, "dummyIpfsHash");
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
@@ -219,7 +219,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.nonAdmin)
-          .submitReview(0, 0, this.grant.address, "dummyIpfsHash"),
+          .submitReview(this.signers.nonAdmin.address, 0, 0, this.grant.address, "dummyIpfsHash"),
       ).to.be.revertedWith("Unauthorised: Neither an admin nor a reviewer");
     });
 
@@ -232,7 +232,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       const tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
       expect(review[5]).to.equal("dummyIpfsHash");
@@ -247,12 +247,12 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       let tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const grantReviewStateBefore = await this.applicationReviewRegistry.grantReviewStates(this.grant.address);
       tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHashResubmitted");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHashResubmitted");
       await tx.wait();
       const grantReviewStateAfter = await this.applicationReviewRegistry.grantReviewStates(this.grant.address);
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
@@ -273,7 +273,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.reviewer)
-          .submitReview(0, 0, this.grant.address, "dummyIpfsHash"),
+          .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash"),
       ).to.be.revertedWith("ReviewSubmit: Revoked access");
     });
   });
@@ -303,7 +303,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
@@ -464,7 +464,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       const tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
       expect(review[5]).to.equal("dummyIpfsHash");
