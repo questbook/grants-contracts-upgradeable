@@ -27,13 +27,3 @@ export async function deployWorkspaceContract(signer?: Signer) {
 
   return workspaceRegistry;
 }
-
-export function isValidDistribution(numOfReviewerPerApplication: number, distribution: number[]): boolean {
-  for (let i = 0; i < distribution.length; ++i) distribution[i] %= numOfReviewerPerApplication;
-  for (let j = 0; j < numOfReviewerPerApplication; ++j) {
-    distribution.sort((a, b) => b - a);
-    for (let i = 0; i < numOfReviewerPerApplication; ++i) if (distribution[i] > 0) --distribution[i];
-    if (distribution.every(x => x === 0)) return true;
-  }
-  return false;
-}

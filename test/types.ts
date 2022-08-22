@@ -13,6 +13,4 @@ export interface Signers {
   otherAdmin: SignerWithAddress;
   applicantAdmin: SignerWithAddress;
   erc20: SignerWithAddress;
-  autoAssignReviewers: SignerWithAddress[];
-  randomApplicants: SignerWithAddress[];
 }
