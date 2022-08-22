@@ -98,7 +98,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
-  describe("Auto assignment of Reviewers", function () {
+  describe.only("Auto assignment of Reviewers", function () {
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
