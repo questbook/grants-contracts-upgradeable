@@ -36,3 +36,4 @@ src/types/factories/*
 
 .openzeppelin/unknown-31337.json
 .DS_Store
+config.json
