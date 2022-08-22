@@ -59,14 +59,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice mapping to store which grants have auto-assigning of reviewers enabled
     mapping(address => bool) public isAutoAssigningEnabled;
 
-    /// @notice mapping from grant address to reviewer address to the number of applications assigned to the reviewer
-    mapping(address => mapping(address => uint96)) public reviewerAssignmentCounts;
-
     /// @notice mapping from grant address to list of reviewers
     mapping(address => address[]) public reviewers;
 
     /// @notice mapping from grant address to list of applications
     mapping(address => uint96[]) public applicationsToGrant;
+
+    /// @notice mapping from grant address to index of the last reviewer assigned
+    mapping(address => uint256) public lastAssignedReviewerIndices;
 
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
@@ -223,13 +223,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
                 "",
                 _active[i]
             );
-
-            if (_active[i]) {
-                uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
-                assert(_assignmentCount + 1 > _assignmentCount);
-                _assignmentCount += 1;
-                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
-            }
         }
 
         emit ReviewersAssigned(
@@ -267,35 +260,21 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(numOfReviewersPerApplication > 0, "AssignReviewers (Batch): Cannot assign reviewers");
         require(_reviewers.length > 0, "AssignReviewers (Batch): No reviewers assigned");
 
-        // Step - 2: Get the number of applications associated with each reviewer.
-        RoundRobinNode[] memory _assignmentCounts = new RoundRobinNode[](_reviewers.length);
-        for (uint256 i = 0; i < _reviewers.length; i++) {
-            _assignmentCounts[i] = RoundRobinNode(
-                _reviewers[i],
-                reviewerAssignmentCounts[_grantAddress][_reviewers[i]]
-            );
-        }
-
-        // Step - 3: Sort the reviewers based on the number of applications they have been assigned.
-        for (uint256 i = 0; i < _assignmentCounts.length; i++) {
-            for (uint256 j = i + 1; j < _assignmentCounts.length; j++) {
-                if (_assignmentCounts[i].applicationsAssigned > _assignmentCounts[j].applicationsAssigned) {
-                    RoundRobinNode memory temp = _assignmentCounts[i];
-                    _assignmentCounts[i] = _assignmentCounts[j];
-                    _assignmentCounts[j] = temp;
-                }
-            }
-        }
-
-        // Step - 4: Filter out that number of reviewers from the list of reviewers from step - 1
+        // Step - 2: Get the index of the last assigned reviewer
         address[] memory _leastBusyReviewers = new address[](numOfReviewersPerApplication);
         bool[] memory _activeReviewers = new bool[](numOfReviewersPerApplication);
+        uint256 lastIndex = lastAssignedReviewerIndices[_grantAddress];
         for (uint256 i = 0; i < numOfReviewersPerApplication; i++) {
-            _leastBusyReviewers[i] = _assignmentCounts[i].reviewer;
+            _leastBusyReviewers[i] = _reviewers[lastIndex];
             _activeReviewers[i] = true;
+            lastIndex++;
+            if (lastIndex > _reviewers.length - 1) {
+                lastIndex = 0;
+            }
         }
+        lastAssignedReviewerIndices[_grantAddress] = lastIndex;
 
-        // Step - 5: Assign the filtered list of reviewers to the application
+        // Step - 3: Assign the filtered list of reviewers to the application
         assignReviewers(_workspaceId, _applicationId, _grantAddress, _leastBusyReviewers, _activeReviewers);
     }
 
