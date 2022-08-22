@@ -37,3 +37,27 @@ export function isValidDistribution(numOfReviewerPerApplication: number, distrib
   }
   return false;
 }
+
+export function generateAssignment(
+  numOfApplications: number,
+  numOfReviewers: number,
+  numOfReviewerPerApplication: number,
+): number[] {
+  const distribution = new Array(numOfReviewers).fill(0);
+  let lastIndex: number = 0;
+  for (let i = 0; i < numOfApplications; ++i) {
+    for (let j = 0; j < numOfReviewerPerApplication; ++j) {
+      distribution[lastIndex]++;
+      lastIndex = (lastIndex + 1) % numOfReviewers;
+    }
+  }
+  return distribution;
+}
+
+export function areEqualDistributions(arr1: number[], arr2: number[]) {
+  if (arr1.length !== arr2.length) return false;
+  for (let i = 0; i < Math.min(arr1.length, arr2.length); ++i) {
+    if (arr1[i] !== arr2[i]) return false;
+  }
+  return true;
+}
