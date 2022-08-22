@@ -59,6 +59,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice mapping to store which grants have auto-assigning of reviewers enabled
     mapping(address => bool) public isAutoAssigningEnabled;
 
+    /// @notice mapping from grant address to reviewer address to the number of applications assigned to the reviewer
+    mapping(address => mapping(address => uint96)) public reviewerAssignmentCounts;
+
     /// @notice mapping from grant address to list of reviewers
     mapping(address => address[]) public reviewers;
 
@@ -223,6 +226,13 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
                 "",
                 _active[i]
             );
+
+            if (_active[i]) {
+                uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
+                assert(_assignmentCount + 1 > _assignmentCount);
+                _assignmentCount += 1;
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
+            }
         }
 
         emit ReviewersAssigned(
