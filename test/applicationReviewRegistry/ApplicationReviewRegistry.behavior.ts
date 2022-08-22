@@ -98,7 +98,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
-  describe.only("Auto assignment of Reviewers", function () {
+  describe("Auto assignment of Reviewers", function () {
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
@@ -320,6 +320,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
           "dummyGrantIpfsHash",
           this.applicationRegistry.address, // random address to avoid having to create a new workspace
           this.applicationRegistry.address,
+          this.signers.admin.address,
           this.signers.admin.address,
         ],
         { kind: "uups" },

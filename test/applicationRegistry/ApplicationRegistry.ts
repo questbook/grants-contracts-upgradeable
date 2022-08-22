@@ -54,6 +54,7 @@ describe("Unit tests", function () {
             this.workspaceRegistry.address,
             this.applicationRegistry.address,
             this.signers.admin.address,
+            this.signers.admin.address,
           ],
           { kind: "uups" },
         )
