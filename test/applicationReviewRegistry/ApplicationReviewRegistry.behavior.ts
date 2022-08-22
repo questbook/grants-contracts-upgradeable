@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { creatingWorkpsace, isValidDistribution } from "../utils";
+import { areEqualDistributions, creatingWorkpsace, generateAssignment, isValidDistribution } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -98,7 +98,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
-  describe.only("Auto assignment of Reviewers", function () {
+  describe("Auto assignment of Reviewers", function () {
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
@@ -118,7 +118,19 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         "dummyIPFSHash",
       );
 
+      const lastAssignedIndex = await this.applicationReviewRegistry.lastAssignedReviewerIndices(this.grant.address);
+      const applicationAssignedTo1 = await this.applicationReviewRegistry.reviewerAssignmentCounts(
+        this.grant.address,
+        this.signers.autoAssignReviewers[0].address,
+      );
+      const applicationAssignedTo2 = await this.applicationReviewRegistry.reviewerAssignmentCounts(
+        this.grant.address,
+        this.signers.autoAssignReviewers[1].address,
+      );
       expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      expect(lastAssignedIndex).to.equals(numOfReviewersPerApplication % this.signers.autoAssignReviewers.length);
+      expect(applicationAssignedTo1).to.equals(1);
+      expect(applicationAssignedTo2).to.equals(1);
     });
 
     it("reviewer should be auto assigned once a new application is received to an existing grant", async function () {
@@ -144,12 +156,25 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .connect(this.signers.randomApplicants[0])
         .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
 
-      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
-      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
-      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
-      // });
+      const distribution = generateAssignment(2, this.signers.autoAssignReviewers.length, numOfReviewersPerApplication);
 
+      const distributionFromContract: number[] = [];
+      for (const autoAssignReviewer of this.signers.autoAssignReviewers) {
+        distributionFromContract.push(
+          (
+            await this.applicationReviewRegistry.reviewerAssignmentCounts(
+              this.grant.address,
+              autoAssignReviewer.address,
+            )
+          ).toNumber(),
+        );
+      }
+
+      // console.log(distribution, distributionFromContract)
+      const lastAssignedIndex = await this.applicationReviewRegistry.lastAssignedReviewerIndices(this.grant.address);
       expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      expect(lastAssignedIndex).to.equals((numOfReviewersPerApplication * 2) % this.signers.autoAssignReviewers.length);
+      expect(areEqualDistributions(distribution, distributionFromContract)).to.equals(true);
     });
 
     it("reviewer should be auto assigned to all existing applications", async function () {
@@ -177,13 +202,32 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         "dummyIPFSHash",
       );
 
-      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      const distribution = generateAssignment(
+        this.signers.randomApplicants.length + 1,
+        this.signers.autoAssignReviewers.length,
+        numOfReviewersPerApplication,
+      );
 
-      // console.log("Total number of applications:", this.signers.randomApplicants.length + 1);
-      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
-      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
-      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
-      // })
+      const distributionFromContract: number[] = [];
+      for (const autoAssignReviewer of this.signers.autoAssignReviewers) {
+        distributionFromContract.push(
+          (
+            await this.applicationReviewRegistry.reviewerAssignmentCounts(
+              this.grant.address,
+              autoAssignReviewer.address,
+            )
+          ).toNumber(),
+        );
+      }
+
+      // console.log(distribution, distributionFromContract)
+      const lastAssignedIndex = await this.applicationReviewRegistry.lastAssignedReviewerIndices(this.grant.address);
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      expect(lastAssignedIndex).to.equals(
+        (numOfReviewersPerApplication * (this.signers.randomApplicants.length + 1)) %
+          this.signers.autoAssignReviewers.length,
+      );
+      expect(areEqualDistributions(distribution, distributionFromContract)).to.equals(true);
     });
   });
 
