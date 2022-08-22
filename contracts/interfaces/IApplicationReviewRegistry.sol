@@ -17,4 +17,6 @@ interface IApplicationReviewRegistry {
     ) external;
 
     function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool);
+
+    function appendToApplicationList(uint96 _applicationId, address _grantAddress) external;
 }

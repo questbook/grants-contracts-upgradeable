@@ -65,6 +65,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice mapping from grant address to list of reviewers
     mapping(address => address[]) public reviewers;
 
+    /// @notice mapping from grant address to list of applications
+    mapping(address => uint96[]) public applicationsToGrant;
+
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
     event ReviewersAssigned(
@@ -343,8 +346,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         reviewers[_grantAddress] = _activeReviewers;
 
         /// @notice Assign reviewers to already existing applications
-        for (uint96 i = 0; i < grantRef.numApplicants(); i++) {
-            assignReviewersRoundRobin(_workspaceId, i, _grantAddress);
+        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
+            assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
         }
     }
 
@@ -491,5 +494,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      */
     function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool) {
         return isAutoAssigningEnabled[_grantAddress];
+    }
+
+    /**
+     * @notice Function to store the applications to a grant
+     * @param _grantAddress Grant address
+     * @param _applicationId Application ID
+     */
+    function appendToApplicationList(uint96 _applicationId, address _grantAddress) external {
+        applicationsToGrant[_grantAddress].push(_applicationId);
     }
 }
