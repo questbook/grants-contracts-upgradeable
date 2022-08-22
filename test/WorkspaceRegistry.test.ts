@@ -4,8 +4,19 @@ import type { WorkspaceRegistry, WorkspaceRegistryV2__factory } from "../src/typ
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { creatingWorkpsace, deployWorkspaceContract, randomWallet } from "./utils";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Signers } from "./types";
 
 describe("Unit tests", function () {
+  before(async function () {
+    this.signers = {} as Signers;
+
+    const signers: SignerWithAddress[] = await ethers.getSigners();
+    this.signers.admin = signers[0];
+    this.signers.nonAdmin = signers[1];
+    this.signers.applicantAdmin = signers[2];
+    this.signers.reviewer = signers[3];
+  });
   describe("WorkspaceRegistry", function () {
     let workspaceRegistry: WorkspaceRegistry;
     let workspaceRegistryFactoryV2: WorkspaceRegistryV2__factory;
@@ -70,6 +81,19 @@ describe("Unit tests", function () {
       expect(await workspaceRegistry.workspaceCount()).to.equal(0);
       await creatingWorkpsace(workspaceRegistry);
       expect(await workspaceRegistry.workspaceCount()).to.equal(1);
+    });
+
+    it("record safe transaction successful, initiated by admin", async function () {
+      await creatingWorkpsace(workspaceRegistry.connect(this.signers.admin));
+      const result = await workspaceRegistry
+        .connect(this.signers.admin)
+        .disburseRewardFromSafe([0, 1, 2], [0, 0, 0], "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", [100, 200, 300], 0);
+      const data = await result.wait();
+      const { events } = data;
+      if (events) {
+        console.log("inside events");
+        expect(events[0].event).to.equal("DisburseRewardFromSafe");
+      }
     });
 
     it("should create new workspace with safe", async function () {
@@ -222,4 +246,23 @@ describe("Unit tests", function () {
       });
     });
   });
+
+  // describe("Disburse reward from safe", async function () {
+  //   it("record safe transaction successful, initiated by admin", async function () {
+  //     let tx = await this.workspaceRegistry
+  //       .connect(this.signers.admin)
+  //       .disburseRewardFromSafe(0, 0, "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", 100,  0);
+  //     tx = await tx.wait();
+  //     const { events } = tx;
+  //     expect(events[0].event).to.equal("DisburseRewardFromSafe");
+  //   });
+
+  // it("record transaction should not be successful if initiated by non admin", async function () {
+  //   expect(
+  //     this.grant
+  //       .connect(this.signers.nonAdmin)
+  //       .recordTransaction(0, 0, "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", "0x12", 100),
+  //   ).to.revertedWith("Unauthorised: Not an admin");
+  // });
+  // });
 });

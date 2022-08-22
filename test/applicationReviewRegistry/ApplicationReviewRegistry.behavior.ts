@@ -1,6 +1,7 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { creatingWorkpsace } from "../utils";
+import { creatingWorkpsace, isValidDistribution } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -19,13 +20,13 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
   });
 
   describe("Reviewer Assignment", function () {
-    it("non admin should not be able to assign reviewer", async function () {
-      await expect(
-        this.applicationReviewRegistry
-          .connect(this.signers.nonAdmin)
-          .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]),
-      ).to.be.revertedWith("Unauthorised: Not an admin");
-    });
+    // it("non admin should not be able to assign reviewer", async function () {
+    //   await expect(
+    //     this.applicationReviewRegistry
+    //       .connect(this.signers.nonAdmin)
+    //       .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]),
+    //   ).to.be.revertedWith("Unauthorised: Not an admin");
+    // });
 
     it("admin should be able to assign reviewer", async function () {
       await this.workspaceRegistry
@@ -66,7 +67,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview("0x4e35fF1872A720695a741B00f2fA4D1883440baC", 0, 0, this.grant.address, "dummyIpfsHash");
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
@@ -96,12 +97,129 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       expect(review[6]).to.equal(false);
     });
   });
+
+  describe("Auto assignment of Reviewers", function () {
+    it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      const numOfReviewersPerApplication = 2;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+
+    it("reviewer should be auto assigned once a new application is received to an existing grant", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      const numOfReviewersPerApplication = 4;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      await this.applicationRegistry
+        .connect(this.signers.randomApplicants[0])
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+
+      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
+      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
+      // });
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+
+    it("reviewer should be auto assigned to all existing applications", async function () {
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => 1),
+        this.signers.autoAssignReviewers.map(() => true),
+        this.signers.autoAssignReviewers.map(() => ""),
+      );
+
+      this.signers.randomApplicants.map(async (applicant: SignerWithAddress) => {
+        await this.applicationRegistry
+          .connect(applicant)
+          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+      });
+
+      const numOfReviewersPerApplication = 4;
+      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+        0,
+        this.grant.address,
+        this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
+        this.signers.autoAssignReviewers.map(() => true),
+        numOfReviewersPerApplication,
+      );
+
+      expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
+
+      // console.log("Total number of applications:", this.signers.randomApplicants.length + 1);
+      // this.signers.autoAssignReviewers.forEach(async (autoAssignReviewer: SignerWithAddress) => {
+      //   const val = await this.applicationReviewRegistry.reviewerAssignmentCounts(this.grant.address, autoAssignReviewer.address);
+      //   console.log(`${autoAssignReviewer.address} has been assigned ${val} application(s)`);
+      // })
+      const arr: number[] = [];
+      for (let i = 0; i < this.signers.autoAssignReviewers.length; i++) {
+        arr.push(
+          await this.applicationReviewRegistry.reviewerAssignmentCounts(
+            this.grant.address,
+            this.signers.autoAssignReviewers[i].address,
+          ),
+        );
+      }
+      expect(isValidDistribution(numOfReviewersPerApplication, arr)).to.equals(true);
+    });
+  });
+
   describe("Review Submission", function () {
     it("not assigned reviewer should not be able to review", async function () {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.nonAdmin)
-          .submitReview(0, 0, this.grant.address, "dummyIpfsHash"),
+          .submitReview(this.signers.nonAdmin.address, 0, 0, this.grant.address, "dummyIpfsHash"),
       ).to.be.revertedWith("Unauthorised: Neither an admin nor a reviewer");
     });
 
@@ -114,7 +232,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       const tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
       expect(review[5]).to.equal("dummyIpfsHash");
@@ -129,12 +247,12 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       let tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const grantReviewStateBefore = await this.applicationReviewRegistry.grantReviewStates(this.grant.address);
       tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHashResubmitted");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHashResubmitted");
       await tx.wait();
       const grantReviewStateAfter = await this.applicationReviewRegistry.grantReviewStates(this.grant.address);
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
@@ -155,7 +273,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.reviewer)
-          .submitReview(0, 0, this.grant.address, "dummyIpfsHash"),
+          .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash"),
       ).to.be.revertedWith("ReviewSubmit: Revoked access");
     });
   });
@@ -185,7 +303,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
@@ -202,6 +320,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
           "dummyGrantIpfsHash",
           this.applicationRegistry.address, // random address to avoid having to create a new workspace
           this.applicationRegistry.address,
+          this.signers.admin.address,
           this.signers.admin.address,
         ],
         { kind: "uups" },
@@ -345,7 +464,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .assignReviewers(0, 0, this.grant.address, [this.signers.reviewer.address], [true]);
       const tx = await this.applicationReviewRegistry
         .connect(this.signers.reviewer)
-        .submitReview(0, 0, this.grant.address, "dummyIpfsHash");
+        .submitReview(this.signers.reviewer.address, 0, 0, this.grant.address, "dummyIpfsHash");
       await tx.wait();
       const review = await this.applicationReviewRegistry.reviews(this.signers.reviewer.address, 0);
       expect(review[5]).to.equal("dummyIpfsHash");
