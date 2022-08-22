@@ -478,14 +478,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint96",
-        "name": "_applicationId",
-        "type": "uint96"
+        "internalType": "uint96[]",
+        "name": "_applicationIds",
+        "type": "uint96[]"
       },
       {
-        "internalType": "uint96",
-        "name": "_milestoneId",
-        "type": "uint96"
+        "internalType": "uint96[]",
+        "name": "_milestoneIds",
+        "type": "uint96[]"
       },
       {
         "internalType": "contract IERC20",
@@ -493,9 +493,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "_amounts",
+        "type": "uint256[]"
       },
       {
         "internalType": "uint96",
