@@ -31,8 +31,6 @@ async function main() {
   const ApplicationRegistryContract = await ApplicationRegistryFactory.attach(config.applicationRegistryAddress.proxy);
   tx = await ApplicationRegistryContract.setWorkspaceReg(config.workspaceRegistryAddress.proxy);
   await tx.wait();
-  tx = await ApplicationRegistryContract.setApplicationReviewReg(config.applicationReviewRegistryAddress.proxy);
-  await tx.wait();
 
   const ApplicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
   const ApplicationReviewRegistryContract = await ApplicationReviewRegistryFactory.attach(
