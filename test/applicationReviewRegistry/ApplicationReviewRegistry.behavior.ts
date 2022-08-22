@@ -98,7 +98,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     });
   });
 
-  describe.only("Auto assignment of Reviewers", function () {
+  describe("Auto assignment of Reviewers", function () {
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
@@ -109,12 +109,13 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       );
 
       const numOfReviewersPerApplication = 2;
-      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).setRubricsAndEnableAutoAssign(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
         this.signers.autoAssignReviewers.map(() => true),
         numOfReviewersPerApplication,
+        "dummyIPFSHash",
       );
 
       expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
@@ -140,12 +141,13 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       );
 
       const numOfReviewersPerApplication = 4;
-      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).setRubricsAndEnableAutoAssign(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
         this.signers.autoAssignReviewers.map(() => true),
         numOfReviewersPerApplication,
+        "dummyIPFSHash",
       );
 
       await this.applicationRegistry
@@ -186,12 +188,13 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       });
 
       const numOfReviewersPerApplication = 4;
-      await this.applicationReviewRegistry.connect(this.signers.admin).enableAutoAssignmentOfReviewers(
+      await this.applicationReviewRegistry.connect(this.signers.admin).setRubricsAndEnableAutoAssign(
         0,
         this.grant.address,
         this.signers.autoAssignReviewers.map((autoAssignReviewer: SignerWithAddress) => autoAssignReviewer.address),
         this.signers.autoAssignReviewers.map(() => true),
         numOfReviewersPerApplication,
+        "dummyIPFSHash",
       );
 
       expect(await this.applicationReviewRegistry.hasAutoAssigningEnabled(this.grant.address)).to.equals(true);
