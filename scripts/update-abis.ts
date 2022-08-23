@@ -1,4 +1,4 @@
-import { readFile, readdir, writeFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 
 async function main() {
   const list = ["ApplicationReviewRegistry", "ApplicationRegistry", "GrantFactory", "Grant", "WorkspaceRegistry"];
