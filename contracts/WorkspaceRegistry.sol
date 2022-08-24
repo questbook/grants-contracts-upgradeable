@@ -55,7 +55,13 @@ contract WorkspaceRegistry is
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
 
     /// @notice Emitted when a workspace's safe is updated
-    event WorkspaceSafeUpdated(uint96 indexed id, bytes32 safeAddress, uint256 safeChainId, uint256 time);
+    event WorkspaceSafeUpdated(
+        uint96 indexed id,
+        bytes32 safeAddress,
+        string longSafeAddress,
+        uint256 safeChainId,
+        uint256 time
+    );
 
     /// @notice Emitted when a workspace is updated
     event WorkspaceUpdated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -168,6 +174,7 @@ contract WorkspaceRegistry is
     function createWorkspace(
         string memory _metadataHash,
         bytes32 _safeAddress,
+        string memory _longSafeAddress,
         uint256 _safeChainId
     ) external whenNotPaused {
         uint96 _id = workspaceCount;
@@ -176,7 +183,7 @@ contract WorkspaceRegistry is
         emit WorkspaceCreated(_id, msg.sender, _metadataHash, block.timestamp);
         // emit safe update if safe was specified
         if (_safeChainId > 0) {
-            emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
+            emit WorkspaceSafeUpdated(_id, _safeAddress, _longSafeAddress, _safeChainId, block.timestamp);
         }
         assert(workspaceCount + 1 > workspaceCount);
         workspaceCount += 1;
@@ -208,11 +215,12 @@ contract WorkspaceRegistry is
     function updateWorkspaceSafe(
         uint96 _id,
         bytes32 _safeAddress,
+        string memory _longSafeAddress,
         uint256 _safeChainId
     ) external whenNotPaused onlyWorkspaceAdmin(_id) {
         Workspace storage workspace = workspaces[_id];
         workspace.safe = Safe(_safeAddress, _safeChainId);
-        emit WorkspaceSafeUpdated(_id, _safeAddress, _safeChainId, block.timestamp);
+        emit WorkspaceSafeUpdated(_id, _safeAddress, _longSafeAddress, _safeChainId, block.timestamp);
     }
 
     /**
