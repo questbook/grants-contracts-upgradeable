@@ -106,6 +106,8 @@ contract WorkspaceRegistry is
         uint96 indexed applicationId,
         uint96 milestoneId,
         address asset,
+        string nonEvmAssetAddress,
+        string transactionHash,
         address sender,
         uint256 amount,
         bool isP2P,
@@ -426,14 +428,18 @@ contract WorkspaceRegistry is
         uint96[] memory _applicationIds,
         uint96[] memory _milestoneIds,
         IERC20 _erc20Interface,
+        string memory nonEvmAssetAddress,
         uint256[] memory _amounts,
-        uint96 _workspaceId
+        uint96 _workspaceId,
+        string memory transactionHash
     ) external onlyWorkspaceAdmin(_workspaceId) {
         for (uint256 i = 0; i < _applicationIds.length; i++) {
             emit DisburseRewardFromSafe(
                 _applicationIds[i],
                 _milestoneIds[i],
                 address(_erc20Interface),
+                nonEvmAssetAddress,
+                transactionHash,
                 msg.sender,
                 _amounts[i],
                 true,
