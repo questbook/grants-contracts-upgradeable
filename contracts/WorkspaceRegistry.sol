@@ -104,13 +104,13 @@ contract WorkspaceRegistry is
 
     /// @notice Emitted when grant reward is disbursed from safe
     event DisburseRewardFromSafe(
-        uint96 indexed applicationId,
-        uint96 milestoneId,
+        uint96[] applicationIds,
+        uint96[] milestoneIds,
         address asset,
         string nonEvmAssetAddress,
-        string transactionHash,
+        string indexed transactionHash,
         address sender,
-        uint256 amount,
+        uint256[] amounts,
         bool isP2P,
         uint256 time
     );
@@ -436,18 +436,21 @@ contract WorkspaceRegistry is
         uint96 _workspaceId,
         string memory transactionHash
     ) external onlyWorkspaceAdmin(_workspaceId) {
-        for (uint256 i = 0; i < _applicationIds.length; i++) {
-            emit DisburseRewardFromSafe(
-                _applicationIds[i],
-                _milestoneIds[i],
-                address(_erc20Interface),
-                nonEvmAssetAddress,
-                transactionHash,
-                msg.sender,
-                _amounts[i],
-                true,
-                block.timestamp
-            );
-        }
+        require(
+            _applicationIds.length == _milestoneIds.length,
+            "Error: applicationIds and milestoneIds length mismatch"
+        );
+        require(_applicationIds.length == _amounts.length, "Error: applicationIds and amounts length mismatch");
+        emit DisburseRewardFromSafe(
+            _applicationIds,
+            _milestoneIds,
+            address(_erc20Interface),
+            nonEvmAssetAddress,
+            transactionHash,
+            msg.sender,
+            _amounts,
+            true,
+            block.timestamp
+        );
     }
 }
