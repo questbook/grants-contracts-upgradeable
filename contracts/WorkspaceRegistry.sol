@@ -102,10 +102,13 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    /// @notice Emitted when grant reward is disbursed from safe
     event DisburseRewardFromSafe(
         uint96 indexed applicationId,
         uint96 milestoneId,
         address asset,
+        string nonEvmAssetAddress,
+        string transactionHash,
         address sender,
         uint256 amount,
         bool isP2P,
@@ -419,21 +422,27 @@ contract WorkspaceRegistry is
      * @param _applicationIds[] application id for which the funds are disbursed
      * @param _milestoneIds[] milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param nonEvmAssetAddress address of non-EVM asset that was disbusrsed
      * @param _amounts[] amount disbursed
      * @param _workspaceId workspace that the application belongs to
+     * @param transactionHash safe transaction hash
      */
     function disburseRewardFromSafe(
         uint96[] memory _applicationIds,
         uint96[] memory _milestoneIds,
         IERC20 _erc20Interface,
+        string memory nonEvmAssetAddress,
         uint256[] memory _amounts,
-        uint96 _workspaceId
+        uint96 _workspaceId,
+        string memory transactionHash
     ) external onlyWorkspaceAdmin(_workspaceId) {
         for (uint256 i = 0; i < _applicationIds.length; i++) {
             emit DisburseRewardFromSafe(
                 _applicationIds[i],
                 _milestoneIds[i],
                 address(_erc20Interface),
+                nonEvmAssetAddress,
+                transactionHash,
                 msg.sender,
                 _amounts[i],
                 true,
