@@ -108,7 +108,7 @@
         "type": "string"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "string",
         "name": "transactionHash",
         "type": "string"

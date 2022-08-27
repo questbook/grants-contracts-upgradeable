@@ -108,7 +108,7 @@ contract WorkspaceRegistry is
         uint96[] milestoneIds,
         address asset,
         string nonEvmAssetAddress,
-        string indexed transactionHash,
+        string transactionHash,
         address sender,
         uint256[] amounts,
         bool isP2P,
