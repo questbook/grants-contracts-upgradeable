@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { generateKeyPairAndAddress, generateInputForAuthorisation } from "@questbook/anon-authoriser";
 import type {} from "../src/types/hardhat";
-import type { WorkspaceRegistry, WorkspaceRegistryV2__factory } from "../src/types";
+import type { WorkspaceRegistry } from "../src/types";
 import { creatingWorkpsace, deployWorkspaceContract, randomWallet } from "./utils";
 
 describe("Unit tests", function () {
@@ -35,8 +35,23 @@ describe("Unit tests", function () {
       // check event was correctly emitted
       const event = data.events?.find(e => e.event === "WorkspaceMemberUpdated");
       expect(event?.args?.member).to.eq(invitee.address);
+    });
 
-      expect(await workspaceRegistry.isWorkspaceAdminOrReviewer(0, invitee.address)).to.equal(true);
+    it("should fail to join if already part of workspace", async () => {
+      const workspaceId = 0;
+      const role = 1;
+      await creatingWorkpsace(workspaceRegistry);
+
+      const { privateKey, address } = generateKeyPairAndAddress();
+      await workspaceRegistry.createInviteLink(workspaceId, role, address);
+
+      // the same user that created the workspace
+      const [invitee] = await ethers.getSigners();
+      const sig = await generateInputForAuthorisation(invitee.address, await workspaceRegistry.address, privateKey);
+
+      await expect(
+        workspaceRegistry.connect(invitee).joinViaInviteLink(workspaceId, "", role, sig.v, sig.r, sig.s),
+      ).to.be.revertedWith("Already an admin");
     });
 
     it("should fail to create an invite from non-admin", async () => {

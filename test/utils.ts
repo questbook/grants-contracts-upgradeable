@@ -15,7 +15,7 @@ export const DUMMY_IPFS_HASH = "dummyIpfsHash";
 export function creatingWorkpsace(contract: WorkspaceRegistry, safeAddress?: Buffer, safeChainId?: number) {
   safeAddress = safeAddress || Buffer.alloc(32);
   safeChainId = safeChainId || 0;
-  return contract.createWorkspace(DUMMY_IPFS_HASH, safeAddress, safeChainId);
+  return contract.createWorkspace(DUMMY_IPFS_HASH, safeAddress, "", safeChainId);
 }
 
 export async function deployWorkspaceContract(signer?: Signer) {

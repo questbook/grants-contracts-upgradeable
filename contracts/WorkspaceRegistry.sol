@@ -296,7 +296,12 @@ contract WorkspaceRegistry is
             signatureS
         );
 
+        Workspace memory workspace = workspaces[_id];
+        bool isAdmin = workspace.owner == msg.sender || _checkRole(_id, msg.sender, 0);
+        require(!isAdmin, "Already an admin");
+
         _setRole(_id, msg.sender, _role, true);
+
         emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
     }
 
