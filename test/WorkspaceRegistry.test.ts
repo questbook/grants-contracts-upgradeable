@@ -87,7 +87,15 @@ describe("Unit tests", function () {
       await creatingWorkpsace(workspaceRegistry.connect(this.signers.admin));
       const result = await workspaceRegistry
         .connect(this.signers.admin)
-        .disburseRewardFromSafe([0, 1, 2], [0, 0, 0], "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", [100, 200, 300], 0);
+        .disburseRewardFromSafe(
+          [0, 1, 2],
+          [0, 0, 0],
+          "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0",
+          "",
+          [100, 200, 300],
+          0,
+          "",
+        );
       const data = await result.wait();
       const { events } = data;
       if (events) {
@@ -114,7 +122,7 @@ describe("Unit tests", function () {
 
       await creatingWorkpsace(workspaceRegistry);
 
-      const result = await workspaceRegistry.updateWorkspaceSafe(0, safeAddress, safeChainId);
+      const result = await workspaceRegistry.updateWorkspaceSafe(0, safeAddress, "", safeChainId);
       const recp = await result.wait();
       const { args: eventArgs } = recp.events!.find(e => e.event === "WorkspaceSafeUpdated")!;
       expect(eventArgs!.id).to.eq(0);
@@ -129,7 +137,7 @@ describe("Unit tests", function () {
       await creatingWorkpsace(workspaceRegistry);
 
       await expect(
-        workspaceRegistry.connect(updater).updateWorkspaceSafe(workspaceId, randomBytes(32), 1),
+        workspaceRegistry.connect(updater).updateWorkspaceSafe(workspaceId, randomBytes(32), "", 1),
       ).to.be.revertedWith("Unauthorised: Not an admin");
     });
 
@@ -245,24 +253,53 @@ describe("Unit tests", function () {
         expect(await _workspaceRegistry.workspaceCount()).to.equal(1);
       });
     });
+
+    describe("Wallet Migration", () => {
+      it("should migrate a wallet", async () => {
+        /**
+         * this owner will be:
+         * 1. the owner of a workspace
+         * 2. and a reviewer in another workspace
+         *
+         * the migration should remove this user from the workspace
+         * and replace their existance there with a new wallet
+         */
+        const originalOwner = await randomWallet();
+        const newOwnerAddress = randomBytes(20); // random address
+        const newOwnerAddressHex = `0x${newOwnerAddress.toString("hex")}`;
+        const registry = workspaceRegistry.connect(originalOwner);
+        // first workspace where the original owner is the owner
+        await creatingWorkpsace(registry);
+
+        // workspace ID = 1, where the original owner is a reviewer
+        await creatingWorkpsace(workspaceRegistry);
+        // original owner is a reviewer in workspace ID = 1
+        await workspaceRegistry.updateWorkspaceMembers(1, [originalOwner.address], [1], [true], [""]);
+
+        const tx = await registry.migrateWallet(originalOwner.address, newOwnerAddressHex);
+        const result = await tx.wait();
+        const events = result.events?.filter(e => e.event === "WorkspaceMemberMigrate");
+        expect(events).to.have.length(2);
+
+        const workspaceIds = [0, 1];
+        for (const id of workspaceIds) {
+          expect(await registry.isWorkspaceAdminOrReviewer(id, newOwnerAddressHex)).to.eq(true);
+
+          expect(await registry.isWorkspaceAdminOrReviewer(id, originalOwner.address)).to.eq(false);
+        }
+      });
+
+      it("should fail to migrate another user's wallet", async () => {
+        const originalOwner = await randomWallet();
+        const registry = workspaceRegistry.connect(originalOwner);
+        // first workspace where the original owner is the owner
+        await creatingWorkpsace(registry);
+
+        const nonOwner = await randomWallet();
+        await expect(
+          registry.connect(nonOwner).migrateWallet(originalOwner.address, nonOwner.address),
+        ).to.be.revertedWith("Only fromWallet can migrate");
+      });
+    });
   });
-
-  // describe("Disburse reward from safe", async function () {
-  //   it("record safe transaction successful, initiated by admin", async function () {
-  //     let tx = await this.workspaceRegistry
-  //       .connect(this.signers.admin)
-  //       .disburseRewardFromSafe(0, 0, "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", 100,  0);
-  //     tx = await tx.wait();
-  //     const { events } = tx;
-  //     expect(events[0].event).to.equal("DisburseRewardFromSafe");
-  //   });
-
-  // it("record transaction should not be successful if initiated by non admin", async function () {
-  //   expect(
-  //     this.grant
-  //       .connect(this.signers.nonAdmin)
-  //       .recordTransaction(0, 0, "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0", "0x12", 100),
-  //   ).to.revertedWith("Unauthorised: Not an admin");
-  // });
-  // });
 });

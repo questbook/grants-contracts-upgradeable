@@ -115,6 +115,8 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    event WorkspaceMemberMigrate(uint96 workspaceId, address from, address to, uint256 time);
+
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
         _;
@@ -224,6 +226,36 @@ contract WorkspaceRegistry is
         Workspace storage workspace = workspaces[_id];
         workspace.safe = Safe(_safeAddress, _safeChainId);
         emit WorkspaceSafeUpdated(_id, _safeAddress, _longSafeAddress, _safeChainId, block.timestamp);
+    }
+
+    /**
+     * @notice Migrate the user's wallet to a new address
+     *
+     * @param fromWallet Current wallet address of the user
+     * @param toWallet The new wallet address to migrate to
+     */
+    function migrateWallet(address fromWallet, address toWallet) external {
+        require(msg.sender == fromWallet, "Only fromWallet can migrate");
+
+        for (uint96 i = 0; i < workspaceCount; i++) {
+            Workspace storage workspace = workspaces[i];
+            bool modified = false;
+            if (workspace.owner == fromWallet) {
+                workspace.owner = toWallet;
+                modified = true;
+            }
+
+            bytes32 role = memberRoles[workspace.id][fromWallet];
+            if (role > 0) {
+                delete memberRoles[workspace.id][fromWallet];
+                memberRoles[workspace.id][toWallet] = role;
+                modified = true;
+            }
+
+            if (modified) {
+                emit WorkspaceMemberMigrate(workspace.id, fromWallet, toWallet, block.timestamp);
+            }
+        }
     }
 
     /**
