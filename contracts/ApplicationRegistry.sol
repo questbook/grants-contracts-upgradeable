@@ -130,6 +130,32 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     /**
+     * @notice Migrate the user's wallet to a new address
+     *
+     * @param fromWallet Current wallet address of the user
+     * @param toWallet The new wallet address to migrate to
+     */
+    function migrateWallet(address fromWallet, address toWallet) external {
+        require(msg.sender == fromWallet, "Only fromWallet can migrate");
+
+        for (uint96 i = 0; i < applicationCount; i++) {
+            Application storage app = applications[i];
+            if (app.owner == fromWallet) {
+                app.owner = toWallet;
+
+                emit ApplicationUpdated(
+                    app.id,
+                    app.owner,
+                    app.metadataHash,
+                    app.state,
+                    app.milestoneCount,
+                    block.timestamp
+                );
+            }
+        }
+    }
+
+    /**
      * @notice Create/submit application
      * @param _grant address of Grant for which the application is submitted
      * @param _workspaceId workspaceId to which the grant belongs

@@ -1,6 +1,7 @@
 import { expect } from "chai";
+import { randomBytes } from "crypto";
 import { ethers, upgrades } from "hardhat";
-import { creatingWorkpsace } from "../utils";
+import { creatingWorkpsace, randomWallet } from "../utils";
 
 export function shouldBehaveLikeApplicationRegistry(): void {
   // it("deployer can pause the contract", async function () {
@@ -560,6 +561,25 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(this.applicationRegistry.connect(this.signers.nonAdmin).transferOwnership(this.signers.nonAdmin.address))
         .to.be.reverted;
       expect(await this.applicationRegistry.owner()).to.equal(this.signers.admin.address);
+    });
+  });
+
+  describe("Wallet Migration", function () {
+    it("should migrate application owner", async function () {
+      const originalOwner = await randomWallet();
+      const newOwnerAddress = `0x${randomBytes(20).toString("hex")}`;
+      const appRegistry = this.applicationRegistry.connect(originalOwner);
+      // submit application from the wallet that will be migrated
+      await appRegistry.submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      // submit another application to act as a conrol element
+      await this.applicationRegistry
+        .connect(await randomWallet())
+        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+
+      const tx = await appRegistry.migrateWallet(originalOwner.address, newOwnerAddress);
+      const result = await tx.wait();
+      expect(result.events.length).to.eq(1);
+      expect(result.events[0].args.owner.toLowerCase()).to.eq(newOwnerAddress.toLowerCase());
     });
   });
 
