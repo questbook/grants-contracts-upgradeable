@@ -38,6 +38,7 @@ describe("Unit tests", function () {
       this.applicationReviewRegistry = <ApplicationRegistry>(
         await upgrades.deployProxy(this.applicationReviewRegistryFactory, { kind: "uups" })
       );
+      await this.applicationReviewRegistry.setApplicationReg(this.applicationRegistry.address);
 
       await this.applicationRegistry.connect(this.signers.admin).setWorkspaceReg(this.workspaceRegistry.address);
       await this.applicationRegistry

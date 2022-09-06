@@ -1,22 +1,16 @@
 import { ethers, upgrades } from "hardhat";
 import type {} from "../src/types/hardhat";
-import type { WorkspaceRegistry, WorkspaceRegistryV2__factory } from "../src/types";
+import type {
+  ApplicationRegistry,
+  ApplicationReviewRegistry,
+  WorkspaceRegistry,
+  WorkspaceRegistryV2__factory,
+} from "../src/types";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
 import { creatingWorkpsace, deployWorkspaceContract, randomWallet } from "./utils";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Signers } from "./types";
 
 describe("Unit tests", function () {
-  before(async function () {
-    this.signers = {} as Signers;
-
-    const signers: SignerWithAddress[] = await ethers.getSigners();
-    this.signers.admin = signers[0];
-    this.signers.nonAdmin = signers[1];
-    this.signers.applicantAdmin = signers[2];
-    this.signers.reviewer = signers[3];
-  });
   describe("WorkspaceRegistry", function () {
     let workspaceRegistry: WorkspaceRegistry;
     let workspaceRegistryFactoryV2: WorkspaceRegistryV2__factory;
@@ -84,9 +78,11 @@ describe("Unit tests", function () {
     });
 
     it("record safe transaction successful, initiated by admin", async function () {
-      await creatingWorkpsace(workspaceRegistry.connect(this.signers.admin));
+      const admin = await randomWallet();
+
+      await creatingWorkpsace(workspaceRegistry.connect(admin));
       const result = await workspaceRegistry
-        .connect(this.signers.admin)
+        .connect(admin)
         .disburseRewardFromSafe(
           [0, 1, 2],
           [0, 0, 0],
@@ -255,6 +251,21 @@ describe("Unit tests", function () {
     });
 
     describe("Wallet Migration", () => {
+      beforeEach(async () => {
+        const applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
+        const applicationRegistry = <ApplicationRegistry>(
+          await upgrades.deployProxy(applicationRegistryFactory, { kind: "uups" })
+        );
+        await applicationRegistry.setWorkspaceReg(workspaceRegistry.address);
+        await workspaceRegistry.setApplicationReg(applicationRegistry.address);
+
+        const applicationReviewRegistryFactory = await ethers.getContractFactory("ApplicationReviewRegistry");
+        const applicationReviewRegistry = <ApplicationReviewRegistry>(
+          await upgrades.deployProxy(applicationReviewRegistryFactory, { kind: "uups" })
+        );
+        await applicationReviewRegistry.setApplicationReg(applicationRegistry.address);
+      });
+
       it("should migrate a wallet", async () => {
         /**
          * this owner will be:

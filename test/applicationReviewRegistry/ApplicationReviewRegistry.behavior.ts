@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { areEqualDistributions, creatingWorkpsace, generateAssignment, isValidDistribution } from "../utils";
+import { areEqualDistributions, creatingWorkpsace, generateAssignment } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
