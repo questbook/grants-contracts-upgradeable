@@ -1,7 +1,8 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { areEqualDistributions, creatingWorkpsace, generateAssignment } from "../utils";
+import { ApplicationReviewRegistry } from "../../src/types";
+import { areEqualDistributions, creatingWorkpsace, generateAssignment, randomEthAddress, randomWallet } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -445,6 +446,63 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         .fulfillPayment(0, [0], this.signers.reviewer.address, [0], this.myToken.address, 10000);
       expect((await this.myToken.balanceOf(this.signers.reviewer.address)).toNumber()).to.equal(10000);
       expect(await this.applicationReviewRegistry.reviewPaymentsStatus(0)).to.be.true;
+    });
+  });
+
+  describe("Wallet Migration", function () {
+    it("should migrate all reviews of a reviewer", async function () {
+      const admin = this.signers.admin;
+      const reviewers = await Promise.all([...Array(2)].map(randomWallet));
+      const reviewRegistry = this.applicationReviewRegistry as ApplicationReviewRegistry;
+      const migratedWalletAddress = randomEthAddress();
+
+      // auto assign enabled to verify migration there happens correctly as well
+      const tx0 = await reviewRegistry.setRubricsAndEnableAutoAssign(
+        0,
+        this.grant.address,
+        reviewers.map(r => r.address),
+        reviewers.map(() => true),
+        1,
+        "dummyRubricsIpfsHash",
+      );
+      await tx0.wait();
+
+      for (const reviewer of reviewers) {
+        await this.workspaceRegistry.connect(admin).updateWorkspaceMembers(0, [reviewer.address], [1], [true], [""]);
+
+        await reviewRegistry.connect(admin).assignReviewers(0, 0, this.grant.address, [reviewer.address], [true]);
+      }
+      // should migrate the first reviewer
+      const tx = await this.applicationRegistry
+        .connect(reviewers[0])
+        .migrateWallet(reviewers[0].address, migratedWalletAddress);
+      const result = await tx.wait();
+      expect(result.events).to.have.length(1);
+
+      // we've to parse the log since the log was emitted from another contract
+      // namely the applicationReviewRegistry, whereas we called the function in applicationRegistry
+      const parsed = reviewRegistry.interface.parseLog(result.events[0]);
+      expect(parsed.name).to.eq("ReviewMigrate");
+      expect(parsed.args._newReviewerAddress.toLowerCase()).to.eq(migratedWalletAddress);
+
+      // check old review was deleted
+      const oldReview = await reviewRegistry.reviews(reviewers[0].address, 0);
+      expect(oldReview.active).to.eq(false);
+      // check new review got added
+      const migratedReview = await reviewRegistry.reviews(migratedWalletAddress, 0);
+      expect(migratedReview.grant).to.eq(this.grant.address);
+      expect(migratedReview.reviewer.toLowerCase()).to.eq(migratedWalletAddress);
+
+      let reviewerList = await Promise.all(reviewers.map((_, i) => reviewRegistry.reviewers(this.grant.address, i)));
+      reviewerList = reviewerList.map(r => r.toLowerCase());
+      expect(reviewerList).to.include(migratedWalletAddress);
+      expect(reviewerList).to.not.include(reviewers[0].address);
+      // expect(reviewer1.toLowerCase()).to.eq(migratedWalletAddress)
+      // all other reviews should be unaffected
+      for (const reviewer of reviewers.slice(1)) {
+        const otherReview = await this.applicationReviewRegistry.reviews(reviewer.address, 0);
+        expect(+otherReview.id.toString()).to.be.greaterThan(0);
+      }
     });
   });
 

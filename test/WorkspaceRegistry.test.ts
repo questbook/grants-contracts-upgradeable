@@ -8,7 +8,7 @@ import type {
 } from "../src/types";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
-import { creatingWorkpsace, deployWorkspaceContract, randomWallet } from "./utils";
+import { creatingWorkpsace, deployWorkspaceContract, randomEthAddress, randomWallet } from "./utils";
 
 describe("Unit tests", function () {
   describe("WorkspaceRegistry", function () {
@@ -276,8 +276,7 @@ describe("Unit tests", function () {
          * and replace their existance there with a new wallet
          */
         const originalOwner = await randomWallet();
-        const newOwnerAddress = randomBytes(20); // random address
-        const newOwnerAddressHex = `0x${newOwnerAddress.toString("hex")}`;
+        const newOwnerAddressHex = randomEthAddress();
         const registry = workspaceRegistry.connect(originalOwner);
         // first workspace where the original owner is the owner
         await creatingWorkpsace(registry);

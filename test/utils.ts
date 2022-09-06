@@ -1,6 +1,13 @@
+import { randomBytes } from "crypto";
 import { Signer } from "ethers";
 import { ethers, upgrades } from "hardhat";
 import type { WorkspaceRegistry } from "../src/types";
+
+export function randomEthAddress() {
+  const addr = randomBytes(20); // random address
+  const addrHex = `0x${addr.toString("hex")}`;
+  return addrHex;
+}
 
 export async function randomWallet() {
   const wallet = ethers.Wallet.createRandom().connect(ethers.provider);
