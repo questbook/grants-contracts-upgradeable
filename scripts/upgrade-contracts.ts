@@ -36,9 +36,13 @@ async function main() {
   for (const contract in contractAddresses) {
     const name = CONTRACT_MAP[contract];
     const address = contractAddresses[contract].address;
+    const appAddress = contractAddresses.applications.address;
+    const shouldAddAppAddress = contract === "workspace";
 
     console.log(`upgrading ${contract} (${name}) on ${address}`);
-    await execPromise(`yarn hardhat upgrade:${name} --address ${address}`);
+    await execPromise(
+      `yarn hardhat upgrade:${name} --address ${address} ${shouldAddAppAddress ? `--appregistry ${appAddress}` : ""}`,
+    );
     console.log(`upgraded ${name}`);
   }
 }

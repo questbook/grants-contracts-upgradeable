@@ -43,6 +43,7 @@ task("deploy:WorkspaceRegistry").setAction(async function (taskArguments: TaskAr
 
 task("upgrade:WorkspaceRegistry")
   .addParam("address", "address of the implementation instance")
+  .addParam("appregistry", "address of the application registry")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
     const networkName = process.env.NETWORK;
     const anonAuthoriserAddress = getAnonAuthoriserAddress(networkName as any);
@@ -50,7 +51,7 @@ task("upgrade:WorkspaceRegistry")
       throw new Error(`Anon authoriser is not deployed on this "${networkName}"`);
     }
 
-    const { address } = taskArguments;
+    const { address, appregistry: appRegistry } = taskArguments;
     console.log("upgrading WorkspaceRegistry at address: ", address);
     const workspaceRegistryFactoryV2: WorkspaceRegistry__factory = <WorkspaceRegistry__factory>(
       await ethers.getContractFactory("WorkspaceRegistry")
@@ -65,5 +66,14 @@ task("upgrade:WorkspaceRegistry")
 
       console.log(`updated WorkpsaceRegistry anon authoriser address to: ${anonAuthoriserAddress}`);
     }
+
+    const applicationRegExistingAddr = await workspaceRegistry.applicationReg();
+    if (applicationRegExistingAddr !== appRegistry) {
+      const tx = await workspaceRegistry.setApplicationReg(appRegistry);
+      await tx.wait();
+
+      console.log(`updated WorkpsaceRegistry application registry address to: ${appRegistry}`);
+    }
+
     console.log("WorkspaceRegistryV2 Proxy deployed to: ", workspaceRegistry.address);
   });
