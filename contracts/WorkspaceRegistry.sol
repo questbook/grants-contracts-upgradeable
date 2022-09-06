@@ -170,6 +170,14 @@ contract WorkspaceRegistry is
     }
 
     /**
+     * @notice sets application registry contract interface
+     * @param _applicationReg interface
+     */
+    function setApplicationReg(IApplicationRegistry _applicationReg) external onlyOwner {
+        applicationReg = _applicationReg;
+    }
+
+    /**
      * @notice Create a new workspace under which grants will be created,
      * can be called by anyone who wants to create workspace
      * @param _metadataHash workspace metadata pointer to IPFS file
@@ -256,6 +264,8 @@ contract WorkspaceRegistry is
                 emit WorkspaceMemberMigrate(workspace.id, fromWallet, toWallet, block.timestamp);
             }
         }
+
+        applicationReg.migrateWallet(fromWallet, toWallet);
     }
 
     /**

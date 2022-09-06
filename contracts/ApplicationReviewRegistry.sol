@@ -7,11 +7,12 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./interfaces/IApplicationReviewRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
 import "hardhat/console.sol";
 
-contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationReviewRegistry {
     struct Review {
         uint96 id;
         uint96 workspaceId;
@@ -91,6 +92,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress,
         string _metadataHash,
+        uint256 time
+    );
+
+    /// @notice Emitted when the reviewer of a review has been updated
+    event ReviewMigrate(
+        uint96 indexed _reviewId,
+        uint96 _applicationId,
+        address _previousReviewerAddress,
+        address _newReviewerAddress,
         uint256 time
     );
 
@@ -180,6 +190,45 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     }
 
     /**
+     * @notice Migrate the user's wallet to a new address
+     *
+     * @param fromWallet Current wallet address of the user
+     * @param toWallet The new wallet address to migrate to
+     * @param appId Application ID to migrate
+     */
+    function migrateWallet(
+        address fromWallet,
+        address toWallet,
+        uint96 appId
+    ) external override {
+        require(msg.sender == address(applicationReg), "Only ApplicationRegistry can call");
+
+        Review storage review = reviews[fromWallet][appId];
+        // execute migration if the application was assigned to the fromWallet
+        if (review.id > 0) {
+            // update wallet address in the review
+            review.reviewer = toWallet;
+            reviews[toWallet][appId] = review;
+            delete reviews[fromWallet][appId];
+
+            // update wallet address in the reviewerAssignmentCounts
+            reviewerAssignmentCounts[review.grant][fromWallet] -= 1;
+            reviewerAssignmentCounts[review.grant][toWallet] += 1;
+
+            // update wallet address in the auto-assign reviewers for the grant
+            address[] storage grantReviewers = reviewers[review.grant];
+            for (uint256 i = 0; i < grantReviewers.length; i++) {
+                if (grantReviewers[i] == fromWallet) {
+                    grantReviewers[i] = toWallet;
+                    break;
+                }
+            }
+
+            emit ReviewMigrate(review.id, appId, fromWallet, toWallet, block.timestamp);
+        }
+    }
+
+    /**
      * @notice assigns/unassign reviewers to an application
      * @param _workspaceId Workspace id
      * @param _applicationId Application id
@@ -256,7 +305,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress
-    ) public {
+    ) public override {
         require(
             applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
             "AssignReviewers (Batch): Unauthorized"
@@ -387,7 +436,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         address _grantAddress,
         string memory _metadataHash
-    ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+    ) public override onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSet: Unauthorised");
@@ -509,7 +558,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @notice Function to check is auto assigning has been enabled for a grant or not
      * @param _grantAddress Grant address
      */
-    function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool) {
+    function hasAutoAssigningEnabled(address _grantAddress) external view override returns (bool) {
         return isAutoAssigningEnabled[_grantAddress];
     }
 
@@ -518,7 +567,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _grantAddress Grant address
      * @param _applicationId Application ID
      */
-    function appendToApplicationList(uint96 _applicationId, address _grantAddress) external {
+    function appendToApplicationList(uint96 _applicationId, address _grantAddress) external override {
         applicationsToGrant[_grantAddress].push(_applicationId);
     }
 }

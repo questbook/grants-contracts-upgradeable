@@ -8,4 +8,6 @@ interface IApplicationRegistry {
 
     /// @notice returns application workspace id
     function getApplicationWorkspace(uint96 _applicationId) external view returns (uint96);
+
+    function migrateWallet(address fromWallet, address toWallet) external;
 }

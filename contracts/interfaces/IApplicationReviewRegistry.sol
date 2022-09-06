@@ -19,4 +19,10 @@ interface IApplicationReviewRegistry {
     function hasAutoAssigningEnabled(address _grantAddress) external view returns (bool);
 
     function appendToApplicationList(uint96 _applicationId, address _grantAddress) external;
+
+    function migrateWallet(
+        address fromWallet,
+        address toWallet,
+        uint96 appId
+    ) external;
 }

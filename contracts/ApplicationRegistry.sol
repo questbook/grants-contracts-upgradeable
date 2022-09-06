@@ -135,8 +135,11 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param fromWallet Current wallet address of the user
      * @param toWallet The new wallet address to migrate to
      */
-    function migrateWallet(address fromWallet, address toWallet) external {
-        require(msg.sender == fromWallet, "Only fromWallet can migrate");
+    function migrateWallet(address fromWallet, address toWallet) external override {
+        require(
+            msg.sender == fromWallet || msg.sender == address(workspaceReg),
+            "Only fromWallet or workspaceReg can migrate"
+        );
 
         for (uint96 i = 0; i < applicationCount; i++) {
             Application storage app = applications[i];
@@ -152,6 +155,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
                     block.timestamp
                 );
             }
+
+            applicationReviewReg.migrateWallet(fromWallet, toWallet, app.id);
         }
     }
 
