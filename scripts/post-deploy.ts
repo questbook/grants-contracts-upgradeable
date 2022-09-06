@@ -22,6 +22,9 @@ async function main() {
   let tx = await WorkspaceRegistryContract.updateAnonAuthoriserAddress(address);
   await tx.wait();
 
+  tx = await WorkspaceRegistryContract.setApplicationReg(config.applicationRegistryAddress.proxy);
+  await tx.wait();
+
   const GrantFactory = await ethers.getContractFactory("GrantFactory");
   const GrantFactoryContract = await GrantFactory.attach(config.grantFactoryAddress.proxy);
   tx = await GrantFactoryContract.setApplicationReviewReg(config.applicationReviewRegistryAddress.proxy);
