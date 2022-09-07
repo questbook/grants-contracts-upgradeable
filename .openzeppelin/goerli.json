@@ -5774,7 +5774,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "205",
-            "type": "t_contract(IWorkspaceRegistry)7462",
+            "type": "t_contract(IWorkspaceRegistry)7491",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:65"
           },
@@ -5782,7 +5782,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "206",
-            "type": "t_contract(IApplicationReviewRegistry)7363",
+            "type": "t_contract(IApplicationReviewRegistry)7392",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:68"
           }
@@ -5804,11 +5804,11 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)7363": {
+          "t_contract(IApplicationReviewRegistry)7392": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
-          "t_contract(IWorkspaceRegistry)7462": {
+          "t_contract(IWorkspaceRegistry)7491": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
