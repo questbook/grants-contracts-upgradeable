@@ -206,8 +206,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         Review storage review = reviews[fromWallet][appId];
         // execute migration if the application was assigned to the fromWallet
         if (review.reviewer == fromWallet) {
-            // update wallet address in the reviewerAssignmentCounts
-            reviewerAssignmentCounts[review.grant][fromWallet] -= 1;
+            uint96 existing = reviewerAssignmentCounts[review.grant][fromWallet];
+            if (existing > 0) {
+                // update wallet address in the reviewerAssignmentCounts
+                reviewerAssignmentCounts[review.grant][fromWallet] = existing - 1;
+                if (existing == 1) {
+                    delete reviewerAssignmentCounts[review.grant][fromWallet];
+                }
+            }
             reviewerAssignmentCounts[review.grant][toWallet] += 1;
 
             // update wallet address in the auto-assign reviewers for the grant
