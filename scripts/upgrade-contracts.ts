@@ -11,6 +11,8 @@ async function main() {
     throw new Error("NETWORK environment variable is not set");
   }
 
+  const contractFilter = process.env.CONTRACTS?.split(",");
+
   console.log(`upgrading contracts on ${network}`);
 
   console.log("compiling contracts first...");
@@ -34,6 +36,10 @@ async function main() {
   }
 
   for (const contract in contractAddresses) {
+    if (contractFilter && !contractFilter.includes(contract)) {
+      continue;
+    }
+
     const name = CONTRACT_MAP[contract];
     const address = contractAddresses[contract].address;
     const appAddress = contractAddresses.applications.address;
