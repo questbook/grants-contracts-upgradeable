@@ -88,6 +88,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint256 time
     );
 
+    event ApplicationMigrate(uint96 indexed applicationId, address newApplicantAddress, uint256 time);
+
     /// @notice Emitted when application milestone is updated
     event MilestoneUpdated(uint96 _id, uint96 _milestoneId, MilestoneState _state, string _metadataHash, uint256 time);
 
@@ -146,14 +148,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             if (app.owner == fromWallet) {
                 app.owner = toWallet;
 
-                emit ApplicationUpdated(
-                    app.id,
-                    app.owner,
-                    app.metadataHash,
-                    app.state,
-                    app.milestoneCount,
-                    block.timestamp
-                );
+                emit ApplicationMigrate(app.id, toWallet, block.timestamp);
             }
 
             applicationReviewReg.migrateWallet(fromWallet, toWallet, app.id);

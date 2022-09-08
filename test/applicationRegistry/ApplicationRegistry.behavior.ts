@@ -579,7 +579,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       const tx = await appRegistry.migrateWallet(originalOwner.address, newOwnerAddress);
       const result = await tx.wait();
       expect(result.events.length).to.eq(1);
-      expect(result.events[0].args.owner.toLowerCase()).to.eq(newOwnerAddress.toLowerCase());
+      expect(result.events[0].args.newApplicantAddress.toLowerCase()).to.eq(newOwnerAddress.toLowerCase());
     });
   });
 

@@ -308,7 +308,7 @@ describe("Unit tests", function () {
         const nonOwner = await randomWallet();
         await expect(
           registry.connect(nonOwner).migrateWallet(originalOwner.address, nonOwner.address),
-        ).to.be.revertedWith("Only fromWallet can migrate");
+        ).to.be.revertedWith("Only fromWallet/owner can migrate");
       });
     });
   });
