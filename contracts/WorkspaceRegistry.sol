@@ -243,7 +243,7 @@ contract WorkspaceRegistry is
      * @param toWallet The new wallet address to migrate to
      */
     function migrateWallet(address fromWallet, address toWallet) external {
-        require(msg.sender == fromWallet, "Only fromWallet can migrate");
+        require(msg.sender == fromWallet || owner() == msg.sender, "Only fromWallet/owner can migrate");
 
         for (uint96 i = 0; i < workspaceCount; i++) {
             Workspace storage workspace = workspaces[i];

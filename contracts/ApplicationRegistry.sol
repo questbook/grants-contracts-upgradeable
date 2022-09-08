@@ -138,7 +138,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function migrateWallet(address fromWallet, address toWallet) external override {
         require(
             msg.sender == fromWallet || msg.sender == address(workspaceReg),
-            "Only fromWallet or workspaceReg can migrate"
+            "Only fromWallet/workspaceReg can migrate"
         );
 
         for (uint96 i = 0; i < applicationCount; i++) {
