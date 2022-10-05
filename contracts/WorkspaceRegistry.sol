@@ -50,6 +50,8 @@ contract WorkspaceRegistry is
     /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
 
+    // TODO: QBAdmins[]
+
     // --- Events ---
     /// @notice Emitted when a new workspace is created
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -116,6 +118,8 @@ contract WorkspaceRegistry is
     );
 
     event WorkspaceMemberMigrate(uint96 workspaceId, address from, address to, uint256 time);
+
+    // TODO : event WorkspacesVisibleUpdated(workspaceId[], isVisible[])
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
@@ -500,4 +504,7 @@ contract WorkspaceRegistry is
             block.timestamp
         );
     }
+
+    // TODO: updateWorkspacesVisible()
+    function updateWorkspacesVisible() external view onlyQBAdmin {}
 }
