@@ -50,7 +50,8 @@ contract WorkspaceRegistry is
     /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
 
-    // TODO: QBAdmins[]
+    /// @notice QBAdmins list holding addresses of all QB admins.
+    uint96[] public QBAdmins;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -119,7 +120,13 @@ contract WorkspaceRegistry is
 
     event WorkspaceMemberMigrate(uint96 workspaceId, address from, address to, uint256 time);
 
-    // TODO : event WorkspacesVisibleUpdated(workspaceId[], isVisible[])
+    /// @notice Emitted when some daos' visibility is updated by a QB admin
+    event WorkspacesVisibleUpdated(uint96[] workspaceId, bool[] isVisible);
+
+    modifier onlyQBAdmin() {
+        require(_checkQBAdmin(), "Unauthorised: Not a QB admin");
+        _;
+    }
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
@@ -415,6 +422,24 @@ contract WorkspaceRegistry is
         return (uint256(memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
 
+    /**
+ * @notice Check's whether the user making the request is a QB admin, can be used internally
+     * @return true if user making request is a QB admin, else false
+     */
+    function _checkQBAdmin(
+    ) internal view returns (bool) {
+        bool isQBAdmin = false;
+
+        for (uint i = 0; i < QBAdmins.length; i++) {
+            if (msg.sender == QBAdmins[i]) {
+                isQBAdmin = true;
+                break;
+            }
+        }
+
+        return isQBAdmin;
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -505,6 +530,28 @@ contract WorkspaceRegistry is
         );
     }
 
-    // TODO: updateWorkspacesVisible()
-    function updateWorkspacesVisible() external view onlyQBAdmin {}
+    /**
+     * @notice Emits event when some daos' visibility is updated by a QB admin
+     * @param workspaceIds workspaces whose visibility was updated
+     * @param isVisible isVisible booleans corresponding to the workspaceIds
+     */
+    function updateWorkspacesVisible(
+        uint96[] memory _workspaceIds,
+        bool[] memory _isVisible
+    ) external view onlyQBAdmin() {
+        require(
+            _workspaceIds.length == _isVisible.length,
+            "Error: workspaceIds and isVisible length mismatch"
+        );
+
+        emit WorkspacesVisibleUpdated(_workspaceIds, _isVisible);
+    }
+
+    /**
+    * @notice Returns the list of QB admins
+     */
+    function getQBAdmins(
+    ) external view returns (uint96[])  {
+        return QBAdmins;
+    }
 }
