@@ -50,8 +50,8 @@ contract WorkspaceRegistry is
     /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
 
-    /// @notice QBAdmins list holding addresses of all QB admins.
-    uint96[] public QBAdmins;
+    /// @notice qbAdmins list holding addresses of all QB admins.
+    address[] public qbAdmins;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -423,15 +423,14 @@ contract WorkspaceRegistry is
     }
 
     /**
- * @notice Check's whether the user making the request is a QB admin, can be used internally
+     * @notice Check's whether the user making the request is a QB admin, can be used internally
      * @return true if user making request is a QB admin, else false
      */
-    function _checkQBAdmin(
-    ) internal view returns (bool) {
+    function _checkQBAdmin() internal view returns (bool) {
         bool isQBAdmin = false;
 
-        for (uint i = 0; i < QBAdmins.length; i++) {
-            if (msg.sender == QBAdmins[i]) {
+        for (uint256 i = 0; i < qbAdmins.length; i++) {
+            if (msg.sender == qbAdmins[i]) {
                 isQBAdmin = true;
                 break;
             }
@@ -532,26 +531,19 @@ contract WorkspaceRegistry is
 
     /**
      * @notice Emits event when some daos' visibility is updated by a QB admin
-     * @param workspaceIds workspaces whose visibility was updated
-     * @param isVisible isVisible booleans corresponding to the workspaceIds
+     * @param _workspaceIds workspaces whose visibility was updated
+     * @param _isVisible isVisible booleans corresponding to the workspaceIds
      */
-    function updateWorkspacesVisible(
-        uint96[] memory _workspaceIds,
-        bool[] memory _isVisible
-    ) external view onlyQBAdmin() {
-        require(
-            _workspaceIds.length == _isVisible.length,
-            "Error: workspaceIds and isVisible length mismatch"
-        );
+    function updateWorkspacesVisible(uint96[] memory _workspaceIds, bool[] memory _isVisible) external onlyQBAdmin {
+        require(_workspaceIds.length == _isVisible.length, "Error: workspaceIds and isVisible length mismatch");
 
         emit WorkspacesVisibleUpdated(_workspaceIds, _isVisible);
     }
 
     /**
-    * @notice Returns the list of QB admins
+     * @notice Returns the list of QB admins
      */
-    function getQBAdmins(
-    ) external view returns (uint96[])  {
-        return QBAdmins;
+    function getQBAdmins() external view returns (address[] memory) {
+        return qbAdmins;
     }
 }
