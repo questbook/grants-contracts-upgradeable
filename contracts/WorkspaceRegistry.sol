@@ -51,7 +51,7 @@ contract WorkspaceRegistry is
     IApplicationRegistry public applicationReg;
 
     /// @notice qbAdmins list holding addresses of all QB admins.
-    address[] public qbAdmins;
+    address[] public qbAdmins = ['0x4bED464ce9D43758e826cfa173f1cDa82964b894'];
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
