@@ -50,6 +50,9 @@ contract WorkspaceRegistry is
     /// @notice applicationRegistry interface used for fetching application owner
     IApplicationRegistry public applicationReg;
 
+    /// @notice qbAdmins list holding addresses of all QB admins.
+    address[] public qbAdmins;
+
     // --- Events ---
     /// @notice Emitted when a new workspace is created
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -117,6 +120,14 @@ contract WorkspaceRegistry is
 
     event WorkspaceMemberMigrate(uint96 workspaceId, address from, address to, uint256 time);
 
+    /// @notice Emitted when some daos' visibility is updated by a QB admin
+    event WorkspacesVisibleUpdated(uint96[] workspaceId, bool[] isVisible);
+
+    modifier onlyQBAdmin() {
+        require(_isQBAdminPresent(msg.sender), "Unauthorised: Not a QB admin");
+        _;
+    }
+
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(_checkRole(_workspaceId, msg.sender, 0), "Unauthorised: Not an admin");
         _;
@@ -152,6 +163,8 @@ contract WorkspaceRegistry is
     function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
+
+        qbAdmins.push(0x4bED464ce9D43758e826cfa173f1cDa82964b894);
     }
 
     /**
@@ -411,6 +424,20 @@ contract WorkspaceRegistry is
         return (uint256(memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
 
+    /**
+     * @notice Check's whether the user making the request is a QB admin, can be used internally
+     * @return true if user making request is a QB admin, else false
+     */
+    function _isQBAdminPresent(address id) internal view returns (bool) {
+        for (uint256 i = 0; i < qbAdmins.length; i++) {
+            if (id == qbAdmins[i]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -499,5 +526,33 @@ contract WorkspaceRegistry is
             true,
             block.timestamp
         );
+    }
+
+    /**
+     * @notice Emits event when some daos' visibility is updated by a QB admin
+     * @param _workspaceIds workspaces whose visibility was updated
+     * @param _isVisible isVisible booleans corresponding to the workspaceIds
+     */
+    function updateWorkspacesVisible(uint96[] memory _workspaceIds, bool[] memory _isVisible) external onlyQBAdmin {
+        require(_workspaceIds.length == _isVisible.length, "Error: workspaceIds and isVisible length mismatch");
+
+        emit WorkspacesVisibleUpdated(_workspaceIds, _isVisible);
+    }
+
+    /**
+    * @notice Allows an admin to add another admin
+    * @param _address address of the admin to be added
+    */
+    function addQBAdmin(address _address) external onlyQBAdmin {
+        require(_isQBAdminPresent(_address), "Admin already exists!");
+
+        qbAdmins.push(_address);
+    }
+
+    /**
+     * @notice Returns the list of QB admins
+     */
+    function getQBAdmins() external view returns (address[] memory) {
+        return qbAdmins;
     }
 }

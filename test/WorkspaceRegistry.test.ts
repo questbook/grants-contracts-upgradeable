@@ -310,6 +310,23 @@ describe("Unit tests", function () {
           registry.connect(nonOwner).migrateWallet(originalOwner.address, nonOwner.address),
         ).to.be.revertedWith("Only fromWallet/owner can migrate");
       });
+
+      // it("should update dao's visibility state, initiated by qb admin", async function () {
+      //   const admin = await randomWallet();
+      //
+      //   await creatingWorkpsace(workspaceRegistry.connect(admin));
+      //   const result = await workspaceRegistry
+      //     .connect(admin)
+      //     .updateWorkspacesVisible(
+      //      [0],
+      //      [true],
+      //     );
+      //
+      //   const { events } = await result.wait();
+      //   if (events) {
+      //     expect(events[0].event).to.equal("WorkspacesVisibleUpdated");
+      //   }
+      // });
     });
   });
 });
