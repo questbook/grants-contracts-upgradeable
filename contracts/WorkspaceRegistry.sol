@@ -540,6 +540,16 @@ contract WorkspaceRegistry is
     }
 
     /**
+    * @notice Allows an admin to add another admin
+    * @param _address address of the admin to be added
+    */
+    function addQBAdmin(address _address) external onlyQBAdmin {
+        require(_isQBAdminPresent(_address), "Admin already exists!");
+
+        qbAdmins.push(_address);
+    }
+
+    /**
      * @notice Returns the list of QB admins
      */
     function getQBAdmins() external view returns (address[] memory) {
