@@ -124,7 +124,7 @@ contract WorkspaceRegistry is
     event WorkspacesVisibleUpdated(uint96[] workspaceId, bool[] isVisible);
 
     modifier onlyQBAdmin() {
-        require(_checkQBAdmin(), "Unauthorised: Not a QB admin");
+        require(_isQBAdminPresent(msg.sender), "Unauthorised: Not a QB admin");
         _;
     }
 
@@ -428,17 +428,14 @@ contract WorkspaceRegistry is
      * @notice Check's whether the user making the request is a QB admin, can be used internally
      * @return true if user making request is a QB admin, else false
      */
-    function _checkQBAdmin() internal view returns (bool) {
-        bool isQBAdmin = false;
-
+    function _isQBAdminPresent(address id) internal view returns (bool) {
         for (uint256 i = 0; i < qbAdmins.length; i++) {
-            if (msg.sender == qbAdmins[i]) {
-                isQBAdmin = true;
-                break;
+            if (id == qbAdmins[i]) {
+                return true;
             }
         }
 
-        return isQBAdmin;
+        return false;
     }
 
     function pause() external onlyOwner {
