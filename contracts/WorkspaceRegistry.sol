@@ -51,7 +51,7 @@ contract WorkspaceRegistry is
     IApplicationRegistry public applicationReg;
 
     /// @notice qbAdmins list holding addresses of all QB admins.
-    address[] public qbAdmins = ['0x4bED464ce9D43758e826cfa173f1cDa82964b894'];
+    address[] public qbAdmins;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -163,6 +163,8 @@ contract WorkspaceRegistry is
     function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
+
+        qbAdmins.push(0x4bED464ce9D43758e826cfa173f1cDa82964b894);
     }
 
     /**
