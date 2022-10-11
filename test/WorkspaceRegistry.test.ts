@@ -250,6 +250,32 @@ describe("Unit tests", function () {
       });
     });
 
+    it("should update visibility state of a DAO", async function () {
+      await creatingWorkpsace(workspaceRegistry);
+      const result = await workspaceRegistry.updateWorkspacesVisible([0], [true]);
+
+      const { events } = await result.wait();
+      if (events) {
+        expect(events[0].event).to.equal("WorkspacesVisibleUpdated");
+      }
+    });
+
+    it("should add a QB admin", async () => {
+      const user = await randomWallet();
+      await workspaceRegistry.addQBAdmin(user.address);
+
+      const admins = await workspaceRegistry.getQBAdmins();
+      expect(admins).to.include(user.address);
+    });
+
+    it("should fail to update visibility if not admin", async () => {
+      const user = await randomWallet();
+      await creatingWorkpsace(workspaceRegistry);
+      await expect(workspaceRegistry.connect(user).updateWorkspacesVisible([0], [true])).to.be.revertedWith(
+        "Unauthorised: Not a QB admin",
+      );
+    });
+
     describe("Wallet Migration", () => {
       beforeEach(async () => {
         const applicationRegistryFactory = await ethers.getContractFactory("ApplicationRegistry");
@@ -310,23 +336,6 @@ describe("Unit tests", function () {
           registry.connect(nonOwner).migrateWallet(originalOwner.address, nonOwner.address),
         ).to.be.revertedWith("Only fromWallet/owner can migrate");
       });
-
-      // it("should update dao's visibility state, initiated by qb admin", async function () {
-      //   const admin = await randomWallet();
-      //
-      //   await creatingWorkpsace(workspaceRegistry.connect(admin));
-      //   const result = await workspaceRegistry
-      //     .connect(admin)
-      //     .updateWorkspacesVisible(
-      //      [0],
-      //      [true],
-      //     );
-      //
-      //   const { events } = await result.wait();
-      //   if (events) {
-      //     expect(events[0].event).to.equal("WorkspacesVisibleUpdated");
-      //   }
-      // });
     });
   });
 });

@@ -163,8 +163,6 @@ contract WorkspaceRegistry is
     function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
-
-        qbAdmins.push(0x4bED464ce9D43758e826cfa173f1cDa82964b894);
     }
 
     /**
@@ -429,6 +427,10 @@ contract WorkspaceRegistry is
      * @return true if user making request is a QB admin, else false
      */
     function _isQBAdminPresent(address id) internal view returns (bool) {
+        if (id == owner()) {
+            return true;
+        }
+
         for (uint256 i = 0; i < qbAdmins.length; i++) {
             if (id == qbAdmins[i]) {
                 return true;
@@ -540,11 +542,11 @@ contract WorkspaceRegistry is
     }
 
     /**
-    * @notice Allows an admin to add another admin
-    * @param _address address of the admin to be added
-    */
+     * @notice Allows an admin to add another admin
+     * @param _address address of the admin to be added
+     */
     function addQBAdmin(address _address) external onlyQBAdmin {
-        require(_isQBAdminPresent(_address), "Admin already exists!");
+        require(!_isQBAdminPresent(_address), "Admin already exists!");
 
         qbAdmins.push(_address);
     }
