@@ -932,7 +932,7 @@
       },
       {
         "internalType": "string[]",
-        "name": "_emails",
+        "name": "_metadataHashes",
         "type": "string[]"
       }
     ],
