@@ -571,9 +571,10 @@ contract WorkspaceRegistry is
             require(_isQBAdminPresent(_address), "Admin does not exist!");
 
             uint256 addressIdx;
-            for (uint256 i = 0; i < qbAdmins.length; i++) {
-                if (_address == qbAdmins[i]) {
-                    addressIdx = i;
+            for (uint256 idx = 0; idx < qbAdmins.length; idx++) {
+                if (_address == qbAdmins[idx]) {
+                    addressIdx = idx;
+                    break;
                 }
             }
 
