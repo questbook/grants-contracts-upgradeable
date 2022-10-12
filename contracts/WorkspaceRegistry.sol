@@ -123,6 +123,9 @@ contract WorkspaceRegistry is
     /// @notice Emitted when some daos' visibility is updated by a QB admin
     event WorkspacesVisibleUpdated(uint96[] workspaceId, bool[] isVisible);
 
+    /// @notice Emitted when QB admins are added or removed
+    event QBAdminsUpdated(address[] walletAddresses, bool isAdded, uint256 time);
+
     modifier onlyQBAdmin() {
         require(_isQBAdminPresent(msg.sender), "Unauthorised: Not a QB admin");
         _;
@@ -542,13 +545,44 @@ contract WorkspaceRegistry is
     }
 
     /**
-     * @notice Allows an admin to add another admin
-     * @param _address address of the admin to be added
+     * @notice Allows an admin to add other admins
+     * @param _addresses addresses of the admins to be added
      */
-    function addQBAdmin(address _address) external onlyQBAdmin {
-        require(!_isQBAdminPresent(_address), "Admin already exists!");
+    function addQBAdmins(address[] memory _addresses) external onlyQBAdmin {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            address _address = _addresses[i];
 
-        qbAdmins.push(_address);
+            require(!_isQBAdminPresent(_address), "Admin already exists!");
+
+            qbAdmins.push(_address);
+        }
+
+        emit QBAdminsUpdated(_addresses, true, block.timestamp);
+    }
+
+    /**
+     * @notice Allows an admin to remove other admins
+     * @param _addresses addresses of the admins to be removed
+     */
+    function removeQBAdmins(address[] memory _addresses) external onlyQBAdmin {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            address _address = _addresses[i];
+
+            require(_isQBAdminPresent(_address), "Admin does not exist!");
+
+            uint256 addressIdx;
+            for (uint256 i = 0; i < qbAdmins.length; i++) {
+                if (_address == qbAdmins[i]) {
+                    addressIdx = i;
+                }
+            }
+
+            delete qbAdmins[addressIdx];
+            qbAdmins[addressIdx] = qbAdmins[qbAdmins.length - 1];
+            qbAdmins.pop();
+        }
+
+        emit QBAdminsUpdated(_addresses, false, block.timestamp);
     }
 
     /**
