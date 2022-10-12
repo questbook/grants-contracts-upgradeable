@@ -260,12 +260,24 @@ describe("Unit tests", function () {
       }
     });
 
-    it("should add a QB admin", async () => {
+    it("should add/remove a QB admin", async () => {
       const user = await randomWallet();
-      await workspaceRegistry.addQBAdmin(user.address);
 
-      const admins = await workspaceRegistry.getQBAdmins();
-      expect(admins).to.include(user.address);
+      const addResult = await workspaceRegistry.addQBAdmins([user.address]);
+      expect(await workspaceRegistry.getQBAdmins()).to.include(user.address);
+
+      const { events: addEvents } = await addResult.wait();
+      if (addEvents) {
+        expect(addEvents[0].event).to.equal("QBAdminsUpdated");
+      }
+
+      const removeResult = await workspaceRegistry.removeQBAdmins([user.address]);
+      expect(await workspaceRegistry.getQBAdmins()).to.not.include(user.address);
+
+      const { events: removeEvents } = await removeResult.wait();
+      if (removeEvents) {
+        expect(removeEvents[0].event).to.equal("QBAdminsUpdated");
+      }
     });
 
     it("should fail to update visibility if not admin", async () => {
