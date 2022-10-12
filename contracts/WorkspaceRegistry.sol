@@ -285,18 +285,18 @@ contract WorkspaceRegistry is
      * @param _members Members whose roles are to be updated
      * @param _roles Roles to be updated
      * @param _enabled Whether to enable or disable the role
-     * @param _emails Emails of members.
+     * @param _metadataHashes Metadatas for the members.
      */
     function updateWorkspaceMembers(
         uint96 _id,
         address[] memory _members,
         uint8[] memory _roles,
         bool[] memory _enabled,
-        string[] memory _emails
+        string[] memory _metadataHashes
     ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
         require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _emails.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+        require(_members.length == _metadataHashes.length, "UpdateWorkspaceMembers: Parameters length mismatch");
         for (uint256 i = 0; i < _members.length; i++) {
             address member = _members[i];
             /// @notice The role 0 denotes an admin role
@@ -304,8 +304,8 @@ contract WorkspaceRegistry is
             uint8 role = _roles[i];
             bool enabled = _enabled[i];
             _setRole(_id, member, role, enabled);
+            emit WorkspaceMemberUpdated(_id, member, role, enabled, _metadataHashes[i], block.timestamp);
         }
-        emit WorkspaceMembersUpdated(_id, _members, _roles, _enabled, _emails, block.timestamp);
     }
 
     /**
