@@ -549,6 +549,8 @@ contract WorkspaceRegistry is
      * @param _addresses addresses of the admins to be added
      */
     function addQBAdmins(address[] memory _addresses) external onlyQBAdmin {
+        require(_addresses.length != 0, "Error: addresses cannot be empty");
+
         for (uint256 i = 0; i < _addresses.length; i++) {
             address _address = _addresses[i];
 
@@ -565,6 +567,8 @@ contract WorkspaceRegistry is
      * @param _addresses addresses of the admins to be removed
      */
     function removeQBAdmins(address[] memory _addresses) external onlyQBAdmin {
+        require(_addresses.length != 0, "Error: addresses cannot be empty");
+
         for (uint256 i = 0; i < _addresses.length; i++) {
             address _address = _addresses[i];
 

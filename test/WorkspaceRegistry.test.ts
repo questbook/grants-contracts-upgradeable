@@ -271,6 +271,16 @@ describe("Unit tests", function () {
         expect(addEvents[0].event).to.equal("QBAdminsUpdated");
       }
 
+      // should throw err if admin already added
+      expect(
+        workspaceRegistry.addQBAdmins([user.address])
+      ).to.be.revertedWith("Admin already exists!");
+
+      // should throw err if empty list passed
+      expect(
+        workspaceRegistry.addQBAdmins([])
+      ).to.be.revertedWith("Error: addresses cannot be empty");
+
       const removeResult = await workspaceRegistry.removeQBAdmins([user.address]);
       expect(await workspaceRegistry.getQBAdmins()).to.not.include(user.address);
 
@@ -278,6 +288,16 @@ describe("Unit tests", function () {
       if (removeEvents) {
         expect(removeEvents[0].event).to.equal("QBAdminsUpdated");
       }
+
+      // should throw err if admin does not exist
+      expect(
+        workspaceRegistry.removeQBAdmins([user.address])
+      ).to.be.revertedWith("Admin does not exist!");
+
+      // should throw err if empty list passed
+      expect(
+        workspaceRegistry.removeQBAdmins([])
+      ).to.be.revertedWith("Error: addresses cannot be empty");
     });
 
     it("should fail to update visibility if not admin", async () => {
