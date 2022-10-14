@@ -126,6 +126,16 @@ contract WorkspaceRegistry is
     /// @notice Emitted when QB admins are added or removed
     event QBAdminsUpdated(address[] walletAddresses, bool isAdded, uint256 time);
 
+    /// @notice Emitted when transaction status is updated
+    event FundsTransferStatusUpdated(
+        uint96[] applicationId,
+        string[] transactionHash,
+        string[] status,
+        string[] tokenName,
+        uint256[] tokenUSDValue,
+        uint256[] executionTimestamp
+    );
+
     modifier onlyQBAdmin() {
         require(_isQBAdminPresent(msg.sender), "Unauthorised: Not a QB admin");
         _;
@@ -530,6 +540,37 @@ contract WorkspaceRegistry is
             _amounts,
             true,
             block.timestamp
+        );
+    }
+
+    /**
+     * @notice Emits event when funds transfer transaction status is updated
+     * @param _applicationId[] array of application id for which the transaction status is updated
+     * @param _transactionHash[] array of transaction hashes of the transaction
+     * @param _status array of status of each transaction
+     * @param _tokenName array of names of token
+     * @param _tokenUSDValue array of USD value of token
+     * @param _executionTimestamp array of timestamp of execution of transaction
+     */
+    function updateFundsTransferTransactionStatus(
+        uint96[] calldata _applicationId,
+        string[] calldata _transactionHash,
+        string[] calldata _status,
+        string[] calldata _tokenName,
+        uint256[] calldata _tokenUSDValue,
+        uint256[] calldata _executionTimestamp
+    ) external onlyOwner {
+        require(
+            _applicationId.length == _transactionHash.length,
+            "Error: applicationId and transactionHash length mismatch"
+        );
+        emit FundsTransferStatusUpdated(
+            _applicationId,
+            _transactionHash,
+            _status,
+            _tokenName,
+            _tokenUSDValue,
+            _executionTimestamp
         );
     }
 
