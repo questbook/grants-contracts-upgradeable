@@ -46,7 +46,6 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
       }
       rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
     }
-
     return {
       accounts: [privateKey!],
       chainId: chains[network].id,
