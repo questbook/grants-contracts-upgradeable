@@ -110,6 +110,7 @@ contract WorkspaceRegistry is
         uint96[] applicationIds,
         uint96[] milestoneIds,
         address asset,
+        string tokenName,
         string nonEvmAssetAddress,
         string transactionHash,
         address sender,
@@ -131,7 +132,6 @@ contract WorkspaceRegistry is
         uint96[] applicationId,
         string[] transactionHash,
         string[] status,
-        string[] tokenName,
         uint256[] tokenUSDValue,
         uint256[] executionTimestamp
     );
@@ -511,6 +511,7 @@ contract WorkspaceRegistry is
      * @param _applicationIds[] application id for which the funds are disbursed
      * @param _milestoneIds[] milestone id for which the funds are disbursed
      * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param _tokenName array of names of token
      * @param nonEvmAssetAddress address of non-EVM asset that was disbusrsed
      * @param _amounts[] amount disbursed
      * @param _workspaceId workspace that the application belongs to
@@ -520,6 +521,7 @@ contract WorkspaceRegistry is
         uint96[] memory _applicationIds,
         uint96[] memory _milestoneIds,
         IERC20 _erc20Interface,
+        string memory _tokenName,
         string memory nonEvmAssetAddress,
         uint256[] memory _amounts,
         uint96 _workspaceId,
@@ -534,6 +536,7 @@ contract WorkspaceRegistry is
             _applicationIds,
             _milestoneIds,
             address(_erc20Interface),
+            _tokenName,
             nonEvmAssetAddress,
             transactionHash,
             msg.sender,
@@ -548,7 +551,6 @@ contract WorkspaceRegistry is
      * @param _applicationId[] array of application id for which the transaction status is updated
      * @param _transactionHash[] array of transaction hashes of the transaction
      * @param _status array of status of each transaction
-     * @param _tokenName array of names of token
      * @param _tokenUSDValue array of USD value of token
      * @param _executionTimestamp array of timestamp of execution of transaction
      */
@@ -556,7 +558,6 @@ contract WorkspaceRegistry is
         uint96[] calldata _applicationId,
         string[] calldata _transactionHash,
         string[] calldata _status,
-        string[] calldata _tokenName,
         uint256[] calldata _tokenUSDValue,
         uint256[] calldata _executionTimestamp
     ) external onlyOwner {
@@ -564,14 +565,7 @@ contract WorkspaceRegistry is
             _applicationId.length == _transactionHash.length,
             "Error: applicationId and transactionHash length mismatch"
         );
-        emit FundsTransferStatusUpdated(
-            _applicationId,
-            _transactionHash,
-            _status,
-            _tokenName,
-            _tokenUSDValue,
-            _executionTimestamp
-        );
+        emit FundsTransferStatusUpdated(_applicationId, _transactionHash, _status, _tokenUSDValue, _executionTimestamp);
     }
 
     /**

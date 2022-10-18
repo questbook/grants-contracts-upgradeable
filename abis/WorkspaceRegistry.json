@@ -104,6 +104,12 @@
       {
         "indexed": false,
         "internalType": "string",
+        "name": "tokenName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
         "name": "nonEvmAssetAddress",
         "type": "string"
       },
@@ -160,12 +166,6 @@
         "indexed": false,
         "internalType": "string[]",
         "name": "status",
-        "type": "string[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "string[]",
-        "name": "tokenName",
         "type": "string[]"
       },
       {
@@ -648,6 +648,11 @@
       },
       {
         "internalType": "string",
+        "name": "_tokenName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "nonEvmAssetAddress",
         "type": "string"
       },
@@ -1004,11 +1009,6 @@
       {
         "internalType": "string[]",
         "name": "_status",
-        "type": "string[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "_tokenName",
         "type": "string[]"
       },
       {
