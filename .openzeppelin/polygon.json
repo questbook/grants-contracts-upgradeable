@@ -4121,6 +4121,7 @@
       "address": "0xE5DEec062E50D27136fFD8486fB2d66cB1BD6899",
       "txHash": "0x10201d2e01b79ef5b306e78803fac339e5dcc37d134c17cb9fe1a3c4203eee30",
       "layout": {
+        "solcVersion": "0.8.7",
         "storage": [
           {
             "label": "_initialized",
@@ -4199,7 +4200,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "251",
-            "type": "t_contract(IApplicationReviewRegistry)7410",
+            "type": "t_contract(IApplicationReviewRegistry)6999",
             "contract": "GrantFactory",
             "src": "contracts/GrantFactory.sol:20"
           }
@@ -4221,7 +4222,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)7410": {
+          "t_contract(IApplicationReviewRegistry)6999": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
@@ -5132,6 +5133,7 @@
       "address": "0x16B0eC56dEA47a847A33f1F9ED49529E7D7DAABa",
       "txHash": "0xaf08c03d78f32f14fdb8a9d96f2331d1861d7525c0f1bc950d082d64d27be8f5",
       "layout": {
+        "solcVersion": "0.8.7",
         "storage": [
           {
             "label": "_initialized",
@@ -5202,7 +5204,7 @@
             "label": "applications",
             "offset": 0,
             "slot": "202",
-            "type": "t_mapping(t_uint96,t_struct(Application)3125_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Application)2379_storage)",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:54"
           },
@@ -5218,7 +5220,7 @@
             "label": "applicationMilestones",
             "offset": 0,
             "slot": "204",
-            "type": "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)3098))",
+            "type": "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2352))",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:62"
           },
@@ -5226,7 +5228,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "205",
-            "type": "t_contract(IWorkspaceRegistry)7509",
+            "type": "t_contract(IWorkspaceRegistry)7098",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:65"
           },
@@ -5234,7 +5236,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "206",
-            "type": "t_contract(IApplicationReviewRegistry)7410",
+            "type": "t_contract(IApplicationReviewRegistry)6999",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:68"
           }
@@ -5256,20 +5258,20 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)7410": {
+          "t_contract(IApplicationReviewRegistry)6999": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
-          "t_contract(IWorkspaceRegistry)7509": {
+          "t_contract(IWorkspaceRegistry)7098": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
-          "t_enum(ApplicationState)3104": {
+          "t_enum(ApplicationState)2358": {
             "label": "enum ApplicationRegistry.ApplicationState",
             "members": ["Submitted", "Resubmit", "Approved", "Rejected", "Complete"],
             "numberOfBytes": "1"
           },
-          "t_enum(MilestoneState)3098": {
+          "t_enum(MilestoneState)2352": {
             "label": "enum ApplicationRegistry.MilestoneState",
             "members": ["Submitted", "Requested", "Approved"],
             "numberOfBytes": "1"
@@ -5282,15 +5284,15 @@
             "label": "mapping(address => mapping(address => bool))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint48,t_enum(MilestoneState)3098)": {
+          "t_mapping(t_uint48,t_enum(MilestoneState)2352)": {
             "label": "mapping(uint48 => enum ApplicationRegistry.MilestoneState)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)3098))": {
+          "t_mapping(t_uint96,t_mapping(t_uint48,t_enum(MilestoneState)2352))": {
             "label": "mapping(uint96 => mapping(uint48 => enum ApplicationRegistry.MilestoneState))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Application)3125_storage)": {
+          "t_mapping(t_uint96,t_struct(Application)2379_storage)": {
             "label": "mapping(uint96 => struct ApplicationRegistry.Application)",
             "numberOfBytes": "32"
           },
@@ -5298,7 +5300,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Application)3125_storage": {
+          "t_struct(Application)2379_storage": {
             "label": "struct ApplicationRegistry.Application",
             "members": [
               {
@@ -5345,7 +5347,7 @@
               },
               {
                 "label": "state",
-                "type": "t_enum(ApplicationState)3104",
+                "type": "t_enum(ApplicationState)2358",
                 "offset": 0,
                 "slot": "4"
               }
@@ -5375,6 +5377,7 @@
       "address": "0x06Ad0c99E3eECC06c91d9a0895eb5620209F6048",
       "txHash": "0x798e182591fe5b0b665bb951f3831cf18e7640e263a5dc094035fab8870226c9",
       "layout": {
+        "solcVersion": "0.8.7",
         "storage": [
           {
             "label": "_initialized",
@@ -5437,7 +5440,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "201",
-            "type": "t_contract(IWorkspaceRegistry)7509",
+            "type": "t_contract(IWorkspaceRegistry)7098",
             "contract": "ApplicationReviewRegistry",
             "src": "contracts/ApplicationReviewRegistry.sol:40"
           },
@@ -5445,7 +5448,7 @@
             "label": "grantFactory",
             "offset": 0,
             "slot": "202",
-            "type": "t_contract(IGrantFactory)7485",
+            "type": "t_contract(IGrantFactory)7074",
             "contract": "ApplicationReviewRegistry",
             "src": "contracts/ApplicationReviewRegistry.sol:43"
           },
@@ -5453,7 +5456,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "203",
-            "type": "t_contract(IApplicationRegistry)7364",
+            "type": "t_contract(IApplicationRegistry)6953",
             "contract": "ApplicationReviewRegistry",
             "src": "contracts/ApplicationReviewRegistry.sol:46"
           },
@@ -5469,7 +5472,7 @@
             "label": "reviews",
             "offset": 0,
             "slot": "204",
-            "type": "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)4006_storage))",
+            "type": "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)3260_storage))",
             "contract": "ApplicationReviewRegistry",
             "src": "contracts/ApplicationReviewRegistry.sol:52"
           },
@@ -5477,7 +5480,7 @@
             "label": "grantReviewStates",
             "offset": 0,
             "slot": "205",
-            "type": "t_mapping(t_address,t_struct(GrantReviewState)4017_storage)",
+            "type": "t_mapping(t_address,t_struct(GrantReviewState)3271_storage)",
             "contract": "ApplicationReviewRegistry",
             "src": "contracts/ApplicationReviewRegistry.sol:55"
           },
@@ -5555,15 +5558,15 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationRegistry)7364": {
+          "t_contract(IApplicationRegistry)6953": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
-          "t_contract(IGrantFactory)7485": {
+          "t_contract(IGrantFactory)7074": {
             "label": "contract IGrantFactory",
             "numberOfBytes": "20"
           },
-          "t_contract(IWorkspaceRegistry)7509": {
+          "t_contract(IWorkspaceRegistry)7098": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
@@ -5583,11 +5586,11 @@
             "label": "mapping(address => mapping(address => uint96))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)4006_storage))": {
+          "t_mapping(t_address,t_mapping(t_uint96,t_struct(Review)3260_storage))": {
             "label": "mapping(address => mapping(uint96 => struct ApplicationReviewRegistry.Review))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(GrantReviewState)4017_storage)": {
+          "t_mapping(t_address,t_struct(GrantReviewState)3271_storage)": {
             "label": "mapping(address => struct ApplicationReviewRegistry.GrantReviewState)",
             "numberOfBytes": "32"
           },
@@ -5603,7 +5606,7 @@
             "label": "mapping(uint96 => bool)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Review)4006_storage)": {
+          "t_mapping(t_uint96,t_struct(Review)3260_storage)": {
             "label": "mapping(uint96 => struct ApplicationReviewRegistry.Review)",
             "numberOfBytes": "32"
           },
@@ -5611,7 +5614,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(GrantReviewState)4017_storage": {
+          "t_struct(GrantReviewState)3271_storage": {
             "label": "struct ApplicationReviewRegistry.GrantReviewState",
             "members": [
               {
@@ -5647,7 +5650,7 @@
             ],
             "numberOfBytes": "128"
           },
-          "t_struct(Review)4006_storage": {
+          "t_struct(Review)3260_storage": {
             "label": "struct ApplicationReviewRegistry.Review",
             "members": [
               {
@@ -6273,7 +6276,7 @@
             "label": "workspaces",
             "offset": 0,
             "slot": "252",
-            "type": "t_mapping(t_uint96,t_struct(Workspace)1586_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Workspace)5506_storage)",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:42"
           },
@@ -6297,7 +6300,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "255",
-            "type": "t_contract(IApplicationRegistry)3050",
+            "type": "t_contract(IApplicationRegistry)6970",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:51"
           },
@@ -6335,7 +6338,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IApplicationRegistry)3050": {
+          "t_contract(IApplicationRegistry)6970": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
@@ -6347,7 +6350,7 @@
             "label": "mapping(uint96 => mapping(address => bytes32))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Workspace)1586_storage)": {
+          "t_mapping(t_uint96,t_struct(Workspace)5506_storage)": {
             "label": "mapping(uint96 => struct WorkspaceRegistry.Workspace)",
             "numberOfBytes": "32"
           },
@@ -6355,7 +6358,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Safe)1576_storage": {
+          "t_struct(Safe)5496_storage": {
             "label": "struct WorkspaceRegistry.Safe",
             "members": [
               {
@@ -6373,7 +6376,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Workspace)1586_storage": {
+          "t_struct(Workspace)5506_storage": {
             "label": "struct WorkspaceRegistry.Workspace",
             "members": [
               {
@@ -6396,7 +6399,243 @@
               },
               {
                 "label": "safe",
-                "type": "t_struct(Safe)1576_storage",
+                "type": "t_struct(Safe)5496_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          },
+          "t_uint96": {
+            "label": "uint96",
+            "numberOfBytes": "12"
+          }
+        }
+      }
+    },
+    "fcc19feb10efd44401d143563f428f8227a6bce1abd471eb719dbf87483c2bf2": {
+      "address": "0x17a6A966C4Afd008B6b367E35809b6cc3b991a07",
+      "txHash": "0x003c3836a3ffd605fb1a58d3b7e7e49e4d41094c773339d2fc3653591dfd7845",
+      "layout": {
+        "solcVersion": "0.8.7",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "202",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "workspaceCount",
+            "offset": 0,
+            "slot": "251",
+            "type": "t_uint96",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:23"
+          },
+          {
+            "label": "workspaces",
+            "offset": 0,
+            "slot": "252",
+            "type": "t_mapping(t_uint96,t_struct(Workspace)5491_storage)",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:42"
+          },
+          {
+            "label": "memberRoles",
+            "offset": 0,
+            "slot": "253",
+            "type": "t_mapping(t_uint96,t_mapping(t_address,t_bytes32))",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:45"
+          },
+          {
+            "label": "anonAuthoriserAddress",
+            "offset": 0,
+            "slot": "254",
+            "type": "t_address",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:48"
+          },
+          {
+            "label": "applicationReg",
+            "offset": 0,
+            "slot": "255",
+            "type": "t_contract(IApplicationRegistry)6953",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:51"
+          },
+          {
+            "label": "qbAdmins",
+            "offset": 0,
+            "slot": "256",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "WorkspaceRegistry",
+            "src": "contracts/WorkspaceRegistry.sol:54"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IApplicationRegistry)6953": {
+            "label": "contract IApplicationRegistry",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint96,t_mapping(t_address,t_bytes32))": {
+            "label": "mapping(uint96 => mapping(address => bytes32))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint96,t_struct(Workspace)5491_storage)": {
+            "label": "mapping(uint96 => struct WorkspaceRegistry.Workspace)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Safe)5481_storage": {
+            "label": "struct WorkspaceRegistry.Safe",
+            "members": [
+              {
+                "label": "_address",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "chainId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Workspace)5491_storage": {
+            "label": "struct WorkspaceRegistry.Workspace",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint96",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "owner",
+                "type": "t_address",
+                "offset": 12,
+                "slot": "0"
+              },
+              {
+                "label": "metadataHash",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "safe",
+                "type": "t_struct(Safe)5481_storage",
                 "offset": 0,
                 "slot": "2"
               }
