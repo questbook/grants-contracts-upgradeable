@@ -925,6 +925,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "fromWallets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "toWallets",
+        "type": "address[]"
+      }
+    ],
+    "name": "migrateWalletBatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "owner",
     "outputs": [
