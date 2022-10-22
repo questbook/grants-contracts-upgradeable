@@ -266,7 +266,7 @@ contract WorkspaceRegistry is
      * @param fromWallet Current wallet address of the user
      * @param toWallet The new wallet address to migrate to
      */
-    function migrateWallet(address fromWallet, address toWallet) external {
+    function migrateWallet(address fromWallet, address toWallet) public {
         require(msg.sender == fromWallet || owner() == msg.sender, "Only fromWallet/owner can migrate");
 
         for (uint96 i = 0; i < workspaceCount; i++) {
@@ -298,12 +298,12 @@ contract WorkspaceRegistry is
      * @param fromWallets Current wallet addresses of the users
      * @param toWallets The new wallet addresses to migrate to
      */
-    function migrateWalletBatch(address[] fromWallet, address[] toWallet) external {
+    function migrateWalletBatch(address[] calldata fromWallets, address[] calldata toWallets) external {
         require(owner() == msg.sender, "Only owner can perform batch migration");
-        require(fromWallet.length == toWallet.length, "Array length mismatch");
+        require(fromWallets.length == toWallets.length, "Array length mismatch");
 
-        for (uint96 i = 0; i < fromWallet.length; ++i) {
-            migrateWallet(fromWallet[i], toWallet[i]);
+        for (uint96 i = 0; i < fromWallets.length; ++i) {
+            migrateWallet(fromWallets[i], toWallets[i]);
         }
     }
 
