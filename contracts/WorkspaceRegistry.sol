@@ -293,6 +293,21 @@ contract WorkspaceRegistry is
     }
 
     /**
+     * @notice Migrate multiple users' wallets in one go
+     *
+     * @param fromWallets Current wallet addresses of the users
+     * @param toWallets The new wallet addresses to migrate to
+     */
+    function migrateWalletBatch(address[] fromWallet, address[] toWallet) external {
+        require(owner() == msg.sender, "Only owner can perform batch migration");
+        require(fromWallet.length == toWallet.length, "Array length mismatch");
+
+        for (uint96 i = 0; i < fromWallet.length; ++i) {
+            migrateWallet(fromWallet[i], toWallet[i]);
+        }
+    }
+
+    /**
      * @notice Update workspace members' roles, can be called by workspace admins
      * @param _id ID of target workspace
      * @param _members Members whose roles are to be updated
