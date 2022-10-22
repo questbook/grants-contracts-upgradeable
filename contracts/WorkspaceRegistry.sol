@@ -110,6 +110,19 @@ contract WorkspaceRegistry is
         uint96[] applicationIds,
         uint96[] milestoneIds,
         address asset,
+        string nonEvmAssetAddress,
+        string transactionHash,
+        address sender,
+        uint256[] amounts,
+        bool isP2P,
+        uint256 time
+    );
+
+    /// @notice Emitted when payout is initiated through safe
+    event DisburseRewardFromSafe(
+        uint96[] applicationIds,
+        uint96[] milestoneIds,
+        address asset,
         string tokenName,
         string nonEvmAssetAddress,
         string transactionHash,

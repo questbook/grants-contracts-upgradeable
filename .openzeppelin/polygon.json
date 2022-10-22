@@ -6536,7 +6536,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "255",
-            "type": "t_contract(IApplicationRegistry)3048",
+            "type": "t_contract(IApplicationRegistry)3072",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:51"
           },
@@ -6574,7 +6574,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IApplicationRegistry)3048": {
+          "t_contract(IApplicationRegistry)3072": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
