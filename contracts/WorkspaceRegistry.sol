@@ -94,6 +94,9 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    /// @notice Emitted when a workspace member's profile is deleted
+    event WorkspaceMemberDeleted(uint96 indexed id, address member, uint256 time);
+
     /// @notice Emitted when grant reward is disbursed
     event DisburseReward(
         uint96 indexed applicationId,
@@ -346,6 +349,26 @@ contract WorkspaceRegistry is
             bool enabled = _enabled[i];
             _setRole(_id, member, role, enabled);
             emit WorkspaceMemberUpdated(_id, member, role, enabled, _metadataHashes[i], block.timestamp);
+        }
+    }
+
+    /**
+     * @notice Remove workspace members
+     * @param _id ID of target workspace
+     * @param _members Members whose roles are to be updated
+     */
+    function removeWorkspaceMembers(uint96 _id, address[] memory _members)
+        external
+        whenNotPaused
+        onlyWorkspaceAdmin(_id)
+        withinLimit(_members.length)
+    {
+        for (uint256 i = 0; i < _members.length; i++) {
+            address member = _members[i];
+            if (_checkRole(_id, member, 0) || _checkRole(_id, member, 1)) {
+                delete memberRoles[_id][member];
+                emit WorkspaceMemberDeleted(_id, member, block.timestamp);
+            }
         }
     }
 
