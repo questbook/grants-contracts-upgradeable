@@ -88,6 +88,7 @@ describe("Unit tests", function () {
           [0, 0, 0],
           "0xE3D997D569b5b03B577C6a2Edd1d2613FE776cb0",
           "",
+          "",
           [100, 200, 300],
           0,
           "",
@@ -109,7 +110,6 @@ describe("Unit tests", function () {
           "0xf995e3f5dd1aadf285bf426953673cc49b57c62e339085105d9258a1070da509",
         ],
         ["executed", "executed", "executed"],
-        ["MATIC", "USDC", "DAI"],
         [100, 200, 300],
         [18890, 166667, 166536],
       );
