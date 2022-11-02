@@ -3650,7 +3650,7 @@
             "label": "workspaces",
             "offset": 0,
             "slot": "252",
-            "type": "t_mapping(t_uint96,t_struct(Workspace)1586_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Workspace)2499_storage)",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:42"
           },
@@ -3674,7 +3674,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "255",
-            "type": "t_contract(IApplicationRegistry)3123",
+            "type": "t_contract(IApplicationRegistry)4036",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:51"
           },
@@ -3712,7 +3712,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IApplicationRegistry)3123": {
+          "t_contract(IApplicationRegistry)4036": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
@@ -3724,7 +3724,7 @@
             "label": "mapping(uint96 => mapping(address => bytes32))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Workspace)1586_storage)": {
+          "t_mapping(t_uint96,t_struct(Workspace)2499_storage)": {
             "label": "mapping(uint96 => struct WorkspaceRegistry.Workspace)",
             "numberOfBytes": "32"
           },
@@ -3732,7 +3732,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Safe)1576_storage": {
+          "t_struct(Safe)2489_storage": {
             "label": "struct WorkspaceRegistry.Safe",
             "members": [
               {
@@ -3750,7 +3750,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Workspace)1586_storage": {
+          "t_struct(Workspace)2499_storage": {
             "label": "struct WorkspaceRegistry.Workspace",
             "members": [
               {
@@ -3773,7 +3773,7 @@
               },
               {
                 "label": "safe",
-                "type": "t_struct(Safe)1576_storage",
+                "type": "t_struct(Safe)2489_storage",
                 "offset": 0,
                 "slot": "2"
               }
