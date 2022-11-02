@@ -275,14 +275,16 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function batchUpdateApplicationState(
         uint96[] memory _applicationIds,
         ApplicationState[] memory _applicationStates,
-        uint96 _workspaceId
+        uint96 _workspaceId,
+        string[] memory feedbackHashes
     ) external onlyWorkspaceAdmin(_workspaceId) {
         require(
             _applicationIds.length == _applicationStates.length,
             "applicationIds and applicationStates array length mismatch"
         );
+        require(_applicationIds.length == feedbackHashes.length, "applicationIds and feedbacks array length mismatch");
         for (uint256 i = 0; i < _applicationIds.length; i++) {
-            updateApplicationState(_applicationIds[i], _workspaceId, _applicationStates[i], " ");
+            updateApplicationState(_applicationIds[i], _workspaceId, _applicationStates[i], feedbackHashes[i]);
         }
     }
 
