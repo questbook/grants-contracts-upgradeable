@@ -7,6 +7,7 @@ interface IApplicationReviewRegistry {
     function setRubrics(
         uint96 _workspaceId,
         address _grantAddress,
+        uint96 _numberOfReviewersPerApplication,
         string memory _metadataHash
     ) external;
 

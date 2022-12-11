@@ -22,6 +22,15 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     /// @notice Emitted when a new grant contract is deployed
     event GrantCreated(address grantAddress, uint96 workspaceId, string metadataHash, uint256 time);
 
+    /// @notice Emitted when a new grant contract is deployed
+    event GrantCreated(
+        address grantAddress,
+        uint96 workspaceId,
+        string metadataHash,
+        uint96 numberOfReviewersPerApplication,
+        uint256 time
+    );
+
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
 
@@ -72,6 +81,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         uint96 _workspaceId,
         string memory _metadataHash,
         string memory _rubricsMetadataHash,
+        uint96 _numberOfReviewersPerApplication,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg
     ) external whenNotPaused returns (address) {
@@ -89,8 +99,19 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
             )
         );
         address _grantAddress = address(grantProxy);
-        emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
-        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
+        emit GrantCreated(
+            _grantAddress,
+            _workspaceId,
+            _metadataHash,
+            _numberOfReviewersPerApplication,
+            block.timestamp
+        );
+        applicationReviewReg.setRubrics(
+            _workspaceId,
+            _grantAddress,
+            _numberOfReviewersPerApplication,
+            _rubricsMetadataHash
+        );
         return _grantAddress;
     }
 

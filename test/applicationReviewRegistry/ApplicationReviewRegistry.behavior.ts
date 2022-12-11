@@ -300,14 +300,14 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.nonAdmin)
-          .setRubrics(0, this.grant.address, "dummyIpfsHash"),
+          .setRubrics(0, this.grant.address, 4, "dummyIpfsHash"),
       ).to.be.revertedWith("Unauthorised: Not an admin nor grantFactory");
     });
 
     it("workspace admin should be able to set rubrics", async function () {
       await this.applicationReviewRegistry
         .connect(this.signers.admin)
-        .setRubrics(0, this.grant.address, "dummyRubricsIpfsHash");
+        .setRubrics(0, this.grant.address, 4, "dummyRubricsIpfsHash");
       const grantReviewState = await this.applicationReviewRegistry.grantReviewStates(this.grant.address);
       expect(grantReviewState[3]).to.equal("dummyRubricsIpfsHash");
     });
@@ -325,7 +325,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       await expect(
         this.applicationReviewRegistry
           .connect(this.signers.admin)
-          .setRubrics(0, this.grant.address, "dummyRubricsIpfsHash"),
+          .setRubrics(0, this.grant.address, 4, "dummyRubricsIpfsHash"),
       ).to.be.revertedWith("RubricsSet: Reviews non-zero");
     });
 
@@ -344,7 +344,9 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
         { kind: "uups" },
       );
       await expect(
-        this.applicationReviewRegistry.connect(this.signers.admin).setRubrics(1, grant.address, "dummyRubricsIpfsHash"),
+        this.applicationReviewRegistry
+          .connect(this.signers.admin)
+          .setRubrics(1, grant.address, 4, "dummyRubricsIpfsHash"),
       ).to.be.revertedWith("RubricsSet: Unauthorised");
     });
   });
