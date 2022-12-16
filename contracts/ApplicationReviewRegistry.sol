@@ -11,8 +11,11 @@ import "./interfaces/IApplicationReviewRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
 import "hardhat/console.sol";
+import "./libraries/IterableMapping.sol";
 
 contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationReviewRegistry {
+    using IterableMapping for IterableMapping.Map;
+
     struct Review {
         uint96 id;
         uint96 workspaceId;
@@ -71,6 +74,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice mapping from grant address to index of the last reviewer assigned
     mapping(address => uint256) public lastAssignedReviewerIndices;
+
+    /// @notice auxillary map to store reviewer assignment
+    IterableMapping.Map private _map;
+
+    /// @notice auxillary map to store reviewer assignment count while auto assigning
+    mapping(address => uint96) private _reviewerCount;
 
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
@@ -133,6 +142,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _sender,
         address _reviewer,
         uint256 _amount,
+        uint256 time
+    );
+
+    event AutoAssignmentEnabled(
+        uint96 _workspaceId,
+        address _grantAddress,
+        address[] _reviewers,
+        uint96[] _applications,
+        uint96 _numberOfReviewersPerApplication,
+        address _enabledBy,
         uint256 time
     );
 
@@ -296,7 +315,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
             if (_active[i]) {
                 uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
-                assert(_assignmentCount + 1 > _assignmentCount);
                 _assignmentCount += 1;
                 reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
             }
@@ -355,20 +373,67 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         assignReviewers(_workspaceId, _applicationId, _grantAddress, _leastBusyReviewers, _activeReviewers);
     }
 
+    function generateAssignment(
+        address[] memory _reviewers,
+        uint96[] memory _applications,
+        uint96[][] memory _applicationsPerReviewer,
+        uint96 _numOfReviewersPerApplication
+    ) private {
+        uint256 maxApplicationsPerReviewer = (_numOfReviewersPerApplication * _applications.length) / _reviewers.length;
+
+        for (uint256 i = 0; i < _reviewers.length; i++) {
+            require(
+                _applicationsPerReviewer[i].length <= maxApplicationsPerReviewer,
+                "Cannot assign this many applications to a reviewer"
+            );
+
+            for (uint256 j = 0; j < _applicationsPerReviewer[i].length; j++) {
+                require(
+                    applicationReg.isApplicationSubmitted(_applicationsPerReviewer[i][j]),
+                    "Application not in Submitted state"
+                );
+                address[] storage _reviewersForApplication = _map.get(_applicationsPerReviewer[i][j]);
+                _reviewersForApplication.push(_reviewers[i]);
+                _reviewerCount[_reviewers[i]] += 1;
+
+                // This is done to check if the application IDs entered are valid
+                require(
+                    _reviewersForApplication.length <= _numOfReviewersPerApplication,
+                    "Duplicate application ids detected!"
+                );
+
+                // This is done as a check to ensure that the reviewers are unique
+                require(_reviewerCount[_reviewers[i]] <= maxApplicationsPerReviewer, "Duplicate reviewers detected!");
+            }
+        }
+    }
+
+    function destroyAssignment(address[] memory _reviewers, uint96[] memory _applications) private {
+        for (uint256 i = 0; i < _applications.length; i++) {
+            _map.remove(_applications[i]);
+        }
+
+        for (uint256 i = 0; i < _reviewers.length; i++) {
+            delete _reviewerCount[_reviewers[i]];
+        }
+    }
+
     /**
      * @notice auto assigns reviewers to all existing applications to a grant
      * @notice and enables it for all applications that come after it
      * @param _workspaceId Workspace id
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
-     * @param _active Array of boolean values indicating whether the reviewers are active or not
+     * @param _applications Array of application ids
+     * @param _applicationsPerReviewer Array of application ids per reviewer
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
      */
     function enableAutoAssignmentOfReviewers(
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active,
+        uint96[] memory _applications,
+        uint96[][] memory _applicationsPerReviewer,
         uint96 _numOfReviewersPerApplication
     ) private onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
@@ -378,33 +443,44 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(isAutoAssigningEnabled[_grantAddress] == false, "AutoAssignReviewers: Auto assignment already enabled");
         isAutoAssigningEnabled[_grantAddress] = true;
 
-        uint96 trueCount = 0;
-        for (uint256 i = 0; i < _active.length; i++) {
-            if (_active[i]) {
-                assert(trueCount + 1 > trueCount);
-                trueCount += 1;
-            }
+        require(
+            _reviewers.length >= _numOfReviewersPerApplication,
+            "AutoAssignReviewers: Not enough reviewers selected"
+        );
+
+        for (uint256 i = 0; i < _reviewers.length; i++) {
+            require(
+                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]),
+                "AutoAssignReviewers: Unauthorised"
+            );
         }
-        require(trueCount >= _numOfReviewersPerApplication, "AutoAssignReviewers: Not enough reviewers selected");
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
         grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
+        reviewers[_grantAddress] = _reviewers;
 
-        address[] memory _activeReviewers = new address[](trueCount);
-        uint256 j = 0;
-        for (uint256 i = 0; i < trueCount; i++) {
-            if (_active[i]) {
-                _activeReviewers[j] = _reviewers[i];
-                j += 1;
+        generateAssignment(_reviewers, _applications, _applicationsPerReviewer, _numOfReviewersPerApplication);
+
+        for (uint256 i = 0; i < _applications.length; i++) {
+            address[] memory _reviewersForApplication = _map.get(_applications[i]);
+            bool[] memory _active = new bool[](_reviewersForApplication.length);
+            for (uint256 j = 0; j < _reviewersForApplication.length; j++) {
+                _active[j] = true;
             }
+            assignReviewers(_workspaceId, _applications[i], _grantAddress, _reviewersForApplication, _active);
         }
 
-        reviewers[_grantAddress] = _activeReviewers;
+        destroyAssignment(_reviewers, _applications);
 
-        /// @notice Assign reviewers to already existing applications
-        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
-            assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
-        }
+        emit AutoAssignmentEnabled(
+            _workspaceId,
+            _grantAddress,
+            _reviewers,
+            _applications,
+            _numOfReviewersPerApplication,
+            msg.sender,
+            block.timestamp
+        );
     }
 
     /**
@@ -484,7 +560,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _workspaceId Workspace id
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
-     * @param _active Array of boolean values indicating whether the reviewers are active or not
+     * @param _applications Array of application ids
+     * @param _applicationsPerReviewer Array of application ids per reviewer
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
      * @param _rubricMetadataHash IPFS hash of the rubrics metadata
      */
@@ -492,17 +569,20 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active,
+        uint96[] memory _applications,
+        uint96[][] memory _applicationsPerReviewer,
         uint96 _numOfReviewersPerApplication,
         string memory _rubricMetadataHash
     ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSetAndEnableAutoAssign: Unauthorised");
+        require(_reviewers.length == _applicationsPerReviewer.length, "RubricsSetAndEnableAutoAssign: Length mismatch");
         setRubrics(_workspaceId, _grantAddress, _numOfReviewersPerApplication, _rubricMetadataHash);
         enableAutoAssignmentOfReviewers(
             _workspaceId,
             _grantAddress,
             _reviewers,
-            _active,
+            _applications,
+            _applicationsPerReviewer,
             _numOfReviewersPerApplication
         );
     }
