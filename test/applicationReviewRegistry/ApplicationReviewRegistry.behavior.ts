@@ -1,8 +1,16 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
+import { Wallet } from "ethers";
 import { ethers, upgrades } from "hardhat";
 import { ApplicationReviewRegistry } from "../../src/types";
-import { areEqualDistributions, creatingWorkpsace, generateAssignment, randomEthAddress, randomWallet } from "../utils";
+import {
+  areEqualDistributions,
+  creatingWorkpsace,
+  generateAssignment,
+  getAssignment,
+  randomEthAddress,
+  randomWallet,
+} from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
@@ -28,6 +36,61 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
     //       .assignReviewers(0, 0, this.grant.address, [this.signers.nonAdmin.address], [true]),
     //   ).to.be.revertedWith("Unauthorised: Not an admin");
     // });
+
+    it.only("check assignment", async function () {
+      const numOfReviewers = 10;
+      const numOfApplications = 200;
+      const numOfReviewersPerApplication = 5;
+
+      // const numOfReviewers = 3;
+      // const numOfApplications = 10;
+      // const numOfReviewersPerApplication = 2;
+
+      const reviewers: string[] = [];
+      for (let i = 0; i < numOfReviewers; ++i) {
+        const wallet = await randomWallet();
+        reviewers.push(await wallet.getAddress());
+      }
+
+      await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        reviewers,
+        reviewers.map(() => 1),
+        reviewers.map(() => true),
+        reviewers.map(() => ""),
+      );
+
+      const applicants: Wallet[] = [];
+      for (let i = 0; i < numOfApplications; ++i) {
+        const wallet = await randomWallet();
+        applicants.push(wallet);
+      }
+
+      const applications: number[] = [];
+      for (let i = 0; i < numOfApplications; ++i) {
+        await this.applicationRegistry
+          .connect(applicants[i])
+          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+        applications.push(i);
+      }
+
+      console.log(await this.grant.numApplicants());
+
+      const assignment = getAssignment(reviewers, applications, numOfReviewersPerApplication);
+      // console.log(reviewers, applications, assignment)
+
+      await this.applicationReviewRegistry
+        .connect(this.signers.admin)
+        .setRubricsAndEnableAutoAssign(
+          0,
+          this.grant.address,
+          reviewers,
+          applications,
+          assignment,
+          numOfReviewersPerApplication,
+          "",
+        );
+    });
 
     it("admin should be able to assign reviewer", async function () {
       await this.workspaceRegistry

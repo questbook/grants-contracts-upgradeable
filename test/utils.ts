@@ -68,3 +68,33 @@ export function areEqualDistributions(arr1: number[], arr2: number[]) {
   }
   return true;
 }
+
+export function getAssignment(
+  reviewers: string[],
+  applications: number[],
+  numOfReviewerPerApplication: number,
+): number[][] {
+  const total = numOfReviewerPerApplication * applications.length;
+  const distribution = new Array(total).fill(-1);
+  for (let i = 0; i < applications.length; ++i) {
+    let j = 0;
+    for (; j < numOfReviewerPerApplication; ++j) {
+      distribution[i * numOfReviewerPerApplication + j] = applications[i];
+    }
+  }
+
+  // console.log(distribution)
+
+  const result: number[][] = [];
+  for (let i = 0; i < reviewers.length; ++i) result.push([]);
+  let lastIndex = 0;
+  for (let i = 0; i < total; ) {
+    let count = 0;
+    while (count < numOfReviewerPerApplication) {
+      result[lastIndex].push(distribution[i++]);
+      lastIndex = (lastIndex + 1) % reviewers.length;
+      ++count;
+    }
+  }
+  return result;
+}
