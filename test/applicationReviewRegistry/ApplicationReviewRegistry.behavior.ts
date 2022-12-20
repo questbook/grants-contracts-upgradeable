@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
+import { Wallet } from "ethers";
 import { ethers, upgrades } from "hardhat";
 import { ApplicationReviewRegistry } from "../../src/types";
 import { areEqualDistributions, creatingWorkpsace, generateAssignment, randomEthAddress, randomWallet } from "../utils";
@@ -100,6 +101,42 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
   });
 
   describe("Auto assignment of Reviewers", function () {
+    it.only("check assignment", async function () {
+      const numOfReviewers = 10;
+      const numOfApplicants = 300;
+      const numOfReviewersPerApplication = 5;
+
+      const reviewers: Wallet[] = [];
+      for (let i = 0; i < numOfReviewers; ++i) reviewers.push(await randomWallet());
+
+      const applicants: Wallet[] = [];
+      for (let i = 0; i < numOfApplicants; ++i) {
+        applicants.push(await randomWallet());
+      }
+
+      this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
+        0,
+        reviewers.map(r => r.address),
+        Array(numOfReviewers).fill(1),
+        Array(numOfReviewers).fill(true),
+        Array(numOfReviewers).fill(""),
+      );
+
+      for (let i = 0; i < numOfApplicants; ++i) {
+        await this.applicationRegistry
+          .connect(applicants[i])
+          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+      }
+
+      await this.applicationReviewRegistry.connect(this.signers.admin).setRubricsAndEnableAutoAssign(
+        0,
+        this.grant.address,
+        reviewers.map(r => r.address),
+        numOfReviewersPerApplication,
+        "Rubrics IPFS Hash",
+      );
+    });
+
     it("admin should be able to enable auto assigning of reviewers when one application is there", async function () {
       await this.workspaceRegistry.connect(this.signers.admin).updateWorkspaceMembers(
         0,
