@@ -414,9 +414,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         /// @notice Assign reviewers to already existing applications
         uint256 submittedApplicationCount = 0;
         for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
-            // assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
-            if (applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i]))
-                submittedApplicationCount += 1;
+            submittedApplicationCount += applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i])
+                ? 1
+                : 0;
         }
 
         uint96[] memory submittedApplications = new uint96[](submittedApplicationCount);
@@ -431,7 +431,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 lastReviewerIndex = 0;
         address[] memory _reviewersToBeAssigned = new address[](_numOfReviewersPerApplication);
         bool[] memory _active = new bool[](_numOfReviewersPerApplication);
-        for (uint256 i = 0; i < _numOfReviewersPerApplication; ++i) _active[i] = true;
 
         for (uint256 i = 0; i < submittedApplications.length; ++i) {
             for (j = 0; j < _numOfReviewersPerApplication; ++j) {
