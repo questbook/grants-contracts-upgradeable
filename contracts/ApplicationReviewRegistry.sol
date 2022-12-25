@@ -555,46 +555,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     }
 
     /**
-     * @notice resets the rubric data for a set of reviewers of a grant
-     * @notice especially useful if the admin wants to start afresh
-     * @param _workspaceId Workspace id
-     * @param _grantAddress Grant address
-     * @param _reviewers Array of reviewer addresses
-     * @param _applications Array of application ids
-     */
-    function resetAllReviewerData(
-        uint96 _workspaceId,
-        address _grantAddress,
-        address[] memory _reviewers,
-        uint96[] memory _applications
-    ) public onlyWorkspaceAdmin(_workspaceId) {
-        IGrant grantRef = IGrant(_grantAddress);
-        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
-        for (uint256 i = 0; i < _reviewers.length; i++) {
-            require(
-                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]),
-                "AutoAssignReviewers: Unauthorised"
-            );
-            for (uint256 j = 0; j < _applications.length; ++j) {
-                require(
-                    applicationReg.getApplicationWorkspace(_applications[i]) == _workspaceId,
-                    "AutoAssignReviewers: Unauthorised"
-                );
-                delete reviews[_reviewers[i]][_applications[j]];
-            }
-        }
-
-        isAutoAssigningEnabled[_grantAddress] = false;
-        delete reviewers[_grantAddress];
-
-        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
-        grantReviewState.numOfReviewersPerApplication = 0;
-        grantReviewState.numOfReviews = 0;
-
-        emit ReviewerDataReset(_workspaceId, _grantAddress, msg.sender, block.timestamp);
-    }
-
-    /**
      * @notice Submits a review for an application
      * @param _workspaceId Workspace id
      * @param _applicationId Application id
