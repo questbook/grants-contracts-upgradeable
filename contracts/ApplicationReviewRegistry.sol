@@ -459,6 +459,13 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         );
     }
 
+    /**
+     * @notice updates the auto assignment config of reviewers
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     * @param _reviewers Array of reviewer addresses
+     * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
+     */
     function updateAutoAssignmentOfReviewers(
         uint96 _workspaceId,
         address _grantAddress,
@@ -519,6 +526,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         );
     }
 
+    /**
+     * @notice disables auto assignment for a grant
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     */
     function disableAutoAssignment(uint96 _workspaceId, address _grantAddress)
         public
         onlyWorkspaceAdminOrGrantFactory(_workspaceId)
@@ -542,6 +554,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         );
     }
 
+    /**
+     * @notice resets the rubric data for a set of reviewers of a grant
+     * @notice especially useful if the admin wants to start afresh
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     * @param _reviewers Array of reviewer addresses
+     * @param _applications Array of application ids
+     */
     function resetAllReviewerData(
         uint96 _workspaceId,
         address _grantAddress,

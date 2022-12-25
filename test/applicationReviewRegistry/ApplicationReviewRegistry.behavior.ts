@@ -614,7 +614,7 @@ export function shouldBehaveLikeApplicationReviewRegistry(): void {
       expect(distribution).eqls(newDistributionFromContract);
     });
 
-    it.only("should assign updated num of reviewers to new applications", async function () {
+    it("should assign updated num of reviewers to new applications", async function () {
       const reviewerCount = 10;
 
       const reviewers: Wallet[] = [];
