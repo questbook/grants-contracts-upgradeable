@@ -334,6 +334,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress
     ) public override {
+        require(msg.sender == address(applicationReg), "AssignReviewers (Batch): Unauthorised");
         require(
             applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
             "AssignReviewers (Batch): Unauthorized"
@@ -546,7 +547,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _grantAddress,
         address[] memory _reviewers,
         uint96[] memory _applications
-    ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+    ) public onlyWorkspaceAdmin(_workspaceId) {
         IGrant grantRef = IGrant(_grantAddress);
         require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
         for (uint256 i = 0; i < _reviewers.length; i++) {
