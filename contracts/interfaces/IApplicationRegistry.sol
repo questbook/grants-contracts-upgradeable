@@ -10,4 +10,6 @@ interface IApplicationRegistry {
     function getApplicationWorkspace(uint96 _applicationId) external view returns (uint96);
 
     function migrateWallet(address fromWallet, address toWallet) external;
+
+    function isSubmittedApplication(uint96 _applicationId) external view returns (bool);
 }

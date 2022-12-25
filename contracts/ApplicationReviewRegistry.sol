@@ -136,6 +136,18 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 time
     );
 
+    event AutoAssignmentUpdated(
+        uint96 _workspaceId,
+        address _grantAddress,
+        address[] _reviewers,
+        uint96 _numberOfReviewersPerApplication,
+        bool _enabled,
+        address _updatedBy,
+        uint256 time
+    );
+
+    event ReviewerDataReset(uint96 _workspaceId, address _grantAddress, address _resetBy, uint256 time);
+
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
         _;
@@ -296,9 +308,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
             if (_active[i]) {
                 uint96 _assignmentCount = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
-                assert(_assignmentCount + 1 > _assignmentCount);
-                _assignmentCount += 1;
-                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount;
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] = _assignmentCount + 1;
             }
         }
 
@@ -324,6 +334,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress
     ) public override {
+        require(msg.sender == address(applicationReg), "AssignReviewers (Batch): Unauthorised");
         require(
             applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
             "AssignReviewers (Batch): Unauthorized"
@@ -344,8 +355,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         for (uint256 i = 0; i < numOfReviewersPerApplication; i++) {
             _leastBusyReviewers[i] = _reviewers[lastIndex];
             _activeReviewers[i] = true;
-            lastIndex++;
-            if (lastIndex > _reviewers.length - 1) {
+            ++lastIndex;
+            if (lastIndex == _reviewers.length) {
                 lastIndex = 0;
             }
         }
@@ -353,6 +364,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         // Step - 3: Assign the filtered list of reviewers to the application
         assignReviewers(_workspaceId, _applicationId, _grantAddress, _leastBusyReviewers, _activeReviewers);
+
+        emit AutoAssignmentUpdated(
+            _workspaceId,
+            _grantAddress,
+            _reviewers,
+            numOfReviewersPerApplication,
+            isAutoAssigningEnabled[_grantAddress],
+            msg.sender,
+            block.timestamp
+        );
     }
 
     /**
@@ -361,14 +382,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _workspaceId Workspace id
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
-     * @param _active Array of boolean values indicating whether the reviewers are active or not
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
      */
     function enableAutoAssignmentOfReviewers(
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active,
         uint96 _numOfReviewersPerApplication
     ) private onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
@@ -376,35 +395,163 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         IGrant grantRef = IGrant(_grantAddress);
         require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
         require(isAutoAssigningEnabled[_grantAddress] == false, "AutoAssignReviewers: Auto assignment already enabled");
+        require(
+            _reviewers.length >= _numOfReviewersPerApplication,
+            "AutoAssignReviewers: Not enough reviewers selected"
+        );
+        for (uint256 i = 0; i < _reviewers.length; ++i) {
+            require(
+                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]),
+                "AutoAssignReviewers: Not a reviewer"
+            );
+        }
+
         isAutoAssigningEnabled[_grantAddress] = true;
 
-        uint96 trueCount = 0;
-        for (uint256 i = 0; i < _active.length; i++) {
-            if (_active[i]) {
-                assert(trueCount + 1 > trueCount);
-                trueCount += 1;
+        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
+        reviewers[_grantAddress] = _reviewers;
+
+        /// @notice Assign reviewers to already existing applications
+        uint256 submittedApplicationCount = 0;
+        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
+            submittedApplicationCount += applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i])
+                ? 1
+                : 0;
+        }
+
+        uint96[] memory submittedApplications = new uint96[](submittedApplicationCount);
+        uint256 j = 0;
+        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
+            // assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
+            if (applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i])) {
+                submittedApplications[j] = applicationsToGrant[_grantAddress][i];
             }
         }
-        require(trueCount >= _numOfReviewersPerApplication, "AutoAssignReviewers: Not enough reviewers selected");
+
+        uint256 lastReviewerIndex = 0;
+        address[] memory _reviewersToBeAssigned = new address[](_numOfReviewersPerApplication);
+        bool[] memory _active = new bool[](_numOfReviewersPerApplication);
+
+        for (uint256 i = 0; i < submittedApplications.length; ++i) {
+            for (j = 0; j < _numOfReviewersPerApplication; ++j) {
+                _reviewersToBeAssigned[j] = _reviewers[lastReviewerIndex];
+                _active[j] = true;
+                ++lastReviewerIndex;
+                if (lastReviewerIndex == _reviewers.length) {
+                    lastReviewerIndex = 0;
+                }
+            }
+
+            assignReviewers(_workspaceId, submittedApplications[i], _grantAddress, _reviewersToBeAssigned, _active);
+        }
+
+        lastAssignedReviewerIndices[_grantAddress] = lastReviewerIndex;
+
+        emit AutoAssignmentUpdated(
+            _workspaceId,
+            _grantAddress,
+            _reviewers,
+            _numOfReviewersPerApplication,
+            true,
+            msg.sender,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice updates the auto assignment config of reviewers
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     * @param _reviewers Array of reviewer addresses
+     * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
+     */
+    function updateAutoAssignmentOfReviewers(
+        uint96 _workspaceId,
+        address _grantAddress,
+        address[] memory _reviewers,
+        uint96 _numOfReviewersPerApplication
+    ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+        require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
+
+        IGrant grantRef = IGrant(_grantAddress);
+        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
+        require(isAutoAssigningEnabled[_grantAddress], "AutoAssignReviewers: Auto assignment not enabled");
+        require(
+            _reviewers.length >= _numOfReviewersPerApplication,
+            "AutoAssignReviewers: Not enough reviewers selected"
+        );
+
+        for (uint256 k = 0; k < _reviewers.length; ++k) {
+            require(
+                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]),
+                "AutoAssignReviewers: Not a reviewer"
+            );
+        }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
         grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
 
-        address[] memory _activeReviewers = new address[](trueCount);
-        uint256 j = 0;
-        for (uint256 i = 0; i < trueCount; i++) {
-            if (_active[i]) {
-                _activeReviewers[j] = _reviewers[i];
-                j += 1;
+        uint256[] memory counts = new uint256[](_reviewers.length);
+        for (uint256 k = 0; k < _reviewers.length; ++k)
+            counts[k] = reviewerAssignmentCounts[_grantAddress][_reviewers[k]];
+
+        uint256 i = 1;
+        while (i < _reviewers.length) {
+            uint256 x = counts[i];
+            address y = _reviewers[i];
+            uint256 j = i - 1;
+            while (j >= 0 && counts[j] > x) {
+                counts[j + 1] = counts[j];
+                _reviewers[j + 1] = _reviewers[j];
+                --j;
             }
+
+            counts[j + 1] = x;
+            _reviewers[j + 1] = y;
+            ++i;
         }
 
-        reviewers[_grantAddress] = _activeReviewers;
+        reviewers[_grantAddress] = _reviewers;
+        lastAssignedReviewerIndices[_grantAddress] = 0;
 
-        /// @notice Assign reviewers to already existing applications
-        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
-            assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
-        }
+        emit AutoAssignmentUpdated(
+            _workspaceId,
+            _grantAddress,
+            _reviewers,
+            _numOfReviewersPerApplication,
+            true,
+            msg.sender,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice disables auto assignment for a grant
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     */
+    function disableAutoAssignment(uint96 _workspaceId, address _grantAddress)
+        public
+        onlyWorkspaceAdminOrGrantFactory(_workspaceId)
+    {
+        IGrant grantRef = IGrant(_grantAddress);
+        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
+        require(isAutoAssigningEnabled[_grantAddress], "AutoAssignReviewers: Auto assignment not enabled");
+
+        isAutoAssigningEnabled[_grantAddress] = false;
+
+        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+
+        emit AutoAssignmentUpdated(
+            _workspaceId,
+            _grantAddress,
+            reviewers[_grantAddress],
+            grantReviewState.numOfReviewersPerApplication,
+            false,
+            msg.sender,
+            block.timestamp
+        );
     }
 
     /**
@@ -484,7 +631,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _workspaceId Workspace id
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
-     * @param _active Array of boolean values indicating whether the reviewers are active or not
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
      * @param _rubricMetadataHash IPFS hash of the rubrics metadata
      */
@@ -492,19 +638,12 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
-        bool[] memory _active,
         uint96 _numOfReviewersPerApplication,
         string memory _rubricMetadataHash
     ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSetAndEnableAutoAssign: Unauthorised");
         setRubrics(_workspaceId, _grantAddress, _numOfReviewersPerApplication, _rubricMetadataHash);
-        enableAutoAssignmentOfReviewers(
-            _workspaceId,
-            _grantAddress,
-            _reviewers,
-            _active,
-            _numOfReviewersPerApplication
-        );
+        enableAutoAssignmentOfReviewers(_workspaceId, _grantAddress, _reviewers, _numOfReviewersPerApplication);
     }
 
     /**

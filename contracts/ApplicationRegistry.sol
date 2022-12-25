@@ -404,4 +404,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         Application memory application = applications[_applicationId];
         return application.workspaceId;
     }
+
+    function isSubmittedApplication(uint96 _applicationId) external view override returns (bool) {
+        Application memory application = applications[_applicationId];
+        return application.state == ApplicationState.Submitted;
+    }
 }
