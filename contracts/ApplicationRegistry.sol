@@ -405,6 +405,21 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         return application.workspaceId;
     }
 
+    /**
+     * @notice returns application grant
+     * @param _applicationId applicationId for which grant is required
+     * @return address of application's grant
+     */
+    function getApplicationGrant(uint96 _applicationId) external view override returns (address) {
+        Application memory application = applications[_applicationId];
+        return application.grant;
+    }
+
+    /**
+     * @notice returns true if the application is in submitted state
+     * @param _applicationId applicationId whose state needs to be checked
+     * @return boolean value indicating if application is in submitted state
+     */
     function isSubmittedApplication(uint96 _applicationId) external view override returns (bool) {
         Application memory application = applications[_applicationId];
         return application.state == ApplicationState.Submitted;

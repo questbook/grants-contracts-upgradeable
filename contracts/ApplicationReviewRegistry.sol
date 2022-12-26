@@ -169,6 +169,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         _;
     }
 
+    modifier onlyWorkspaceAdminOrApplicationRegistry(uint96 _workspaceId) {
+        require(
+            workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender) || msg.sender == address(applicationReg),
+            "Unauthorised: Not an admin nor application registry"
+        );
+        _;
+    }
+
     /**
      * @notice Calls initialize on the base contracts
      *
@@ -272,7 +280,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _grantAddress,
         address[] memory _reviewers,
         bool[] memory _active
-    ) public {
+    ) public onlyWorkspaceAdminOrApplicationRegistry(_workspaceId) {
         require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
         require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
@@ -324,6 +332,31 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     }
 
     /**
+     * @notice assigns/unassign reviewers to a bunch of applications
+     * @param _workspaceId Workspace id
+     * @param _applicationIds Application ids
+     * @param _reviewers Array of array of reviewer addresses
+     * @param _actives Array of array boolean values indicating whether the reviewers are active or not
+     */
+    function assignReviewersBatch(
+        uint96 _workspaceId,
+        uint96[] memory _applicationIds,
+        address[][] memory _reviewers,
+        bool[][] memory _actives
+    ) public onlyWorkspaceAdmin(_workspaceId) {
+        require(_applicationIds.length == _reviewers.length, "AssignReviewer (Batch): Parameters length mismatch");
+        require(_applicationIds.length == _actives.length, "AssignReviewer (Batch): Parameters length mismatch");
+
+        for (uint256 i = 0; i < _applicationIds.length; i++) {
+            address _grantAddress = applicationReg.getApplicationGrant(_applicationIds[i]);
+            require(_grantAddress != address(0), "AssignReviewer (Batch): Grant address is zero address");
+            IGrant grantRef = IGrant(_grantAddress);
+            require(grantRef.workspaceId() == _workspaceId, "AssignReviewer (Batch): Unauthorised");
+            assignReviewers(_workspaceId, _applicationIds[i], _grantAddress, _reviewers[i], _actives[i]);
+        }
+    }
+
+    /**
      * @notice assigns reviewers in case of auto assign
      * @param _workspaceId Workspace id
      * @param _applicationId Application id
@@ -333,8 +366,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress
-    ) public override {
-        require(msg.sender == address(applicationReg), "AssignReviewers (Batch): Unauthorised");
+    ) public override onlyWorkspaceAdminOrApplicationRegistry(_workspaceId) {
+        // require(msg.sender == address(applicationReg), "AssignReviewers (Batch): Unauthorised");
         require(
             applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
             "AssignReviewers (Batch): Unauthorized"
@@ -465,12 +498,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _grantAddress Grant address
      * @param _reviewers Array of reviewer addresses
      * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
+     * @param _isMock If this is true, the contract just emits the already present values
      */
     function updateAutoAssignmentOfReviewers(
         uint96 _workspaceId,
         address _grantAddress,
         address[] memory _reviewers,
-        uint96 _numOfReviewersPerApplication
+        uint96 _numOfReviewersPerApplication,
+        bool _isMock
     ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
 
@@ -490,6 +525,20 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+        if (_isMock) {
+            emit AutoAssignmentUpdated(
+                _workspaceId,
+                _grantAddress,
+                reviewers[_grantAddress],
+                grantReviewState.numOfReviewersPerApplication,
+                true,
+                msg.sender,
+                block.timestamp
+            );
+
+            return;
+        }
+
         grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
 
         uint256[] memory counts = new uint256[](_reviewers.length);
