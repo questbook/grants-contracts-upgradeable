@@ -10,7 +10,6 @@ import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
-import "hardhat/console.sol";
 
 contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationReviewRegistry {
     struct Review {
@@ -281,17 +280,18 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address[] memory _reviewers,
         bool[] memory _active
     ) public onlyWorkspaceAdminOrApplicationRegistry(_workspaceId) {
-        require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "AssignReviewer: Unauthorized");
-        require(_reviewers.length == _active.length, "AssignReviewer: Parameters length mismatch");
+        require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "Unauthorized");
+        require(_reviewers.length == _active.length, "Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
 
         for (uint256 i = 0; i < _reviewers.length; i++) {
-            require(_reviewers[i] != address(0), "AssignReviewer: Reviewer is zero address");
+            require(_reviewers[i] != address(0), "Reviewer is zero address");
+            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]), "Not a reviewer");
 
             Review memory review = reviews[_reviewers[i]][_applicationId];
 
             if (_hasSubmittedReview(review.metadataHash) && !_active[i]) {
-                revert("AssignReviewer: Review already submitted");
+                revert("Review already submitted");
             }
 
             uint96 _id;
@@ -340,18 +340,20 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      */
     function assignReviewersBatch(
         uint96 _workspaceId,
+        address _grantAddress,
         uint96[] memory _applicationIds,
         address[][] memory _reviewers,
         bool[][] memory _actives
     ) public onlyWorkspaceAdmin(_workspaceId) {
-        require(_applicationIds.length == _reviewers.length, "AssignReviewer (Batch): Parameters length mismatch");
-        require(_applicationIds.length == _actives.length, "AssignReviewer (Batch): Parameters length mismatch");
+        require(
+            _applicationIds.length == _reviewers.length && _applicationIds.length == _actives.length,
+            "Parameters length mismatch"
+        );
+
+        IGrant grantRef = IGrant(_grantAddress);
+        require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
 
         for (uint256 i = 0; i < _applicationIds.length; i++) {
-            address _grantAddress = applicationReg.getApplicationGrant(_applicationIds[i]);
-            require(_grantAddress != address(0), "AssignReviewer (Batch): Grant address is zero address");
-            IGrant grantRef = IGrant(_grantAddress);
-            require(grantRef.workspaceId() == _workspaceId, "AssignReviewer (Batch): Unauthorised");
             assignReviewers(_workspaceId, _applicationIds[i], _grantAddress, _reviewers[i], _actives[i]);
         }
     }
@@ -367,19 +369,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _applicationId,
         address _grantAddress
     ) public override onlyWorkspaceAdminOrApplicationRegistry(_workspaceId) {
-        // require(msg.sender == address(applicationReg), "AssignReviewers (Batch): Unauthorised");
-        require(
-            applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId,
-            "AssignReviewers (Batch): Unauthorized"
-        );
-        require(_grantAddress != address(0), "AssignReviewers (Batch): Grant address is zero address");
+        require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "Unauthorized");
+        require(_grantAddress != address(0), "Grant address is zero address");
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
         address[] memory _reviewers = reviewers[_grantAddress];
 
         // Step - 1: Get the number of reviewers that need to be there per application
         uint96 numOfReviewersPerApplication = grantReviewState.numOfReviewersPerApplication;
-        require(numOfReviewersPerApplication > 0, "AssignReviewers (Batch): Cannot assign reviewers");
-        require(_reviewers.length > 0, "AssignReviewers (Batch): No reviewers assigned");
+        require(numOfReviewersPerApplication > 0, "Cannot assign reviewers");
+        require(_reviewers.length > 0, "No reviewers assigned");
 
         // Step - 2: Get the index of the last assigned reviewer
         address[] memory _leastBusyReviewers = new address[](numOfReviewersPerApplication);
@@ -423,20 +421,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address[] memory _reviewers,
         uint96 _numOfReviewersPerApplication
     ) private onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
-        require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
+        require(_numOfReviewersPerApplication > 0, "Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
-        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
-        require(isAutoAssigningEnabled[_grantAddress] == false, "AutoAssignReviewers: Auto assignment already enabled");
-        require(
-            _reviewers.length >= _numOfReviewersPerApplication,
-            "AutoAssignReviewers: Not enough reviewers selected"
-        );
+        require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
+        require(isAutoAssigningEnabled[_grantAddress] == false, "Auto assignment already enabled");
+        require(_reviewers.length >= _numOfReviewersPerApplication, "Not enough reviewers selected");
         for (uint256 i = 0; i < _reviewers.length; ++i) {
-            require(
-                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]),
-                "AutoAssignReviewers: Not a reviewer"
-            );
+            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]), "Not a reviewer");
         }
 
         isAutoAssigningEnabled[_grantAddress] = true;
@@ -507,21 +499,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _numOfReviewersPerApplication,
         bool _isMock
     ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
-        require(_numOfReviewersPerApplication > 0, "AutoAssignReviewers: Reviewers per application must be positive");
+        require(_numOfReviewersPerApplication > 0, "Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
-        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
-        require(isAutoAssigningEnabled[_grantAddress], "AutoAssignReviewers: Auto assignment not enabled");
-        require(
-            _reviewers.length >= _numOfReviewersPerApplication,
-            "AutoAssignReviewers: Not enough reviewers selected"
-        );
+        require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
+        require(isAutoAssigningEnabled[_grantAddress], "Auto assignment not enabled");
+        require(_reviewers.length >= _numOfReviewersPerApplication, "Not enough reviewers selected");
 
         for (uint256 k = 0; k < _reviewers.length; ++k) {
-            require(
-                workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]),
-                "AutoAssignReviewers: Not a reviewer"
-            );
+            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]), "Not a reviewer");
         }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
@@ -585,8 +571,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         onlyWorkspaceAdminOrGrantFactory(_workspaceId)
     {
         IGrant grantRef = IGrant(_grantAddress);
-        require(grantRef.workspaceId() == _workspaceId, "AutoAssignReviewers: Unauthorised");
-        require(isAutoAssigningEnabled[_grantAddress], "AutoAssignReviewers: Auto assignment not enabled");
+        require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
+        require(isAutoAssigningEnabled[_grantAddress], "Auto assignment not enabled");
 
         isAutoAssigningEnabled[_grantAddress] = false;
 
@@ -620,8 +606,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         Review storage review = reviews[msg.sender][_applicationId];
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
-        require(review.workspaceId == _workspaceId, "ReviewSubmit: Unauthorised");
-        require(review.active, "ReviewSubmit: Revoked access");
+        require(review.workspaceId == _workspaceId, "Unauthorised");
+        require(review.active, "Revoked access");
 
         if (!_hasSubmittedReview(review.metadataHash)) {
             grantReviewState.numOfReviews += 1;
@@ -654,8 +640,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     ) public override onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
-        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSet: Unauthorised");
-        require(grantReviewState.numOfReviews == 0, "RubricsSet: Reviews non-zero");
+        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "Unauthorised");
+        require(grantReviewState.numOfReviews == 0, "Reviews non-zero");
 
         grantReviewState.rubricsMetadataHash = _metadataHash;
         grantReviewState.workspaceId = _workspaceId;
@@ -690,7 +676,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 _numOfReviewersPerApplication,
         string memory _rubricMetadataHash
     ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
-        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "RubricsSetAndEnableAutoAssign: Unauthorised");
+        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "Unauthorised");
         setRubrics(_workspaceId, _grantAddress, _numOfReviewersPerApplication, _rubricMetadataHash);
         enableAutoAssignmentOfReviewers(_workspaceId, _grantAddress, _reviewers, _numOfReviewersPerApplication);
     }
@@ -714,11 +700,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 _amount,
         string memory _transactionHash
     ) public onlyWorkspaceAdmin(_workspaceId) {
-        require(_reviewIds.length == _applicationIds.length, "ChangePaymentStatus: Parameters length mismatch");
+        require(_reviewIds.length == _applicationIds.length, "Parameters length mismatch");
 
         for (uint256 i = 0; i < _reviewIds.length; i++) {
             Review memory review = reviews[_reviewer][_applicationIds[i]];
-            require(review.workspaceId == _workspaceId, "ChangePaymentStatus: Unauthorised");
+            require(review.workspaceId == _workspaceId, "Unauthorised");
             reviewPaymentsStatus[_reviewIds[i]] = true;
         }
         emit ReviewPaymentMarkedDone(
