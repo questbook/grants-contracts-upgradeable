@@ -132,6 +132,20 @@ contract WorkspaceRegistry is
         uint256 time
     );
 
+    /// @notice Emitted when payout is initiated through wallet
+    event DisburseRewardFromWallet(
+        uint96[] applicationIds,
+        uint96[] milestoneIds,
+        address asset,
+        string tokenName,
+        string nonEvmAssetAddress,
+        string transactionHash,
+        address sender,
+        uint256[] amounts,
+        bool isP2P,
+        uint256 time
+    );
+
     event WorkspaceMemberMigrate(uint96 workspaceId, address from, address to, uint256 time);
 
     /// @notice Emitted when some daos' visibility is updated by a QB admin
@@ -561,6 +575,46 @@ contract WorkspaceRegistry is
         );
         require(_applicationIds.length == _amounts.length, "Error: applicationIds and amounts length mismatch");
         emit DisburseRewardFromSafe(
+            _applicationIds,
+            _milestoneIds,
+            address(_erc20Interface),
+            _tokenName,
+            nonEvmAssetAddress,
+            transactionHash,
+            msg.sender,
+            _amounts,
+            true,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Emits event when funds disbursed through the external wallet
+     * @param _applicationIds[] application id for which the funds are disbursed
+     * @param _milestoneIds[] milestone id for which the funds are disbursed
+     * @param _erc20Interface interface for erc20 asset using which rewards are disbursed
+     * @param _tokenName array of names of token
+     * @param nonEvmAssetAddress address of non-EVM asset that was disbusrsed
+     * @param _amounts[] amount disbursed
+     * @param _workspaceId workspace that the application belongs to
+     * @param transactionHash wallet transaction hash
+     */
+    function disburseRewardFromWallet(
+        uint96[] memory _applicationIds,
+        uint96[] memory _milestoneIds,
+        IERC20 _erc20Interface,
+        string memory _tokenName,
+        string memory nonEvmAssetAddress,
+        uint256[] memory _amounts,
+        uint96 _workspaceId,
+        string memory transactionHash
+    ) external onlyWorkspaceAdmin(_workspaceId) {
+        require(
+            _applicationIds.length == _milestoneIds.length,
+            "Error: applicationIds and milestoneIds length mismatch"
+        );
+        require(_applicationIds.length == _amounts.length, "Error: applicationIds and amounts length mismatch");
+        emit DisburseRewardFromWallet(
             _applicationIds,
             _milestoneIds,
             address(_erc20Interface),
