@@ -420,7 +420,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _grantAddress,
         address[] memory _reviewers,
         uint96 _numOfReviewersPerApplication
-    ) private onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
+    ) public onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
         require(_numOfReviewersPerApplication > 0, "Reviewers per application must be positive");
 
         IGrant grantRef = IGrant(_grantAddress);
@@ -659,26 +659,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         } else {
             emit RubricsSet(_workspaceId, _grantAddress, _metadataHash, block.timestamp);
         }
-    }
-
-    /**
-     * @notice Sets the rubrics metadata hash for a grant, and enables auto assigning of reviewers at one go
-     * @param _workspaceId Workspace id
-     * @param _grantAddress Grant address
-     * @param _reviewers Array of reviewer addresses
-     * @param _numOfReviewersPerApplication Number of reviewers per application when auto assigning
-     * @param _rubricMetadataHash IPFS hash of the rubrics metadata
-     */
-    function setRubricsAndEnableAutoAssign(
-        uint96 _workspaceId,
-        address _grantAddress,
-        address[] memory _reviewers,
-        uint96 _numOfReviewersPerApplication,
-        string memory _rubricMetadataHash
-    ) external onlyWorkspaceAdminOrGrantFactory(_workspaceId) {
-        require(IGrant(_grantAddress).workspaceId() == _workspaceId, "Unauthorised");
-        setRubrics(_workspaceId, _grantAddress, _numOfReviewersPerApplication, _rubricMetadataHash);
-        enableAutoAssignmentOfReviewers(_workspaceId, _grantAddress, _reviewers, _numOfReviewersPerApplication);
     }
 
     /**
