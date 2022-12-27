@@ -641,7 +641,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
 
         require(IGrant(_grantAddress).workspaceId() == _workspaceId, "Unauthorised");
-        require(grantReviewState.numOfReviews == 0, "Reviews non-zero");
+        // require(grantReviewState.numOfReviews == 0, "Reviews non-zero");
 
         grantReviewState.rubricsMetadataHash = _metadataHash;
         grantReviewState.workspaceId = _workspaceId;
