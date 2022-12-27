@@ -9,6 +9,9 @@ interface IApplicationRegistry {
     /// @notice returns application workspace id
     function getApplicationWorkspace(uint96 _applicationId) external view returns (uint96);
 
+    /// @notice returns application grant
+    function getApplicationGrant(uint96 _applicationId) external view returns (address);
+
     function migrateWallet(address fromWallet, address toWallet) external;
 
     function isSubmittedApplication(uint96 _applicationId) external view returns (bool);
