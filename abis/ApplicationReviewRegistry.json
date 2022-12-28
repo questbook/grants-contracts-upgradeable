@@ -582,6 +582,34 @@
         "type": "uint96"
       },
       {
+        "internalType": "address",
+        "name": "_grantAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_reviewers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint96",
+        "name": "_numOfReviewersPerApplication",
+        "type": "uint96"
+      }
+    ],
+    "name": "enableAutoAssignmentOfReviewers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_workspaceId",
+        "type": "uint96"
+      },
+      {
         "internalType": "uint96[]",
         "name": "_applicationIds",
         "type": "uint96[]"
@@ -1011,39 +1039,6 @@
       }
     ],
     "name": "setRubrics",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint96",
-        "name": "_workspaceId",
-        "type": "uint96"
-      },
-      {
-        "internalType": "address",
-        "name": "_grantAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address[]",
-        "name": "_reviewers",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint96",
-        "name": "_numOfReviewersPerApplication",
-        "type": "uint96"
-      },
-      {
-        "internalType": "string",
-        "name": "_rubricMetadataHash",
-        "type": "string"
-      }
-    ],
-    "name": "setRubricsAndEnableAutoAssign",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
