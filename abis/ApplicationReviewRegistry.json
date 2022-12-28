@@ -541,39 +541,6 @@
         "type": "uint96"
       },
       {
-        "internalType": "address",
-        "name": "_grantAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint96[]",
-        "name": "_applicationIds",
-        "type": "uint96[]"
-      },
-      {
-        "internalType": "address[][]",
-        "name": "_reviewers",
-        "type": "address[][]"
-      },
-      {
-        "internalType": "bool[][]",
-        "name": "_actives",
-        "type": "bool[][]"
-      }
-    ],
-    "name": "assignReviewersBatch",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint96",
-        "name": "_workspaceId",
-        "type": "uint96"
-      },
-      {
         "internalType": "uint96",
         "name": "_applicationId",
         "type": "uint96"
