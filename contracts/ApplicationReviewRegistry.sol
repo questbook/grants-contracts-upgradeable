@@ -10,6 +10,7 @@ import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
 import "./interfaces/IGrantFactory.sol";
 import "./interfaces/IGrant.sol";
+import "hardhat/console.sol";
 
 contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, IApplicationReviewRegistry {
     struct Review {
@@ -70,6 +71,9 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
     /// @notice mapping from grant address to index of the last reviewer assigned
     mapping(address => uint256) public lastAssignedReviewerIndices;
+
+    /// @notice mapping from grant address to index of the last application assigned
+    mapping(address => uint256) public lastAssignedApplicationIndices;
 
     // --- Events ---
     /// @notice Emitted when reviewers are assigned
@@ -365,6 +369,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
             }
         }
         lastAssignedReviewerIndices[_grantAddress] = lastIndex;
+        lastAssignedApplicationIndices[_grantAddress] = lastAssignedApplicationIndices[_grantAddress] + 1;
 
         // Step - 3: Assign the filtered list of reviewers to the application
         assignReviewers(_workspaceId, _applicationId, _grantAddress, _leastBusyReviewers, _activeReviewers);
@@ -400,8 +405,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
         require(isAutoAssigningEnabled[_grantAddress] == false, "Auto assignment already enabled");
         require(_reviewers.length >= _numOfReviewersPerApplication, "Not enough reviewers selected");
-        for (uint256 i = 0; i < _reviewers.length; ++i) {
-            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]), "Not a reviewer");
+        for (uint256 k = 0; k < _reviewers.length; ++k) {
+            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]), "Not a reviewer");
         }
 
         isAutoAssigningEnabled[_grantAddress] = true;
@@ -412,7 +417,8 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         /// @notice Assign reviewers to already existing applications
         uint256 submittedApplicationCount = 0;
-        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
+        uint256 i = lastAssignedApplicationIndices[_grantAddress];
+        for (; i < applicationsToGrant[_grantAddress].length; i++) {
             submittedApplicationCount += applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i])
                 ? 1
                 : 0;
@@ -420,18 +426,20 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         uint96[] memory submittedApplications = new uint96[](submittedApplicationCount);
         uint256 j = 0;
-        for (uint96 i = 0; i < applicationsToGrant[_grantAddress].length; i++) {
+        for (i = lastAssignedApplicationIndices[_grantAddress]; i < applicationsToGrant[_grantAddress].length; i++) {
             // assignReviewersRoundRobin(_workspaceId, applicationsToGrant[_grantAddress][i], _grantAddress);
             if (applicationReg.isSubmittedApplication(applicationsToGrant[_grantAddress][i])) {
                 submittedApplications[j] = applicationsToGrant[_grantAddress][i];
             }
         }
 
+        lastAssignedApplicationIndices[_grantAddress] = i;
+
         uint256 lastReviewerIndex = 0;
         address[] memory _reviewersToBeAssigned = new address[](_numOfReviewersPerApplication);
         bool[] memory _active = new bool[](_numOfReviewersPerApplication);
 
-        for (uint256 i = 0; i < submittedApplications.length; ++i) {
+        for (i = 0; i < submittedApplications.length; ++i) {
             for (j = 0; j < _numOfReviewersPerApplication; ++j) {
                 _reviewersToBeAssigned[j] = _reviewers[lastReviewerIndex];
                 _active[j] = true;
@@ -479,8 +487,16 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(isAutoAssigningEnabled[_grantAddress], "Auto assignment not enabled");
         require(_reviewers.length >= _numOfReviewersPerApplication, "Not enough reviewers selected");
 
-        for (uint256 k = 0; k < _reviewers.length; ++k) {
-            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]), "Not a reviewer");
+        uint256 count = reviewerAssignmentCounts[_grantAddress][_reviewers[0]];
+        for (uint256 i = 0; i < _reviewers.length; ++i) {
+            require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]), "Not a reviewer");
+            if (i > 0) {
+                require(
+                    reviewerAssignmentCounts[_grantAddress][_reviewers[i]] >= count,
+                    "Reviewer assignment count not sorted"
+                );
+                count = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
+            }
         }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
@@ -499,26 +515,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         }
 
         grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
-
-        uint256[] memory counts = new uint256[](_reviewers.length);
-        for (uint256 k = 0; k < _reviewers.length; ++k)
-            counts[k] = reviewerAssignmentCounts[_grantAddress][_reviewers[k]];
-
-        uint256 i = 1;
-        while (i < _reviewers.length) {
-            uint256 x = counts[i];
-            address y = _reviewers[i];
-            uint256 j = i - 1;
-            while (j >= 0 && counts[j] > x) {
-                counts[j + 1] = counts[j];
-                _reviewers[j + 1] = _reviewers[j];
-                --j;
-            }
-
-            counts[j + 1] = x;
-            _reviewers[j + 1] = y;
-            ++i;
-        }
 
         reviewers[_grantAddress] = _reviewers;
         lastAssignedReviewerIndices[_grantAddress] = 0;
