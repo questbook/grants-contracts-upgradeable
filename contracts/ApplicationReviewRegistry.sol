@@ -405,8 +405,15 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(grantRef.workspaceId() == _workspaceId, "Unauthorised");
         require(isAutoAssigningEnabled[_grantAddress] == false, "Auto assignment already enabled");
         require(_reviewers.length >= _numOfReviewersPerApplication, "Not enough reviewers selected");
+
+        uint256 count = reviewerAssignmentCounts[_grantAddress][_reviewers[0]];
         for (uint256 k = 0; k < _reviewers.length; ++k) {
             require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]), "Not a reviewer");
+            require(
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] >= count,
+                "Reviewer assignment count not sorted"
+            );
+            count = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
         }
 
         isAutoAssigningEnabled[_grantAddress] = true;
@@ -490,13 +497,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 count = reviewerAssignmentCounts[_grantAddress][_reviewers[0]];
         for (uint256 i = 0; i < _reviewers.length; ++i) {
             require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[i]), "Not a reviewer");
-            if (i > 0) {
-                require(
-                    reviewerAssignmentCounts[_grantAddress][_reviewers[i]] >= count,
-                    "Reviewer assignment count not sorted"
-                );
-                count = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
-            }
+            require(
+                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] >= count,
+                "Reviewer assignment count not sorted"
+            );
+            count = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
         }
 
         GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
