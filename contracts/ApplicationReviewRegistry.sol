@@ -410,17 +410,20 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         for (uint256 k = 0; k < _reviewers.length; ++k) {
             require(workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, _reviewers[k]), "Not a reviewer");
             require(
-                reviewerAssignmentCounts[_grantAddress][_reviewers[i]] >= count,
+                reviewerAssignmentCounts[_grantAddress][_reviewers[k]] >= count,
                 "Reviewer assignment count not sorted"
             );
-            count = reviewerAssignmentCounts[_grantAddress][_reviewers[i]];
+            count = reviewerAssignmentCounts[_grantAddress][_reviewers[k]];
         }
 
         isAutoAssigningEnabled[_grantAddress] = true;
 
-        GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
-        grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
-        reviewers[_grantAddress] = _reviewers;
+        // DO NOT REMOVE THIS BLOCK SCOPE - EVER!
+        {
+            GrantReviewState storage grantReviewState = grantReviewStates[_grantAddress];
+            grantReviewState.numOfReviewersPerApplication = _numOfReviewersPerApplication;
+            reviewers[_grantAddress] = _reviewers;
+        }
 
         /// @notice Assign reviewers to already existing applications
         uint256 submittedApplicationCount = 0;
@@ -445,7 +448,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 lastReviewerIndex = 0;
         address[] memory _reviewersToBeAssigned = new address[](_numOfReviewersPerApplication);
         bool[] memory _active = new bool[](_numOfReviewersPerApplication);
-
         for (i = 0; i < submittedApplications.length; ++i) {
             for (j = 0; j < _numOfReviewersPerApplication; ++j) {
                 _reviewersToBeAssigned[j] = _reviewers[lastReviewerIndex];
