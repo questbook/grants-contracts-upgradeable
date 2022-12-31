@@ -58,6 +58,7 @@ const CONTRACT_MAP: { [_: string]: string } = {
   grantFactory: "GrantFactory",
   reviews: "ApplicationReviewRegistry",
   applications: "ApplicationRegistry",
+  communication: "Communication",
 };
 
 const execPromise = promisify(exec);
