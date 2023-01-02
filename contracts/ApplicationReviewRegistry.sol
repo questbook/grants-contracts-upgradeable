@@ -637,6 +637,14 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         }
     }
 
+    // TODO: Implement this function
+    /**
+     * @notice Resets the rubric for a grant, only callable by Admin of the workspace
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     */
+    function resetAllRubrics(uint96 _workspaceId, address _grantAddress) public onlyWorkspaceAdmin(_workspaceId) {}
+
     /**
      * @notice Mark payment as done of a review, only callable by Admin of the workspace
      * @param _workspaceId Workspace id
