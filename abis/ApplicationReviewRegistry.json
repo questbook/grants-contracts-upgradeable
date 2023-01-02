@@ -875,6 +875,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_workspaceId",
+        "type": "uint96"
+      },
+      {
+        "internalType": "address",
+        "name": "_grantAddress",
+        "type": "address"
+      }
+    ],
+    "name": "resetAllRubrics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "reviewCount",
     "outputs": [
