@@ -126,6 +126,11 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         bool _isPrivate,
         string memory _commentMetadataHash
     ) public {
+        uint96 applicationId = _applicationIds[0];
+        for (uint256 i = 1; i < _applicationIds.length; i++) {
+            require(_applicationIds[i] > applicationId, "Application IDs must be in ascending order");
+        }
+
         for (uint256 i = 0; i < _applicationIds.length; i++) {
             addComment(_workspaceId, _grantAddress, _applicationIds[i], _isPrivate, _commentMetadataHash);
         }

@@ -353,6 +353,11 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         require(_applicationIds.length == _reviewers.length, "Parameters length mismatch");
         require(_reviewers.length == _active.length, "Parameters length mismatch");
 
+        uint96 applicationId = _applicationIds[0];
+        for (uint256 i = 1; i < _applicationIds.length; i++) {
+            require(_applicationIds[i] > applicationId, "Application IDs must be in ascending order");
+        }
+
         for (uint256 i = 0; i < _applicationIds.length; i++) {
             require(applicationReg.getApplicationWorkspace(_applicationIds[i]) == _workspaceId, "Unauthorized");
             assignReviewers(_workspaceId, _applicationIds[i], _grantAddress, _reviewers, _active);
