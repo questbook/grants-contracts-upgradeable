@@ -336,6 +336,30 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     }
 
     /**
+     * @notice assigns/unassign the same list of reviewers to a set of applications
+     * @param _workspaceId Workspace id
+     * @param _grantAddress Grant address
+     * @param _applicationIds Application ids
+     * @param _reviewers Array of reviewer addresses
+     * @param _active Array of boolean values indicating whether the reviewers are active or not
+     */
+    function assignReviewersBatch(
+        uint96 _workspaceId,
+        address _grantAddress,
+        uint96[] memory _applicationIds,
+        address[] memory _reviewers,
+        bool[] memory _active
+    ) public onlyWorkspaceAdmin(_workspaceId) {
+        require(_applicationIds.length == _reviewers.length, "Parameters length mismatch");
+        require(_reviewers.length == _active.length, "Parameters length mismatch");
+
+        for (uint256 i = 0; i < _applicationIds.length; i++) {
+            require(applicationReg.getApplicationWorkspace(_applicationIds[i]) == _workspaceId, "Unauthorized");
+            assignReviewers(_workspaceId, _applicationIds[i], _grantAddress, _reviewers, _active);
+        }
+    }
+
+    /**
      * @notice assigns reviewers in case of auto assign
      * @param _workspaceId Workspace id
      * @param _applicationId Application id
