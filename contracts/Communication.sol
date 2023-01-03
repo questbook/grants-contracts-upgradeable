@@ -88,7 +88,7 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint96 _applicationId,
         bool _isPrivate,
         string memory _commentMetadataHash
-    ) external {
+    ) public {
         if (_isPrivate) {
             require(
                 workspaceReg.isWorkspaceAdminOrReviewer(_workspaceId, msg.sender) ||
@@ -109,5 +109,30 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             msg.sender,
             block.timestamp
         );
+    }
+
+    /**
+     * @notice Add the same comment to multiple applications
+     * @param _workspaceId workspace id of application
+     * @param _grantAddress grant to which the application belongs
+     * @param _applicationIds target applicationIds to which comment needs to be added
+     * @param _isPrivate if true, comment is private and only workspace admins, reviewers and applicants can see it
+     * @param _commentMetadataHash metadata file hash with the comment
+     */
+    function addComments(
+        uint96 _workspaceId,
+        address _grantAddress,
+        uint96[] memory _applicationIds,
+        bool _isPrivate,
+        string memory _commentMetadataHash
+    ) public {
+        uint96 applicationId = _applicationIds[0];
+        for (uint256 i = 1; i < _applicationIds.length; i++) {
+            require(_applicationIds[i] > applicationId, "Application IDs must be in ascending order");
+        }
+
+        for (uint256 i = 0; i < _applicationIds.length; i++) {
+            addComment(_workspaceId, _grantAddress, _applicationIds[i], _isPrivate, _commentMetadataHash);
+        }
     }
 }
