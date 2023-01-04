@@ -117,14 +117,14 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
      * @param _grantAddress grant to which the application belongs
      * @param _applicationIds target applicationIds to which comment needs to be added
      * @param _isPrivate if true, comment is private and only workspace admins, reviewers and applicants can see it
-     * @param _commentMetadataHash metadata file hash with the comment
+     * @param _commentMetadataHashes metadata file hashes with the comment
      */
     function addComments(
         uint96 _workspaceId,
         address _grantAddress,
         uint96[] memory _applicationIds,
         bool _isPrivate,
-        string memory _commentMetadataHash
+        string[] memory _commentMetadataHashes
     ) public {
         uint96 applicationId = _applicationIds[0];
         for (uint256 i = 1; i < _applicationIds.length; i++) {
@@ -132,7 +132,7 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         }
 
         for (uint256 i = 0; i < _applicationIds.length; i++) {
-            addComment(_workspaceId, _grantAddress, _applicationIds[i], _isPrivate, _commentMetadataHash);
+            addComment(_workspaceId, _grantAddress, _applicationIds[i], _isPrivate, _commentMetadataHashes[i]);
         }
     }
 }

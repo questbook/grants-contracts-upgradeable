@@ -45,6 +45,7 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
         throw new Error("Infura key required to connect to " + network);
       }
       rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
+      console.log(rpcUrl);
     }
     return {
       accounts: [privateKey!],
