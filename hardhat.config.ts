@@ -45,7 +45,6 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
         throw new Error("Infura key required to connect to " + network);
       }
       rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
-      console.log(rpcUrl);
     }
     return {
       accounts: [privateKey!],
@@ -106,7 +105,23 @@ const config: HardhatUserConfig = {
     // apiKey: process.env.POLYGONSCAN_KEY,
     // apiKey: process.env.ETHERSCAN_KEY,
     // apiKey: process.env.OPT_ETHERSCAN_KEY,
-    apiKey: process.env.GOERLI_ETHERSCAN_KEY,
+    // apiKey: process.env.GOERLI_ETHERSCAN_KEY,
+    apiKey: {
+      "goerli-testnet": process.env.GOERLI_ETHERSCAN_KEY ?? "",
+      "polygon-mainnet": process.env.POLYGONSCAN_KEY ?? "",
+      "optimism-mainnet": process.env.OPT_ETHERSCAN_KEY ?? "",
+      "celo-mainnet": process.env.CELOSCAN_KEY ?? "",
+    },
+    customChains: [
+      {
+        network: "celo-mainnet",
+        chainId: 42220,
+        urls: {
+          apiURL: "https://api.celoscan.io/api",
+          browserURL: "https://celoscan.io/",
+        },
+      },
+    ],
   },
 };
 
