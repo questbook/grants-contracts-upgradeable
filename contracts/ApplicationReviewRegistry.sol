@@ -329,7 +329,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address[] memory _reviewers,
         bool[] memory _active
     ) public onlyWorkspaceAdmin(_workspaceId) {
-        require(_applicationIds.length == _reviewers.length, "Parameters length mismatch");
+        require(_applicationIds.length > 0, "Application IDs must not be empty");
         require(_reviewers.length == _active.length, "Parameters length mismatch");
 
         uint96 applicationId = _applicationIds[0];
