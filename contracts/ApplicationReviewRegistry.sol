@@ -109,15 +109,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
     /// @notice Emitted when rubric metadata is set
     event RubricsSet(uint96 _workspaceId, address indexed _grantAddress, string _metadataHash, uint256 time);
 
-    /// @notice Emitted when rubric metadata and number of reviewers is set
-    event RubricsSetV2(
-        uint96 _workspaceId,
-        address indexed _grantAddress,
-        uint96 _numberOfReviewersPerApplication,
-        string _metadataHash,
-        uint256 time
-    );
-
     /// @notice Emitted when review payment is marked as done
     event ReviewPaymentMarkedDone(
         uint96[] _reviewIds,
@@ -137,18 +128,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint256 _amount,
         uint256 time
     );
-
-    event AutoAssignmentUpdated(
-        uint96 _workspaceId,
-        address _grantAddress,
-        address[] _reviewers,
-        uint96 _numberOfReviewersPerApplication,
-        bool _enabled,
-        address _updatedBy,
-        uint256 time
-    );
-
-    event ReviewerDataReset(uint96 _workspaceId, address _grantAddress, address _resetBy, uint256 time);
 
     modifier onlyWorkspaceAdmin(uint96 _workspaceId) {
         require(workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "Unauthorised: Not an admin");
