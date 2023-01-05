@@ -53,7 +53,6 @@ export function shouldBehaveLikeGrantFactory(): void {
         0,
         "dummyIpfsHash",
         "dummyRubricsIpfsHash",
-        4,
         this.workspaceRegistry.address,
         this.applicationRegistry.address,
       );
@@ -77,7 +76,6 @@ export function shouldBehaveLikeGrantFactory(): void {
         0,
         "dummyIpfsHash",
         "dummyRubricsIpfsHash",
-        4,
         this.workspaceRegistry.address,
         this.applicationRegistry.address,
       );
@@ -102,7 +100,6 @@ export function shouldBehaveLikeGrantFactory(): void {
           0,
           "dummyIpfsHash",
           "dummyRubricsIpfsHash",
-          4,
           this.workspaceRegistry.address,
           this.applicationRegistry.address,
         ),
@@ -117,7 +114,6 @@ export function shouldBehaveLikeGrantFactory(): void {
           0,
           "dummyIpfsHash",
           "dummyRubricsIpfsHash",
-          4,
           this.workspaceRegistry.address,
           this.applicationRegistry.address,
         ),
@@ -152,7 +148,6 @@ export function shouldBehaveLikeGrantFactory(): void {
           0,
           "dummyIpfsHash",
           "dummyRubricsIpfsHash",
-          4,
           this.workspaceRegistry.address,
           this.applicationRegistry.address,
         );
@@ -174,7 +169,6 @@ export function shouldBehaveLikeGrantFactory(): void {
           0,
           "dummyIpfsHash",
           "dummyRubricsIpfsHash",
-          4,
           this.workspaceRegistry.address,
           this.applicationRegistry.address,
         );
