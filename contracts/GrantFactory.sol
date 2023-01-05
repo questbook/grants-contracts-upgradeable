@@ -22,15 +22,6 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
     /// @notice Emitted when a new grant contract is deployed
     event GrantCreated(address grantAddress, uint96 workspaceId, string metadataHash, uint256 time);
 
-    /// @notice Emitted when a new grant contract is deployed
-    event GrantCreated(
-        address grantAddress,
-        uint96 workspaceId,
-        string metadataHash,
-        uint96 numberOfReviewersPerApplication,
-        uint256 time
-    );
-
     /// @notice Emitted when a Grant implementation contract is upgraded
     event GrantImplementationUpdated(address grantAddress, bool success, bytes data);
 
@@ -81,7 +72,6 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         uint96 _workspaceId,
         string memory _metadataHash,
         string memory _rubricsMetadataHash,
-        uint96 _numberOfReviewersPerApplication,
         IWorkspaceRegistry _workspaceReg,
         IApplicationRegistry _applicationReg
     ) external whenNotPaused returns (address) {
@@ -99,40 +89,32 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
             )
         );
         address _grantAddress = address(grantProxy);
-        emit GrantCreated(
-            _grantAddress,
-            _workspaceId,
-            _metadataHash,
-            _numberOfReviewersPerApplication,
-            block.timestamp
-        );
-        applicationReviewReg.setRubrics(
-            _workspaceId,
-            _grantAddress,
-            _numberOfReviewersPerApplication,
-            _rubricsMetadataHash
-        );
+        emit GrantCreated(_grantAddress, _workspaceId, _metadataHash, block.timestamp);
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
         return _grantAddress;
     }
 
     /**
      * @notice Function to update grant
-     * @param grantAddress Address of the grant contract that needs to be updated
+     * @param _grantAddress Address of the grant contract that needs to be updated
      * @param _workspaceId Workspace Id that the grant belongs to
      * @param _workspaceReg Workspace registry interface
      * @param _metadataHash New URL that points to grant metadata
      */
     function updateGrant(
-        address grantAddress,
+        address _grantAddress,
         uint96 _workspaceId,
-        IWorkspaceRegistry _workspaceReg,
-        string memory _metadataHash
+        string memory _metadataHash,
+        string memory _rubricsMetadataHash,
+        IWorkspaceRegistry _workspaceReg
     ) external {
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
-        IGrant(grantAddress).updateGrant(_metadataHash);
-        bool active = IGrant(grantAddress).active();
+        IGrant(_grantAddress).updateGrant(_metadataHash);
+        bool active = IGrant(_grantAddress).active();
 
-        emit GrantUpdatedFromFactory(grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
+
+        emit GrantUpdatedFromFactory(_grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
     }
 
     /**

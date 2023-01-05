@@ -188,11 +188,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
 
-        applicationReviewReg.appendToApplicationList(_id, _grant);
-        /// @notice Whenever a new application is received, assign reviewers to it if auto-assigning is enabled
-        if (applicationReviewReg.hasAutoAssigningEnabled(_grant)) {
-            applicationReviewReg.assignReviewersRoundRobin(_workspaceId, _id, _grant);
-        }
+        // applicationReviewReg.appendToApplicationList(_id, _grant);
     }
 
     /**
