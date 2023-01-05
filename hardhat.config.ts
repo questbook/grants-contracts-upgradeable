@@ -27,6 +27,9 @@ const privateKey = process.env.PRIVATE_KEY!;
 // If the network you want to deploy to requires an Infura key
 // specify it in the environment variable INFURA_KEY
 const infuraApiKey = process.env.INFURA_API_KEY;
+// If the network you want to deploy to requires an Alchemy key
+// specify it in the environment variable ALCHEMY_API_KEY
+const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 // If the network to deploy to is specified
 // only that specific network will be used in the hardhat config
 const selectedNetwork = process.env.NETWORK;
@@ -46,6 +49,13 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
       }
       rpcUrl = rpcUrl.replace("{{infura_key}}", infuraApiKey);
     }
+    if (rpcUrl.includes("{{alchemy_key}}")) {
+      if (!alchemyApiKey) {
+        throw new Error("Alchemy key required to connect to " + network);
+      }
+      rpcUrl = rpcUrl.replace("{{alchemy_key}}", alchemyApiKey);
+    }
+    console.log(rpcUrl);
     return {
       accounts: [privateKey!],
       chainId: chains[network].id,

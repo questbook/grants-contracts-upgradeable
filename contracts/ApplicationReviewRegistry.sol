@@ -28,6 +28,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         uint96 workspaceId;
         uint96 numOfReviews;
         string rubricsMetadataHash;
+        uint96 numOfReviewersPerApplication;
     }
 
     struct RoundRobinNode {
