@@ -11833,7 +11833,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "251",
-            "type": "t_contract(IApplicationReviewRegistry)7909",
+            "type": "t_contract(IApplicationReviewRegistry)3041",
             "contract": "GrantFactory",
             "src": "contracts/GrantFactory.sol:20"
           }
@@ -11855,7 +11855,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)7909": {
+          "t_contract(IApplicationReviewRegistry)3041": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
@@ -12661,7 +12661,7 @@
             "label": "workspaces",
             "offset": 0,
             "slot": "252",
-            "type": "t_mapping(t_uint96,t_struct(Workspace)6219_storage)",
+            "type": "t_mapping(t_uint96,t_struct(Workspace)1586_storage)",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:42"
           },
@@ -12685,7 +12685,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "255",
-            "type": "t_contract(IApplicationRegistry)7861",
+            "type": "t_contract(IApplicationRegistry)3228",
             "contract": "WorkspaceRegistry",
             "src": "contracts/WorkspaceRegistry.sol:51"
           },
@@ -12723,7 +12723,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IApplicationRegistry)7861": {
+          "t_contract(IApplicationRegistry)3228": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
@@ -12735,7 +12735,7 @@
             "label": "mapping(uint96 => mapping(address => bytes32))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint96,t_struct(Workspace)6219_storage)": {
+          "t_mapping(t_uint96,t_struct(Workspace)1586_storage)": {
             "label": "mapping(uint96 => struct WorkspaceRegistry.Workspace)",
             "numberOfBytes": "32"
           },
@@ -12743,7 +12743,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Safe)6209_storage": {
+          "t_struct(Safe)1576_storage": {
             "label": "struct WorkspaceRegistry.Safe",
             "members": [
               {
@@ -12761,7 +12761,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Workspace)6219_storage": {
+          "t_struct(Workspace)1586_storage": {
             "label": "struct WorkspaceRegistry.Workspace",
             "members": [
               {
@@ -12784,7 +12784,7 @@
               },
               {
                 "label": "safe",
-                "type": "t_struct(Safe)6209_storage",
+                "type": "t_struct(Safe)1576_storage",
                 "offset": 0,
                 "slot": "2"
               }
@@ -14385,7 +14385,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "201",
-            "type": "t_contract(IWorkspaceRegistry)5479",
+            "type": "t_contract(IWorkspaceRegistry)3698",
             "contract": "Communication",
             "src": "contracts/Communication.sol:13"
           },
@@ -14393,7 +14393,7 @@
             "label": "applicationReg",
             "offset": 0,
             "slot": "202",
-            "type": "t_contract(IApplicationRegistry)5357",
+            "type": "t_contract(IApplicationRegistry)3551",
             "contract": "Communication",
             "src": "contracts/Communication.sol:16"
           }
@@ -14415,11 +14415,11 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationRegistry)5357": {
+          "t_contract(IApplicationRegistry)3551": {
             "label": "contract IApplicationRegistry",
             "numberOfBytes": "20"
           },
-          "t_contract(IWorkspaceRegistry)5479": {
+          "t_contract(IWorkspaceRegistry)3698": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
@@ -14881,7 +14881,7 @@
             "label": "workspaceReg",
             "offset": 0,
             "slot": "205",
-            "type": "t_contract(IWorkspaceRegistry)5479",
+            "type": "t_contract(IWorkspaceRegistry)5244",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:65"
           },
@@ -14889,7 +14889,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "206",
-            "type": "t_contract(IApplicationReviewRegistry)5380",
+            "type": "t_contract(IApplicationReviewRegistry)5145",
             "contract": "ApplicationRegistry",
             "src": "contracts/ApplicationRegistry.sol:68"
           }
@@ -14911,11 +14911,11 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)5380": {
+          "t_contract(IApplicationReviewRegistry)5145": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
-          "t_contract(IWorkspaceRegistry)5479": {
+          "t_contract(IWorkspaceRegistry)5244": {
             "label": "contract IWorkspaceRegistry",
             "numberOfBytes": "20"
           },
@@ -15375,8 +15375,8 @@
       }
     },
     "6a01182974fd8de3a1e4b36c6a25fbd4c44dad2b7ab084ecb4b3b8f6e3f5600a": {
-      "address": "0x7424036A986d3B46e8A266baE066Aff782ED07e0",
-      "txHash": "0x7fb740fba5082eec21a4df13b2b38c106d296868ec7cb25f35bb4b3f856d2f84",
+      "address": "0xd5dA70BA6271e325532773939D9f41f822f2e6BD",
+      "txHash": "0x9ac1062d42b1a4781aefc30f38b39f282051f5ee2af2ebbf32b6b7c3ce4250cf",
       "layout": {
         "solcVersion": "0.8.7",
         "storage": [
@@ -15457,7 +15457,7 @@
             "label": "applicationReviewReg",
             "offset": 0,
             "slot": "251",
-            "type": "t_contract(IApplicationReviewRegistry)5380",
+            "type": "t_contract(IApplicationReviewRegistry)3009",
             "contract": "GrantFactory",
             "src": "contracts/GrantFactory.sol:20"
           }
@@ -15479,7 +15479,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IApplicationReviewRegistry)5380": {
+          "t_contract(IApplicationReviewRegistry)3009": {
             "label": "contract IApplicationReviewRegistry",
             "numberOfBytes": "20"
           },
