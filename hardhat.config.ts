@@ -57,7 +57,7 @@ function getChainConfig(network: Chain): NetworkUserConfig | undefined {
     }
     console.log(rpcUrl);
     return {
-      accounts: [privateKey!],
+      accounts: [privateKey],
       chainId: chains[network].id,
       url: rpcUrl,
     };
