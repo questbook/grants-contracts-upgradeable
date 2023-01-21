@@ -163,6 +163,8 @@ contract WorkspaceRegistry is
         uint256[] executionTimestamp
     );
 
+    event GrantsSectionUpdated(address[] grantIds, string sectionName, string sectionLogoIpfsHash);
+
     modifier onlyQBAdmin() {
         require(_isQBAdminPresent(msg.sender), "Unauthorised: Not a QB admin");
         _;
@@ -659,6 +661,14 @@ contract WorkspaceRegistry is
         require(_workspaceIds.length == _isVisible.length, "Error: workspaceIds and isVisible length mismatch");
 
         emit WorkspacesVisibleUpdated(_workspaceIds, _isVisible);
+    }
+
+    function updateGrantsSection(
+        address[] calldata _grantIds,
+        string calldata _sectionName,
+        string calldata _sectionLogoIpfsHash
+    ) external onlyQBAdmin {
+        emit GrantsSectionUpdated(_grantIds, _sectionName, _sectionLogoIpfsHash);
     }
 
     /**
