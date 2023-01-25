@@ -56,7 +56,7 @@ contract WorkspaceRegistry is
     address[] public qbAdmins;
 
     /// @notice this stores a mapping from a scwAddress to the wallet address of an user
-    mapping(address => address) public scwAddressToWalletAddress;
+    // mapping(address => address) public scwAddressToWalletAddress;
 
     /// @notice this stores a mapping from a wallet address to the scwAddress of an user
     mapping(address => address) public walletAddressToScwAddress;
