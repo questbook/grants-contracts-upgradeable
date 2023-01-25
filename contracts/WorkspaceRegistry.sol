@@ -61,6 +61,10 @@ contract WorkspaceRegistry is
     /// @notice this stores a mapping from a wallet address to the scwAddress of an user
     mapping(address => address) public walletAddressToScwAddress;
 
+    /// @notice this is the offset that is used to get the guard contract address for a safe.
+    /// @notice In case, SAFE decides to upgrade their contracts, this offset should be changed.
+    uint256 public GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
+
     // --- Events ---
     /// @notice Emitted when a new workspace is created
     event WorkspaceCreated(uint96 indexed id, address indexed owner, string metadataHash, uint256 time);
@@ -429,7 +433,6 @@ contract WorkspaceRegistry is
      * @param _walletAddress wallet address of the member (not scwAddress)
      * @param _hashedMessage hashed message that was signed by the member
      * @param _v @param _r @param _s signature of the message
-     * @param _guardContractAddress address of the SafeGuard contract
      * @param _metadataHash metadata for the member
      * @param _role the role the user was invited for
      */
@@ -440,7 +443,6 @@ contract WorkspaceRegistry is
         uint96 _id,
         bytes memory _hashedMessage,
         address _walletAddress,
-        address _guardContractAddress,
         string memory _metadataHash,
         uint8 _role
     ) external whenNotPaused {
@@ -455,10 +457,10 @@ contract WorkspaceRegistry is
         address safeAddress = address(uint160(uint256(safe._address)));
         require(safeAddress != address(0), "Safe not added");
 
+        ISafe safeContract = ISafe(safeAddress);
         bool shouldAdd = false;
         if (_role == 0) {
             // Trying to add an admin. Need to check if they are a signer
-            ISafe safeContract = ISafe(safeAddress);
             address[] memory owners = safeContract.getOwners();
             for (uint256 i = 0; i < owners.length; ++i) {
                 if (owners[i] == _walletAddress) {
@@ -469,8 +471,9 @@ contract WorkspaceRegistry is
         } else if (_role == 1) {
             // Trying to add a reviewer.
             // Need to check if they are in the list of reviewers on the guard contract
-            ISafeGuard guard = ISafeGuard(_guardContractAddress);
-            require(guard.safeAddress() == safeAddress, "This guard is not added to the safe");
+            address _guardAddress = address(uint160(bytes20(safeContract.getStorageAt(GUARD_OFFSET, 1))));
+            require(_guardAddress != address(0), "Guard is not set");
+            ISafeGuard guard = ISafeGuard(_guardAddress);
 
             address[] memory reviewers = guard.reviewers();
             for (uint256 i = 0; i < reviewers.length; ++i) {
