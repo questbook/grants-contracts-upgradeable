@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
+import "./interfaces/ISafe.sol";
+import "./interfaces/ISafeGuard.sol";
 import "@questbook/anon-authoriser/contracts/anon-authoriser.sol";
 import "hardhat/console.sol";
 
@@ -52,6 +54,12 @@ contract WorkspaceRegistry is
 
     /// @notice qbAdmins list holding addresses of all QB admins.
     address[] public qbAdmins;
+
+    /// @notice this stores a mapping from a scwAddress to the wallet address of an user
+    mapping(address => address) public scwAddressToWalletAddress;
+
+    /// @notice this stores a mapping from a wallet address to the scwAddress of an user
+    mapping(address => address) public walletAddressToScwAddress;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -407,6 +415,78 @@ contract WorkspaceRegistry is
         );
 
         Workspace memory workspace = workspaces[_id];
+        bool isAdmin = workspace.owner == msg.sender || _checkRole(_id, msg.sender, 0);
+        require(!isAdmin, "Already an admin");
+
+        _setRole(_id, msg.sender, _role, true);
+
+        emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
+    }
+
+    /**
+     * @notice Join a workspace by proving your membership using SafeGuard
+     * @param _id ID of workspace to join
+     * @param _walletAddress wallet address of the member (not scwAddress)
+     * @param _hashedMessage hashed message that was signed by the member
+     * @param _v @param _r @param _s signature of the message
+     * @param _guardContractAddress address of the SafeGuard contract
+     * @param _metadataHash metadata for the member
+     * @param _role the role the user was invited for
+     */
+    function proveMembership(
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s,
+        uint96 _id,
+        bytes memory _hashedMessage,
+        address _walletAddress,
+        address _guardContractAddress,
+        string memory _metadataHash,
+        uint8 _role
+    ) external whenNotPaused {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHashMessage = keccak256(abi.encodePacked(prefix, _hashedMessage));
+        address signer = ecrecover(prefixedHashMessage, _v, _r, _s);
+        require(signer == _walletAddress, "Signer should be the wallet address");
+
+        // Check if the wallet address is a signer on the safe
+        Workspace storage workspace = workspaces[_id];
+        Safe storage safe = workspace.safe;
+        address safeAddress = address(uint160(uint256(safe._address)));
+        require(safeAddress != address(0), "Safe not added");
+
+        bool shouldAdd = false;
+        if (_role == 0) {
+            // Trying to add an admin. Need to check if they are a signer
+            ISafe safeContract = ISafe(safeAddress);
+            address[] memory owners = safeContract.getOwners();
+            for (uint256 i = 0; i < owners.length; ++i) {
+                if (owners[i] == _walletAddress) {
+                    shouldAdd = true;
+                    break;
+                }
+            }
+        } else if (_role == 1) {
+            // Trying to add a reviewer.
+            // Need to check if they are in the list of reviewers on the guard contract
+            ISafeGuard guard = ISafeGuard(_guardContractAddress);
+            require(guard.safeAddress() == safeAddress, "This guard is not added to the safe");
+
+            address[] memory reviewers = guard.reviewers();
+            for (uint256 i = 0; i < reviewers.length; ++i) {
+                if (reviewers[i] == _walletAddress) {
+                    shouldAdd = true;
+                    break;
+                }
+            }
+        }
+
+        require(shouldAdd, "Neither a signer on the safe nor a reviewer on the guard");
+
+        // Create mapping between wallet address and scw address
+        walletAddressToScwAddress[_walletAddress] = msg.sender;
+
+        // Add the person to the workspace
         bool isAdmin = workspace.owner == msg.sender || _checkRole(_id, msg.sender, 0);
         require(!isAdmin, "Already an admin");
 
