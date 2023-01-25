@@ -427,6 +427,12 @@ contract WorkspaceRegistry is
         emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
     }
 
+    function getAddress(bytes memory data) internal view returns (address addr) {
+        assembly {
+            addr := mload(add(data, 32))
+        }
+    }
+
     /**
      * @notice Join a workspace by proving your membership using SafeGuard
      * @param _id ID of workspace to join
@@ -471,7 +477,7 @@ contract WorkspaceRegistry is
         } else if (_role == 1) {
             // Trying to add a reviewer.
             // Need to check if they are in the list of reviewers on the guard contract
-            address _guardAddress = address(uint160(bytes20(safeContract.getStorageAt(GUARD_OFFSET, 1))));
+            address _guardAddress = getAddress(safeContract.getStorageAt(GUARD_OFFSET, 1));
             require(_guardAddress != address(0), "Guard is not set");
             ISafeGuard guard = ISafeGuard(_guardAddress);
 
