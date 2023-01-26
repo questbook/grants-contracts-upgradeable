@@ -109,10 +109,10 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         IWorkspaceRegistry _workspaceReg
     ) external {
         require(_workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender), "GrantUpdate: Unauthorised");
-        IGrant(_grantAddress).updateGrant(_metadataHash);
+        // IGrant(_grantAddress).updateGrant(_metadataHash);
         bool active = IGrant(_grantAddress).active();
 
-        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
+        // applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
 
         emit GrantUpdatedFromFactory(_grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
     }
