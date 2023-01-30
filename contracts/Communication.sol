@@ -70,7 +70,7 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string memory _emailHash,
         string memory _message
     ) external {
-        require(block.chainid == _chainId, "Chain ID does not match");
+        require(block.chainid == _chainId, "Chain ID should match");
         emit EmailAdded(_chainId, _emailHash, _message, msg.sender, block.timestamp);
     }
 
@@ -125,7 +125,7 @@ contract Communication is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint96[] memory _applicationIds,
         bool _isPrivate,
         string[] memory _commentMetadataHashes
-    ) public {
+    ) external {
         uint96 applicationId = _applicationIds[0];
         for (uint256 i = 1; i < _applicationIds.length; i++) {
             require(_applicationIds[i] > applicationId, "Application IDs must be in ascending order");
