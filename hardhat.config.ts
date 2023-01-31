@@ -112,10 +112,11 @@ const config: HardhatUserConfig = {
     target: "ethers-v5",
   },
   etherscan: {
-    apiKey: process.env.POLYGONSCAN_KEY,
+    // apiKey: process.env.POLYGONSCAN_KEY,
     // apiKey: process.env.ETHERSCAN_KEY,
     // apiKey: process.env.OPT_ETHERSCAN_KEY,
     // apiKey: process.env.GOERLI_ETHERSCAN_KEY,
+    apiKey: process.env.CELOSCAN_KEY,
     // apiKey: {
     //   "polygon-mainnet": process.env.POLYGONSCAN_KEY ?? "",
     //   "optimism-mainnet": process.env.OPT_ETHERSCAN_KEY ?? "",

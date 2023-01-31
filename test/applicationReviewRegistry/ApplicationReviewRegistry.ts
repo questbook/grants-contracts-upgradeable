@@ -68,7 +68,13 @@ describe("Unit tests", function () {
 
       await this.applicationRegistry
         .connect(this.signers.nonAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", "1");
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          "1",
+          this.signers.nonAdmin.address.toString(),
+        );
 
       this.grantFactoryFactory = await ethers.getContractFactory("GrantFactory");
       this.grantFactoryContract = <GrantFactory>await upgrades.deployProxy(this.grantFactoryFactory, { kind: "uups" });

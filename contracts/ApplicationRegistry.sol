@@ -67,6 +67,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice interface for using external functionalities like assigning reviewers
     IApplicationReviewRegistry public applicationReviewReg;
 
+    /// @notice mapping from wallet address to scwAddress of the applicant
+    mapping(string => address) public walletAddressMapping;
+
     // --- Events ---
     /// @notice Emitted when a new application is submitted
     event ApplicationSubmitted(
@@ -161,12 +164,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param _workspaceId workspaceId to which the grant belongs
      * @param _metadataHash application metadata pointer to IPFS file
      * @param _milestoneCount number of milestones under the application
+     * @param _applicantAddress address of the applicant where they would want to receive funds
      */
     function submitApplication(
         address _grant,
         uint96 _workspaceId,
         string memory _metadataHash,
-        uint48 _milestoneCount
+        uint48 _milestoneCount,
+        string memory _applicantAddress
     ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
@@ -187,6 +192,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
+
+        walletAddressMapping[_applicantAddress] = msg.sender;
 
         // applicationReviewReg.appendToApplicationList(_id, _grant);
     }
