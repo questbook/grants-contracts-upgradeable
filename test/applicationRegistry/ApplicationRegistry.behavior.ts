@@ -43,7 +43,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
     await this.applicationRegistry
       .connect(this.signers.applicantAdmin)
-      .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      .submitApplication(
+        this.grant.address,
+        0,
+        "dummyApplicationIpfsHash",
+        1,
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+      );
     expect(await this.applicationRegistry.applicationCount()).to.equal(1);
   });
 
@@ -51,11 +57,23 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
     await this.applicationRegistry
       .connect(this.signers.applicantAdmin)
-      .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      .submitApplication(
+        this.grant.address,
+        0,
+        "dummyApplicationIpfsHash",
+        1,
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+      );
     expect(
       this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1),
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        ),
     ).to.be.reverted;
     expect(await this.applicationRegistry.applicationCount()).to.equal(1);
   });
@@ -66,7 +84,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     expect(
       this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1),
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        ),
     ).to.be.reverted;
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
   });
@@ -117,7 +141,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("grant manager can ask for application resubmission if application is in submitted state", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(1);
@@ -126,7 +156,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("grant manager can approve application", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(2);
@@ -135,7 +171,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("grant manager can reject application", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.state).to.equal(3);
@@ -144,7 +186,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("grant manager can not reject applications in resubmit state", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       expect(
         this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
@@ -207,7 +255,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can not approve application", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 2, "reasonIpfsHash"),
       ).to.be.reverted;
@@ -218,7 +272,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can not reject application", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
       ).to.be.reverted;
@@ -230,7 +290,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry.connect(this.signers.nonAdmin).updateApplicationState(0, 1, 3, "reasonIpfsHash"),
       ).to.be.revertedWith("ApplicationStateUpdate: Invalid workspace");
@@ -241,7 +307,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can resubmit application with updated metadata if grant manager has asked for resubmission", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
@@ -254,7 +326,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("non owner can not resubmit application if grant manager has asked for resubmission", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
       expect(application.metadataHash).to.equal("dummyApplicationIpfsHash");
@@ -269,7 +347,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can not resubmit application if application is in submitted state", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -283,7 +367,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can not resubmit application if application is approved by grant manager", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       expect(
         this.applicationRegistry
@@ -298,7 +388,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("application owner can not resubmit application with updated metadata if grant manager has rejected the application", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       expect(
         this.applicationRegistry
@@ -313,7 +409,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("workspace admin can mark application as complete if all milestones are approved", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          2,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
@@ -344,7 +446,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("workspace admin can not mark application as complete if all milestones are not approved", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          2,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
       expect(
@@ -376,7 +484,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.nonAdmin));
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 2);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          2,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       expect(
         this.applicationRegistry.connect(this.signers.nonAdmin).completeApplication(0, 1, "reasonIpfsHash"),
@@ -390,7 +504,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("Milestone state can not be updated if milestoneId is invalid", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -401,7 +521,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("Milestone state can not be updated if application is not approved", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
@@ -412,7 +538,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("Milestone state can not approved if application is not approved", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"))
         .to.be.reverted;
     });
@@ -421,7 +553,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       beforeEach(async function () {
         await this.applicationRegistry
           .connect(this.signers.applicantAdmin)
-          .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+          .submitApplication(
+            this.grant.address,
+            0,
+            "dummyApplicationIpfsHash",
+            1,
+            ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+          );
         await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       });
 
@@ -546,7 +684,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
     it("should return application owner", async function () {
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(await this.applicationRegistry.getApplicationOwner(0)).to.equal(this.signers.applicantAdmin.address);
     });
 
@@ -570,11 +714,23 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       const newOwnerAddress = `0x${randomBytes(20).toString("hex")}`;
       const appRegistry = this.applicationRegistry.connect(originalOwner);
       // submit application from the wallet that will be migrated
-      await appRegistry.submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      await appRegistry.submitApplication(
+        this.grant.address,
+        0,
+        "dummyApplicationIpfsHash",
+        1,
+        ethers.utils.hexZeroPad(originalOwner.address, 32),
+      );
       // submit another application to act as a conrol element
       await this.applicationRegistry
         .connect(await randomWallet())
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad((await randomWallet()).address, 32),
+        );
 
       const tx = await appRegistry.migrateWallet(originalOwner.address, newOwnerAddress);
       const result = await tx.wait();
@@ -612,7 +768,13 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(await this.applicationRegistry.applicationCount()).to.equal(0);
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       expect(await this.applicationRegistry.applicationCount()).to.equal(1);
       const applicationRegistry = await upgrades.upgradeProxy(
         this.applicationRegistry.address,

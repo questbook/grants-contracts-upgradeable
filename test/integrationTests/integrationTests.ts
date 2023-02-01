@@ -64,7 +64,13 @@ describe("Integration tests", function () {
 
     await this.applicationRegistry
       .connect(this.signers.applicantAdmin)
-      .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+      .submitApplication(
+        this.grant.address,
+        0,
+        "dummyApplicationIpfsHash",
+        1,
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+      );
     await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
 
     const erc20Artifact: Artifact = await artifacts.readArtifact("MyToken");

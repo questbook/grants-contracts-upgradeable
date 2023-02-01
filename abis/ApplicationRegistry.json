@@ -611,6 +611,11 @@
         "internalType": "uint48",
         "name": "_milestoneCount",
         "type": "uint48"
+      },
+      {
+        "internalType": "string",
+        "name": "_applicantAddress",
+        "type": "string"
       }
     ],
     "name": "submitApplication",
@@ -711,6 +716,25 @@
     "name": "upgradeToAndCall",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "walletAddressMapping",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

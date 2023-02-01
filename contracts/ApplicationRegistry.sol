@@ -67,6 +67,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     /// @notice interface for using external functionalities like assigning reviewers
     IApplicationReviewRegistry public applicationReviewReg;
 
+    /// @notice mapping from wallet address to scwAddress of the applicant
+    mapping(bytes32 => address) public walletAddressMapping;
+
     // --- Events ---
     /// @notice Emitted when a new application is submitted
     event ApplicationSubmitted(
@@ -161,12 +164,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param _workspaceId workspaceId to which the grant belongs
      * @param _metadataHash application metadata pointer to IPFS file
      * @param _milestoneCount number of milestones under the application
+     * @param _applicantAddress address of the applicant where they would want to receive funds
      */
     function submitApplication(
         address _grant,
         uint96 _workspaceId,
         string memory _metadataHash,
-        uint48 _milestoneCount
+        uint48 _milestoneCount,
+        bytes32 _applicantAddress
     ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
@@ -188,7 +193,20 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
         grantRef.incrementApplicant();
 
+        walletAddressMapping[_applicantAddress] = msg.sender;
+
         // applicationReviewReg.appendToApplicationList(_id, _grant);
+    }
+
+    /**
+     * @notice Update linked wallet address
+     * @param _applicationId target applicationId which needs to be updated
+     * @param _applicantAddress updated wallet address where they would want to receive funds
+     */
+    function updateWalletAddress(uint96 _applicationId, bytes32 _applicantAddress) external {
+        Application storage application = applications[_applicationId];
+        require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
+        walletAddressMapping[_applicantAddress] = msg.sender;
     }
 
     /**

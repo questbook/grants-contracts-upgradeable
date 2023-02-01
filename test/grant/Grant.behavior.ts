@@ -55,7 +55,13 @@ export function shouldBehaveLikeGrant(): void {
       expect(await this.grant.metadataHash()).to.equal("dummyGrantIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.admin)
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1);
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.admin.address, 32),
+        );
       expect(this.grant.connect(this.signers.admin).updateGrant("updatedIpfsHash")).to.be.revertedWith(
         "GrantUpdate: Applicants have already started applying",
       );
