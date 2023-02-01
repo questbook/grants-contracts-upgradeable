@@ -68,7 +68,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     IApplicationReviewRegistry public applicationReviewReg;
 
     /// @notice mapping from wallet address to scwAddress of the applicant
-    mapping(string => address) public walletAddressMapping;
+    mapping(bytes32 => address) public walletAddressMapping;
 
     // --- Events ---
     /// @notice Emitted when a new application is submitted
@@ -171,7 +171,7 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint96 _workspaceId,
         string memory _metadataHash,
         uint48 _milestoneCount,
-        string memory _applicantAddress
+        bytes32 _applicantAddress
     ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         IGrant grantRef = IGrant(_grant);
@@ -196,6 +196,17 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         walletAddressMapping[_applicantAddress] = msg.sender;
 
         // applicationReviewReg.appendToApplicationList(_id, _grant);
+    }
+
+    /**
+     * @notice Update linked wallet address
+     * @param _applicationId target applicationId which needs to be updated
+     * @param _applicantAddress updated wallet address where they would want to receive funds
+     */
+    function updateWalletAddress(uint96 _applicationId, bytes32 _applicantAddress) external {
+        Application storage application = applications[_applicationId];
+        require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
+        walletAddressMapping[_applicantAddress] = msg.sender;
     }
 
     /**

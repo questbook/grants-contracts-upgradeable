@@ -73,7 +73,7 @@ describe("Unit tests", function () {
           0,
           "dummyApplicationIpfsHash",
           "1",
-          this.signers.nonAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.nonAdmin.address, 32),
         );
 
       this.grantFactoryFactory = await ethers.getContractFactory("GrantFactory");

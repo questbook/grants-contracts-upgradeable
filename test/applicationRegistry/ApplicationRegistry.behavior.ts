@@ -48,7 +48,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         0,
         "dummyApplicationIpfsHash",
         1,
-        this.signers.applicantAdmin.address.toString(),
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
       );
     expect(await this.applicationRegistry.applicationCount()).to.equal(1);
   });
@@ -62,7 +62,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         0,
         "dummyApplicationIpfsHash",
         1,
-        this.signers.applicantAdmin.address.toString(),
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
       );
     expect(
       this.applicationRegistry
@@ -72,7 +72,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         ),
     ).to.be.reverted;
     expect(await this.applicationRegistry.applicationCount()).to.equal(1);
@@ -89,7 +89,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         ),
     ).to.be.reverted;
     expect(await this.applicationRegistry.applicationCount()).to.equal(0);
@@ -146,7 +146,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
@@ -161,7 +161,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
@@ -176,7 +176,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
@@ -191,7 +191,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       expect(
@@ -260,7 +260,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 2, "reasonIpfsHash"),
@@ -277,7 +277,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry.connect(this.signers.applicantAdmin).updateApplicationState(0, 0, 3, "reasonIpfsHash"),
@@ -295,7 +295,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry.connect(this.signers.nonAdmin).updateApplicationState(0, 1, 3, "reasonIpfsHash"),
@@ -312,7 +312,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       await this.applicationRegistry
@@ -331,7 +331,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       const application = await this.applicationRegistry.applications(0);
@@ -352,7 +352,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry
@@ -372,7 +372,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       expect(
@@ -393,7 +393,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 3, "reasonIpfsHash");
       expect(
@@ -414,7 +414,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           2,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash");
@@ -451,7 +451,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           2,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       await this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 1, 0, "dummyApplicationIpfsHash");
@@ -489,7 +489,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           2,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       expect(
@@ -509,7 +509,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry
@@ -526,7 +526,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(
         this.applicationRegistry
@@ -543,7 +543,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(this.applicationRegistry.connect(this.signers.admin).approveMilestone(0, 0, 0, "dummyApplicationIpfsHash"))
         .to.be.reverted;
@@ -558,7 +558,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
             0,
             "dummyApplicationIpfsHash",
             1,
-            this.signers.applicantAdmin.address.toString(),
+            ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
           );
         await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
       });
@@ -689,7 +689,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(await this.applicationRegistry.getApplicationOwner(0)).to.equal(this.signers.applicantAdmin.address);
     });
@@ -719,12 +719,18 @@ export function shouldBehaveLikeApplicationRegistry(): void {
         0,
         "dummyApplicationIpfsHash",
         1,
-        originalOwner.address.toString(),
+        ethers.utils.hexZeroPad(originalOwner.address, 32),
       );
       // submit another application to act as a conrol element
       await this.applicationRegistry
         .connect(await randomWallet())
-        .submitApplication(this.grant.address, 0, "dummyApplicationIpfsHash", 1, "");
+        .submitApplication(
+          this.grant.address,
+          0,
+          "dummyApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad((await randomWallet()).address, 32),
+        );
 
       const tx = await appRegistry.migrateWallet(originalOwner.address, newOwnerAddress);
       const result = await tx.wait();
@@ -767,7 +773,7 @@ export function shouldBehaveLikeApplicationRegistry(): void {
           0,
           "dummyApplicationIpfsHash",
           1,
-          this.signers.applicantAdmin.address.toString(),
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
         );
       expect(await this.applicationRegistry.applicationCount()).to.equal(1);
       const applicationRegistry = await upgrades.upgradeProxy(

@@ -69,7 +69,7 @@ describe("Integration tests", function () {
         0,
         "dummyApplicationIpfsHash",
         1,
-        this.signers.applicantAdmin.address.toString(),
+        ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
       );
     await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 2, "reasonIpfsHash");
 
