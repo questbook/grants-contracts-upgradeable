@@ -63,7 +63,7 @@ contract WorkspaceRegistry is
 
     /// @notice this is the offset that is used to get the guard contract address for a safe.
     /// @notice In case, SAFE decides to upgrade their contracts, this offset should be changed.
-    uint256 public GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
+    uint256 public GUARD_OFFSET;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -217,6 +217,7 @@ contract WorkspaceRegistry is
     function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
+        GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
     }
 
     /**
