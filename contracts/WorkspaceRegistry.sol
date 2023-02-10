@@ -63,7 +63,7 @@ contract WorkspaceRegistry is
 
     /// @notice this is the offset that is used to get the guard contract address for a safe.
     /// @notice In case, SAFE decides to upgrade their contracts, this offset should be changed.
-    uint256 public GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
+    // uint256 public GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -118,17 +118,17 @@ contract WorkspaceRegistry is
     );
 
     /// @notice Emitted when grant reward is disbursed from safe
-    event DisburseRewardFromSafe(
-        uint96[] applicationIds,
-        uint96[] milestoneIds,
-        address asset,
-        string nonEvmAssetAddress,
-        string transactionHash,
-        address sender,
-        uint256[] amounts,
-        bool isP2P,
-        uint256 time
-    );
+    // event DisburseRewardFromSafe(
+    //     uint96[] applicationIds,
+    //     uint96[] milestoneIds,
+    //     address asset,
+    //     string nonEvmAssetAddress,
+    //     string transactionHash,
+    //     address sender,
+    //     uint256[] amounts,
+    //     bool isP2P,
+    //     uint256 time
+    // );
 
     /// @notice Emitted when payout is initiated through safe
     event DisburseRewardFromSafe(
@@ -477,7 +477,12 @@ contract WorkspaceRegistry is
         } else if (_role == 1) {
             // Trying to add a reviewer.
             // Need to check if they are in the list of reviewers on the guard contract
-            address _guardAddress = getAddress(safeContract.getStorageAt(GUARD_OFFSET, 1));
+            address _guardAddress = getAddress(
+                safeContract.getStorageAt(
+                    33528237782592280163068556224972516439282563014722366175641814928123294921928,
+                    1
+                )
+            );
             require(_guardAddress != address(0), "Guard is not set");
             ISafeGuard guard = ISafeGuard(_guardAddress);
 
