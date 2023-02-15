@@ -85,17 +85,6 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint256 time
     );
 
-    /// @notice Emitted when a new application is submitted - v2
-    event ApplicationSubmitted(
-        uint96 indexed applicationId,
-        address grant,
-        address owner,
-        string metadataHash,
-        uint48 milestoneCount,
-        bytes32 walletAddress,
-        uint256 time
-    );
-
     /// @notice Emitted when a new application is updated
     event ApplicationUpdated(
         uint96 indexed applicationId,
@@ -177,6 +166,19 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     /**
+     * @notice Update linked wallet address
+     * @param _applicationId target applicationId which needs to be updated
+     * @param _applicantAddress updated wallet address where they would want to receive funds
+     */
+    function updateWalletAddress(uint96 _applicationId, bytes32 _applicantAddress) public {
+        Application storage application = applications[_applicationId];
+        require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
+        eoaToScw[_applicantAddress][application.grant] = msg.sender;
+
+        emit WalletAddressUpdated(_applicationId, application.grant, _applicantAddress, block.timestamp);
+    }
+
+    /**
      * @notice Create/submit application
      * @param _grant address of Grant for which the application is submitted
      * @param _workspaceId workspaceId to which the grant belongs
@@ -212,30 +214,10 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             ApplicationState.Submitted
         );
         applicantGrant[msg.sender][_grant] = true;
-        eoaToScw[_applicantAddress][_grant] = msg.sender;
-        emit ApplicationSubmitted(
-            _id,
-            _grant,
-            msg.sender,
-            _metadataHash,
-            _milestoneCount,
-            _applicantAddress,
-            block.timestamp
-        );
+        emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
+
+        updateWalletAddress(_id, _applicantAddress);
         grantRef.incrementApplicant();
-    }
-
-    /**
-     * @notice Update linked wallet address
-     * @param _applicationId target applicationId which needs to be updated
-     * @param _applicantAddress updated wallet address where they would want to receive funds
-     */
-    function updateWalletAddress(uint96 _applicationId, bytes32 _applicantAddress) external {
-        Application storage application = applications[_applicationId];
-        require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
-        eoaToScw[_applicantAddress][application.grant] = msg.sender;
-
-        emit WalletAddressUpdated(_applicationId, application.grant, _applicantAddress, block.timestamp);
     }
 
     /**
@@ -246,7 +228,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function updateApplicationMetadata(
         uint96 _applicationId,
         string memory _metadataHash,
-        uint48 _milestoneCount
+        uint48 _milestoneCount,
+        bytes32 _applicantAddress
     ) external {
         Application storage application = applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
@@ -269,6 +252,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             _milestoneCount,
             block.timestamp
         );
+
+        updateWalletAddress(_applicationId, _applicantAddress);
     }
 
     /**
@@ -456,15 +441,5 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function getApplicationGrant(uint96 _applicationId) external view override returns (address) {
         Application memory application = applications[_applicationId];
         return application.grant;
-    }
-
-    /**
-     * @notice returns true if the application is in submitted state
-     * @param _applicationId applicationId whose state needs to be checked
-     * @return boolean value indicating if application is in submitted state
-     */
-    function isSubmittedApplication(uint96 _applicationId) external view override returns (bool) {
-        Application memory application = applications[_applicationId];
-        return application.state == ApplicationState.Submitted;
     }
 }
