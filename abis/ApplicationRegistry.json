@@ -613,9 +613,9 @@
         "type": "uint48"
       },
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "_applicantAddress",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "submitApplication",
@@ -690,6 +690,24 @@
   {
     "inputs": [
       {
+        "internalType": "uint96",
+        "name": "_applicationId",
+        "type": "uint96"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_applicantAddress",
+        "type": "bytes32"
+      }
+    ],
+    "name": "updateWalletAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "newImplementation",
         "type": "address"
@@ -721,9 +739,9 @@
   {
     "inputs": [
       {
-        "internalType": "string",
+        "internalType": "bytes32",
         "name": "",
-        "type": "string"
+        "type": "bytes32"
       }
     ],
     "name": "walletAddressMapping",

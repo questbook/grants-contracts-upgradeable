@@ -59,11 +59,15 @@ contract WorkspaceRegistry is
     // mapping(address => address) public scwAddressToWalletAddress;
 
     /// @notice this stores a mapping from a wallet address to the scwAddress of an user
+    /// Deprecated: this is deprecated and is retained to preserve upgradability
     mapping(address => address) public walletAddressToScwAddress;
 
     /// @notice this is the offset that is used to get the guard contract address for a safe.
     /// @notice In case, SAFE decides to upgrade their contracts, this offset should be changed.
     uint256 public GUARD_OFFSET;
+
+    /// @notice this stores a mapping from a wallet address to the scwAddress of an user, for every workspace
+    mapping(address => mapping(uint96 => address)) public eoaToScw;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -217,7 +221,6 @@ contract WorkspaceRegistry is
     function initialize() external initializer {
         __Ownable_init();
         __Pausable_init();
-        GUARD_OFFSET = 33528237782592280163068556224972516439282563014722366175641814928123294921928;
     }
 
     /**
@@ -241,6 +244,10 @@ contract WorkspaceRegistry is
      */
     function setApplicationReg(IApplicationRegistry _applicationReg) external onlyOwner {
         applicationReg = _applicationReg;
+    }
+
+    function setGuardOffset(uint256 _guardOffset) external onlyOwner {
+        GUARD_OFFSET = _guardOffset;
     }
 
     /**
@@ -274,11 +281,10 @@ contract WorkspaceRegistry is
      * @param _id ID of workspace to update
      * @param _metadataHash New IPFS hash that points to workspace metadata
      */
-    function updateWorkspaceMetadata(uint96 _id, string memory _metadataHash)
-        external
-        whenNotPaused
-        onlyWorkspaceAdminOrReviewer(_id)
-    {
+    function updateWorkspaceMetadata(
+        uint96 _id,
+        string memory _metadataHash
+    ) external whenNotPaused onlyWorkspaceAdminOrReviewer(_id) {
         Workspace storage workspace = workspaces[_id];
         workspace.metadataHash = _metadataHash;
         emit WorkspaceUpdated(workspace.id, workspace.owner, workspace.metadataHash, block.timestamp);
@@ -428,9 +434,31 @@ contract WorkspaceRegistry is
         emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
     }
 
-    function getAddress(bytes memory data) internal view returns (address addr) {
+    function getAddress(bytes memory data) internal pure returns (address addr) {
         assembly {
             addr := mload(add(data, 32))
+        }
+    }
+
+    function splitSignature(bytes memory sig) public pure returns (bytes32 r, bytes32 s, uint8 v) {
+        require(sig.length == 65, "invalid signature length");
+
+        assembly {
+            /*
+            First 32 bytes stores the length of the signature
+
+            add(sig, 32) = pointer of sig + 32
+            effectively, skips first 32 bytes of signature
+
+            mload(p) loads next 32 bytes starting at the memory address p into memory
+            */
+
+            // first 32 bytes, after the length prefix
+            r := mload(add(sig, 32))
+            // second 32 bytes
+            s := mload(add(sig, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(sig, 96)))
         }
     }
 
@@ -438,30 +466,31 @@ contract WorkspaceRegistry is
      * @notice Join a workspace by proving your membership using SafeGuard
      * @param _id ID of workspace to join
      * @param _walletAddress wallet address of the member (not scwAddress)
-     * @param _hashedMessage hashed message that was signed by the member
-     * @param _v @param _r @param _s signature of the message
+     * @param _signature signature of the hashed message
      * @param _metadataHash metadata for the member
      * @param _role the role the user was invited for
      */
     function proveMembership(
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s,
         uint96 _id,
-        bytes memory _hashedMessage,
-        address _walletAddress,
         string memory _metadataHash,
-        uint8 _role
+        address _walletAddress,
+        uint8 _role,
+        bytes memory _signature
     ) external whenNotPaused {
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHashMessage = keccak256(abi.encodePacked(prefix, _hashedMessage));
-        address signer = ecrecover(prefixedHashMessage, _v, _r, _s);
-        require(signer == _walletAddress, "Signer should be the wallet address");
+        require(eoaToScw[_walletAddress][_id] == address(0), "Already a member");
+
+        {
+            bytes32 messageHash = keccak256(abi.encodePacked("Verification message"));
+            bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+
+            (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
+            address signer = ecrecover(ethSignedMessageHash, v, r, s);
+            require(signer == _walletAddress, "Signer should be the wallet address");
+        }
 
         // Check if the wallet address is a signer on the safe
         Workspace storage workspace = workspaces[_id];
-        Safe storage safe = workspace.safe;
-        address safeAddress = address(uint160(uint256(safe._address)));
+        address safeAddress = address(uint160(uint256(workspace.safe._address)));
         require(safeAddress != address(0), "Safe not added");
 
         ISafe safeContract = ISafe(safeAddress);
@@ -482,7 +511,7 @@ contract WorkspaceRegistry is
             require(_guardAddress != address(0), "Guard is not set");
             ISafeGuard guard = ISafeGuard(_guardAddress);
 
-            address[] memory reviewers = guard.reviewers();
+            address[] memory reviewers = guard.getReviewers();
             for (uint256 i = 0; i < reviewers.length; ++i) {
                 if (reviewers[i] == _walletAddress) {
                     shouldAdd = true;
@@ -494,7 +523,7 @@ contract WorkspaceRegistry is
         require(shouldAdd, "Neither a signer on the safe nor a reviewer on the guard");
 
         // Create mapping between wallet address and scw address
-        walletAddressToScwAddress[_walletAddress] = msg.sender;
+        eoaToScw[_walletAddress][_id] = msg.sender;
 
         // Add the person to the workspace
         bool isAdmin = workspace.owner == msg.sender || _checkRole(_id, msg.sender, 0);
@@ -532,12 +561,7 @@ contract WorkspaceRegistry is
      * @param _role Role to be set
      * @param _enabled Whether to enable or disable the role
      */
-    function _setRole(
-        uint96 _workspaceId,
-        address _address,
-        uint8 _role,
-        bool _enabled
-    ) internal {
+    function _setRole(uint96 _workspaceId, address _address, uint8 _role, bool _enabled) internal {
         Workspace memory workspace = workspaces[_workspaceId];
 
         /// @notice Do not allow anybody other than owner to set admin role false for workspace owner
@@ -560,11 +584,7 @@ contract WorkspaceRegistry is
      * @param _role Role to be set
      * @return true if specified address has that role in specified workspace, else false
      */
-    function _checkRole(
-        uint96 _workspaceId,
-        address _address,
-        uint8 _role
-    ) internal view returns (bool) {
+    function _checkRole(uint96 _workspaceId, address _address, uint8 _role) internal view returns (bool) {
         /// @notice Check if _address has _role'th bit set in roles of _address in workspace
         return (uint256(memberRoles[_workspaceId][_address]) >> _role) & 1 != 0;
     }
