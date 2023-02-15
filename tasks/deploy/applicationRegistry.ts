@@ -30,7 +30,7 @@ task("deploy:ApplicationRegistry").setAction(async function (taskArguments: Task
   const jsonData = JSON.stringify(applicationRegistryAddress);
 
   if (fs.existsSync("config.json")) {
-    let contractsData = fs.readFileSync("config.json");
+    const contractsData = fs.readFileSync("config.json");
     let contractAddresses = JSON.parse(contractsData);
     contractAddresses = { ...contractAddresses, ...applicationRegistryAddress };
     fs.writeFileSync("config.json", JSON.stringify(contractAddresses));
@@ -52,4 +52,16 @@ task("upgrade:ApplicationRegistry")
     );
     await applicationRegistry.deployed();
     console.log("ApplicationRegistryV2 Proxy deployed to: ", applicationRegistry.address);
+  });
+
+task("forceImport:ApplicationRegistry")
+  .addParam("address", "address of the ApplicationRegistry implementation instance")
+  .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
+    const { address } = taskArguments;
+    console.log("forceImporting ApplicationRegistry at address: ", address);
+    const applicationRegistryFactoryV2: ApplicationRegistry__factory = <ApplicationRegistry__factory>(
+      await ethers.getContractFactory("ApplicationRegistry")
+    );
+    const contract = await upgrades.forceImport(address, applicationRegistryFactoryV2, { kind: "uups" });
+    console.log(contract);
   });

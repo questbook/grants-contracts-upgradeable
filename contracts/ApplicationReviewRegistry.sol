@@ -151,14 +151,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         _;
     }
 
-    modifier onlyWorkspaceAdminOrApplicationRegistry(uint96 _workspaceId) {
-        require(
-            workspaceReg.isWorkspaceAdmin(_workspaceId, msg.sender) || msg.sender == address(applicationReg),
-            "Unauthorised: Not an admin nor application registry"
-        );
-        _;
-    }
-
     /**
      * @notice Calls initialize on the base contracts
      *
@@ -207,11 +199,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param toWallet The new wallet address to migrate to
      * @param appId Application ID to migrate
      */
-    function migrateWallet(
-        address fromWallet,
-        address toWallet,
-        uint96 appId
-    ) external override {
+    function migrateWallet(address fromWallet, address toWallet, uint96 appId) external override {
         require(
             msg.sender == fromWallet || msg.sender == address(applicationReg) || msg.sender == owner(),
             "Only ApplicationRegistry/owner/fromWallet can call"
@@ -262,7 +250,7 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
         address _grantAddress,
         address[] memory _reviewers,
         bool[] memory _active
-    ) public onlyWorkspaceAdminOrApplicationRegistry(_workspaceId) {
+    ) public onlyWorkspaceAdminOrReviewer(_workspaceId) {
         require(applicationReg.getApplicationWorkspace(_applicationId) == _workspaceId, "Unauthorized");
         require(_reviewers.length == _active.length, "Parameters length mismatch");
         uint96[] memory _reviewIds = new uint96[](_reviewers.length);
@@ -352,7 +340,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
      * @param _metadataHash IPFS hash of the review metadata
      */
     function submitReview(
-        address _reviewerAddress,
         uint96 _workspaceId,
         uint96 _applicationId,
         address _grantAddress,
@@ -372,13 +359,31 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         emit ReviewSubmitted(
             review.id,
-            _reviewerAddress,
+            msg.sender,
             _workspaceId,
             _applicationId,
             _grantAddress,
             _metadataHash,
             block.timestamp
         );
+    }
+
+    function assignAndReview(
+        uint96 _workspaceId,
+        uint96 _applicationId,
+        address _grantAddress,
+        address _reviewer,
+        bool _active,
+        string memory _reviewMetadataHash
+    ) public onlyWorkspaceAdminOrReviewer(_workspaceId) {
+        address[] memory _reviewers = new address[](1);
+        _reviewers[0] = _reviewer;
+
+        bool[] memory _activeArray = new bool[](1);
+        _activeArray[0] = _active;
+
+        assignReviewers(_workspaceId, _applicationId, _grantAddress, _reviewers, _activeArray);
+        submitReview(_workspaceId, _applicationId, _grantAddress, _reviewMetadataHash);
     }
 
     /**
@@ -403,14 +408,6 @@ contract ApplicationReviewRegistry is Initializable, UUPSUpgradeable, OwnableUpg
 
         emit RubricsSet(_workspaceId, _grantAddress, _metadataHash, block.timestamp);
     }
-
-    // TODO: Implement this function
-    /**
-     * @notice Resets the rubric for a grant, only callable by Admin of the workspace
-     * @param _workspaceId Workspace id
-     * @param _grantAddress Grant address
-     */
-    function resetAllRubrics(uint96 _workspaceId, address _grantAddress) public onlyWorkspaceAdmin(_workspaceId) {}
 
     /**
      * @notice Mark payment as done of a review, only callable by Admin of the workspace
