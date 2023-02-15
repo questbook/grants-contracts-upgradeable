@@ -68,7 +68,11 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     IApplicationReviewRegistry public applicationReviewReg;
 
     /// @notice mapping from wallet address to scwAddress of the applicant
+    /// Deprecated: this is deprecated and is retained to preserve upgradability
     mapping(bytes32 => address) public walletAddressMapping;
+
+    /// @notice mapping from eoa wallet address to scwAddress of the applicant, per grant program
+    mapping(bytes32 => mapping(address => address)) public eoaToScw;
 
     // --- Events ---
     /// @notice Emitted when a new application is submitted
@@ -81,6 +85,17 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint256 time
     );
 
+    /// @notice Emitted when a new application is submitted - v2
+    event ApplicationSubmitted(
+        uint96 indexed applicationId,
+        address grant,
+        address owner,
+        string metadataHash,
+        uint48 milestoneCount,
+        bytes32 walletAddress,
+        uint256 time
+    );
+
     /// @notice Emitted when a new application is updated
     event ApplicationUpdated(
         uint96 indexed applicationId,
@@ -90,6 +105,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         uint48 milestoneCount,
         uint256 time
     );
+
+    /// @notice Emitted when the EOA wallet address is updated
+    event WalletAddressUpdated(uint96 indexed applicationId, address grant, bytes32 walletAddress, uint256 time);
 
     event ApplicationMigrate(uint96 indexed applicationId, address newApplicantAddress, uint256 time);
 
@@ -174,6 +192,10 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         bytes32 _applicantAddress
     ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
+        require(
+            eoaToScw[_applicantAddress][_grant] == address(0),
+            "ApplicationSubmit: Cannot receive funds to the same address"
+        );
         IGrant grantRef = IGrant(_grant);
         require(grantRef.active(), "ApplicationSubmit: Invalid grant");
         uint96 _id = applicationCount;
@@ -190,12 +212,17 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
             ApplicationState.Submitted
         );
         applicantGrant[msg.sender][_grant] = true;
-        emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
+        eoaToScw[_applicantAddress][_grant] = msg.sender;
+        emit ApplicationSubmitted(
+            _id,
+            _grant,
+            msg.sender,
+            _metadataHash,
+            _milestoneCount,
+            _applicantAddress,
+            block.timestamp
+        );
         grantRef.incrementApplicant();
-
-        walletAddressMapping[_applicantAddress] = msg.sender;
-
-        // applicationReviewReg.appendToApplicationList(_id, _grant);
     }
 
     /**
@@ -206,7 +233,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     function updateWalletAddress(uint96 _applicationId, bytes32 _applicantAddress) external {
         Application storage application = applications[_applicationId];
         require(application.owner == msg.sender, "ApplicationUpdate: Unauthorised");
-        walletAddressMapping[_applicantAddress] = msg.sender;
+        eoaToScw[_applicantAddress][application.grant] = msg.sender;
+
+        emit WalletAddressUpdated(_applicationId, application.grant, _applicantAddress, block.timestamp);
     }
 
     /**
