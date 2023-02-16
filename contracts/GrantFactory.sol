@@ -112,7 +112,7 @@ contract GrantFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable, Pau
         // IGrant(_grantAddress).updateGrant(_metadataHash);
         bool active = IGrant(_grantAddress).active();
 
-        // applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
+        applicationReviewReg.setRubrics(_workspaceId, _grantAddress, _rubricsMetadataHash);
 
         emit GrantUpdatedFromFactory(_grantAddress, _workspaceId, _metadataHash, active, block.timestamp);
     }
