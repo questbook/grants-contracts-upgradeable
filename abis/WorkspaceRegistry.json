@@ -750,6 +750,25 @@
         "internalType": "uint96",
         "name": "_id",
         "type": "uint96"
+      }
+    ],
+    "name": "checkSafeIsNotZero",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_id",
+        "type": "uint96"
       },
       {
         "internalType": "uint8",
@@ -961,6 +980,56 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_id",
+        "type": "uint96"
+      }
+    ],
+    "name": "getWorkspaceSafe",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "_address",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct WorkspaceRegistry.Safe",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint96",
+        "name": "_id",
+        "type": "uint96"
+      }
+    ],
+    "name": "getWorkspaceSafeAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
