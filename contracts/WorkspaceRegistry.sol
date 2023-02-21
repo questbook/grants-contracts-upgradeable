@@ -489,7 +489,7 @@ contract WorkspaceRegistry is
         }
 
         // Check if the wallet address is a signer on the safe
-        Workspace storage workspace = workspaces[_id];
+        Workspace memory workspace = workspaces[_id];
         address safeAddress = address(uint160(uint256(workspace.safe._address)));
         require(safeAddress != address(0), "Safe not added");
 
