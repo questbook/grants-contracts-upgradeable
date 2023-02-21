@@ -317,7 +317,12 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       await this.applicationRegistry.connect(this.signers.admin).updateApplicationState(0, 0, 1, "reasonIpfsHash");
       await this.applicationRegistry
         .connect(this.signers.applicantAdmin)
-        .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1);
+        .updateApplicationMetadata(
+          0,
+          "updatedApplicationIpfsHash",
+          1,
+          ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+        );
       const application = await this.applicationRegistry.applications(0);
       expect(application.metadataHash).to.equal("updatedApplicationIpfsHash");
       expect(application.state).to.equal(0);
@@ -357,7 +362,12 @@ export function shouldBehaveLikeApplicationRegistry(): void {
       expect(
         this.applicationRegistry
           .connect(this.signers.applicantAdmin)
-          .updateApplicationMetadata(0, "updatedApplicationIpfsHash", 1),
+          .updateApplicationMetadata(
+            0,
+            "updatedApplicationIpfsHash",
+            1,
+            ethers.utils.hexZeroPad(this.signers.applicantAdmin.address, 32),
+          ),
       ).to.be.reverted;
       const application = await this.applicationRegistry.applications(0);
       expect(application.metadataHash).to.equal("updatedApplicationIpfsHash");

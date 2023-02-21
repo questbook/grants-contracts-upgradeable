@@ -462,23 +462,6 @@ contract WorkspaceRegistry is
         }
     }
 
-    function getWorkspaceSafe(uint96 _id) external view returns (Safe memory) {
-        return workspaces[_id].safe;
-    }
-
-    function getWorkspaceSafeAddress(uint96 _id) external view returns (address) {
-        Workspace memory workspace = workspaces[_id];
-        address safeAddress = address(uint160(uint256(workspace.safe._address)));
-        return safeAddress;
-    }
-
-    function checkSafeIsNotZero(uint96 _id) external view returns (bool) {
-        Workspace memory workspace = workspaces[_id];
-        address _safeAddress = address(uint160(uint256(workspace.safe._address)));
-        require(_safeAddress != address(0), "Safe is zero address");
-        return true;
-    }
-
     /**
      * @notice Join a workspace by proving your membership using SafeGuard
      * @param _id ID of workspace to join
