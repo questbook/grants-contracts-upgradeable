@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { Wallet } from "ethers";
 import { ethers, upgrades } from "hardhat";
 import { ApplicationReviewRegistry } from "../../src/types";
-import { areEqualDistributions, creatingWorkpsace, generateAssignment, randomEthAddress, randomWallet } from "../utils";
+import { creatingWorkpsace, randomEthAddress, randomWallet } from "../utils";
 
 export function shouldBehaveLikeApplicationReviewRegistry(): void {
   it("non deployer cannot set workspaceRegistry", async function () {
