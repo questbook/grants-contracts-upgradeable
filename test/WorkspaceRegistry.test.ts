@@ -8,7 +8,7 @@ import type {
 } from "../src/types";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
-import { creatingWorkpsace, decodeLogs, deployWorkspaceContract, randomEthAddress, randomWallet } from "./utils";
+import { creatingWorkpsace, deployWorkspaceContract, randomEthAddress, randomWallet } from "./utils";
 
 describe("Unit tests", function () {
   describe("WorkspaceRegistry", function () {
