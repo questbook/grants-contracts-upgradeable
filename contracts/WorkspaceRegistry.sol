@@ -369,18 +369,38 @@ contract WorkspaceRegistry is
         uint8[] memory _roles,
         bool[] memory _enabled,
         string[] memory _metadataHashes
-    ) external whenNotPaused onlyWorkspaceAdmin(_id) withinLimit(_members.length) {
-        require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        require(_members.length == _metadataHashes.length, "UpdateWorkspaceMembers: Parameters length mismatch");
-        for (uint256 i = 0; i < _members.length; i++) {
-            address member = _members[i];
-            /// @notice The role 0 denotes an admin role
-            /// @notice The role 1 denotes a reviewer role
-            uint8 role = _roles[i];
-            bool enabled = _enabled[i];
+    ) external whenNotPaused withinLimit(_members.length) {
+        // If admin, let them edit multiple members
+        if (_checkRole(_id, msg.sender, 0)) {
+            require(_members.length == _roles.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+            require(_members.length == _enabled.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+            require(_members.length == _metadataHashes.length, "UpdateWorkspaceMembers: Parameters length mismatch");
+            for (uint256 i = 0; i < _members.length; i++) {
+                address member = _members[i];
+                /// @notice The role 0 denotes an admin role
+                /// @notice The role 1 denotes a reviewer role
+                uint8 role = _roles[i];
+                bool enabled = _enabled[i];
+                _setRole(_id, member, role, enabled);
+                emit WorkspaceMemberUpdated(_id, member, role, enabled, _metadataHashes[i], block.timestamp);
+            }
+            // If reviewer, let them edit only themselves
+        } else if (_checkRole(_id, msg.sender, 1)) {
+            require(_members.length == 1, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+            require(_roles.length == 1, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+            require(_enabled.length == 1, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+            require(_metadataHashes.length == 1, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+
+            address member = _members[0];
+            require(member == msg.sender, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+            uint8 role = _roles[0];
+            require(role == 1, "UpdateWorkspaceMembers: Reviewer can only update themselves");
+            bool enabled = _enabled[0];
+
             _setRole(_id, member, role, enabled);
-            emit WorkspaceMemberUpdated(_id, member, role, enabled, _metadataHashes[i], block.timestamp);
+            emit WorkspaceMemberUpdated(_id, member, role, enabled, _metadataHashes[0], block.timestamp);
+        } else {
+            revert("UpdateWorkspaceMembers: Not a workspace admin or reviewer");
         }
     }
 

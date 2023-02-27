@@ -241,6 +241,67 @@ describe("Unit tests", function () {
       ).to.be.revertedWith("Unauthorised: Not an admin");
     });
 
+    it("reviewer should only be able to update their own metadata", async function () {
+      const reviewer = await randomWallet();
+      await creatingWorkpsace(workspaceRegistry);
+
+      await workspaceRegistry.updateWorkspaceMembers(0, [reviewer.address], [1], [true], [""]);
+      expect(await workspaceRegistry.isWorkspaceAdmin(0, reviewer.address)).to.equal(false);
+      expect(await workspaceRegistry.isWorkspaceAdminOrReviewer(0, reviewer.address)).to.equal(true);
+
+      const tx = await workspaceRegistry
+        .connect(reviewer)
+        .updateWorkspaceMembers(0, [reviewer.address], [1], [true], ["new_metadata_hash"]);
+      const txn = await tx.wait();
+      expect(txn.events?.length).to.equal(1);
+      const event = txn.events?.[0];
+
+      if (event && event?.args) {
+        expect(event.event).to.equal("WorkspaceMemberUpdated");
+        expect(event.args[0]).to.equals(0);
+        expect(event.args[1]).to.equals(reviewer.address);
+        expect(event.args[2]).to.equals(1);
+        expect(event.args[3]).to.equals(true);
+        expect(event.args[4]).to.equals("new_metadata_hash");
+      }
+    });
+
+    it("reviewer cannot remove someone else from the workspace", async function () {
+      const reviewer = await randomWallet();
+      await creatingWorkpsace(workspaceRegistry);
+
+      await workspaceRegistry.updateWorkspaceMembers(0, [reviewer.address], [1], [true], [""]);
+      expect(await workspaceRegistry.isWorkspaceAdmin(0, reviewer.address)).to.equal(false);
+      expect(await workspaceRegistry.isWorkspaceAdminOrReviewer(0, reviewer.address)).to.equal(true);
+
+      workspaceRegistry
+        .connect(reviewer)
+        .updateWorkspaceMembers(0, [adminAddress], [0], [true], [""])
+        .catch(err => {
+          expect(err.message).to.equal(
+            "VM Exception while processing transaction: reverted with reason string 'UpdateWorkspaceMembers: Reviewer can only update themselves'",
+          );
+        });
+    });
+
+    it("reviewer cannot make themselves admin", async function () {
+      const reviewer = await randomWallet();
+      await creatingWorkpsace(workspaceRegistry);
+
+      await workspaceRegistry.updateWorkspaceMembers(0, [reviewer.address], [1], [true], [""]);
+      expect(await workspaceRegistry.isWorkspaceAdmin(0, reviewer.address)).to.equal(false);
+      expect(await workspaceRegistry.isWorkspaceAdminOrReviewer(0, reviewer.address)).to.equal(true);
+
+      workspaceRegistry
+        .connect(reviewer)
+        .updateWorkspaceMembers(0, [reviewer.address], [0], [true], [""])
+        .catch(err => {
+          expect(err.message).to.equal(
+            "VM Exception while processing transaction: reverted with reason string 'UpdateWorkspaceMembers: Reviewer can only update themselves'",
+          );
+        });
+    });
+
     describe("Proxy implementation upgrade", function () {
       it("should not be able to call proxy initiliaze function", async function () {
         expect(workspaceRegistry.initialize()).to.be.revertedWith("Initializable: contract is already initialized");
