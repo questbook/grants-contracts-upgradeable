@@ -40,10 +40,10 @@ task("deploy:UtilityRegistry").setAction(async function (taskArguments: TaskArgu
 });
 
 task("upgrade:UtilityRegistry")
-  .addParam("address", "address of the Communication implementation instance")
+  .addParam("address", "address of the UtilityRegistry implementation instance")
   .setAction(async function (taskArguments: TaskArguments, { ethers, upgrades }) {
     const { address } = taskArguments;
-    console.log("upgrading Communication at address: ", address);
+    console.log("upgrading UtilityRegistry at address: ", address);
     const UtilityRegistryV2: UtilityRegistry__factory = <UtilityRegistry__factory>(
       await ethers.getContractFactory("UtilityRegistry")
     );
