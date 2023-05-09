@@ -8,6 +8,7 @@ import { Signers } from "../types";
 import { shouldBehaveLikeApplicationRegistry } from "./ApplicationRegistry.behavior";
 import { expect } from "chai";
 import { creatingWorkpsace } from "../utils";
+import { UtilityRegistry } from "../../src/types";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -22,10 +23,14 @@ describe("Unit tests", function () {
 
   describe("ApplicationRegistry", function () {
     beforeEach(async function () {
+      this.utilityRegistryFactory = await ethers.getContractFactory("UtilityRegistry");
+      this.utilityRegistry = <UtilityRegistry>await upgrades.deployProxy(this.utilityRegistryFactory, { kind: "uups" });
+
       this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
       this.workspaceRegistry = <WorkspaceRegistry>(
         await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
       );
+      await this.workspaceRegistry.connect(this.signers.admin).setUtilityRegistry(this.utilityRegistry.address);
 
       await creatingWorkpsace(this.workspaceRegistry.connect(this.signers.admin));
 
@@ -44,6 +49,7 @@ describe("Unit tests", function () {
       await this.applicationRegistry
         .connect(this.signers.admin)
         .setApplicationReviewReg(this.applicationReviewRegistry.address);
+      await this.applicationRegistry.connect(this.signers.admin).setUtilityRegistry(this.utilityRegistry.address);
 
       this.grantFactory = await ethers.getContractFactory("Grant");
       this.grant = <Grant>(

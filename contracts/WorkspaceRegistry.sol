@@ -10,6 +10,7 @@ import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/ISafe.sol";
 import "./interfaces/ISafeGuard.sol";
+import "./interfaces/IUtilityRegistry.sol";
 import "@questbook/anon-authoriser/contracts/anon-authoriser.sol";
 import "hardhat/console.sol";
 
@@ -68,6 +69,8 @@ contract WorkspaceRegistry is
 
     /// @notice this stores a mapping from a wallet address to the scwAddress of an user, for every workspace
     mapping(address => mapping(uint96 => address)) public eoaToScw;
+
+    IUtilityRegistry public utilityReg;
 
     // --- Events ---
     /// @notice Emitted when a new workspace is created
@@ -248,6 +251,10 @@ contract WorkspaceRegistry is
 
     function setGuardOffset(uint256 _guardOffset) external onlyOwner {
         GUARD_OFFSET = _guardOffset;
+    }
+
+    function setUtilityRegistry(IUtilityRegistry _utilityReg) external onlyOwner {
+        utilityReg = _utilityReg;
     }
 
     /**
@@ -451,35 +458,9 @@ contract WorkspaceRegistry is
 
         _setRole(_id, msg.sender, _role, true);
 
+        utilityReg.createProfile(_metadataHash);
+
         emit WorkspaceMemberUpdated(_id, msg.sender, _role, true, _metadataHash, block.timestamp);
-    }
-
-    function getAddress(bytes memory data) internal pure returns (address addr) {
-        assembly {
-            addr := mload(add(data, 32))
-        }
-    }
-
-    function splitSignature(bytes memory sig) public pure returns (bytes32 r, bytes32 s, uint8 v) {
-        require(sig.length == 65, "invalid signature length");
-
-        assembly {
-            /*
-            First 32 bytes stores the length of the signature
-
-            add(sig, 32) = pointer of sig + 32
-            effectively, skips first 32 bytes of signature
-
-            mload(p) loads next 32 bytes starting at the memory address p into memory
-            */
-
-            // first 32 bytes, after the length prefix
-            r := mload(add(sig, 32))
-            // second 32 bytes
-            s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes)
-            v := byte(0, mload(add(sig, 96)))
-        }
     }
 
     /**
@@ -503,9 +484,9 @@ contract WorkspaceRegistry is
             bytes32 messageHash = keccak256(abi.encodePacked("Verification message"));
             bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
 
-            (bytes32 r, bytes32 s, uint8 v) = splitSignature(_signature);
+            (bytes32 r, bytes32 s, uint8 v) = utilityReg.splitSignature(_signature);
             address signer = ecrecover(ethSignedMessageHash, v, r, s);
-            require(signer == _walletAddress, "Signer should be the wallet address");
+            require(signer != address(0) && signer == _walletAddress, "Signer should be the wallet address");
         }
 
         // Check if the wallet address is a signer on the safe
@@ -527,7 +508,7 @@ contract WorkspaceRegistry is
         } else if (_role == 1) {
             // Trying to add a reviewer.
             // Need to check if they are in the list of reviewers on the guard contract
-            address _guardAddress = getAddress(safeContract.getStorageAt(GUARD_OFFSET, 1));
+            address _guardAddress = utilityReg.getAddress(safeContract.getStorageAt(GUARD_OFFSET, 1));
             require(_guardAddress != address(0), "Guard is not set");
             ISafeGuard guard = ISafeGuard(_guardAddress);
 

@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { Signer } from "ethers";
 import { ethers, upgrades } from "hardhat";
-import { WorkspaceRegistry } from "../src/types";
+import { UtilityRegistry, WorkspaceRegistry } from "../src/types";
 
 export function randomEthAddress() {
   const addr = randomBytes(20); // random address
@@ -26,11 +26,16 @@ export function creatingWorkpsace(contract: WorkspaceRegistry, safeAddress?: Buf
 }
 
 export async function deployWorkspaceContract(signer?: Signer) {
+  const utilityRegistryFactory = await ethers.getContractFactory("UtilityRegistry");
+  const utilityRegistry = <UtilityRegistry>await upgrades.deployProxy(utilityRegistryFactory, { kind: "uups" });
+
   const factory = await ethers.getContractFactory("WorkspaceRegistry");
   let workspaceRegistry = (await upgrades.deployProxy(factory, { kind: "uups" })) as WorkspaceRegistry;
   if (signer) {
     workspaceRegistry = workspaceRegistry.connect(signer);
   }
+
+  await workspaceRegistry.setUtilityRegistry(utilityRegistry.address);
 
   return workspaceRegistry;
 }
