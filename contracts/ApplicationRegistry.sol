@@ -9,6 +9,7 @@ import "./interfaces/IWorkspaceRegistry.sol";
 import "./interfaces/IGrant.sol";
 import "./interfaces/IApplicationRegistry.sol";
 import "./interfaces/IApplicationReviewRegistry.sol";
+import "./interfaces/IUtilityRegistry.sol";
 
 /// @title Registry for all the grant applications used for updates on application
 /// and requesting funds/milestone approvals
@@ -73,6 +74,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
 
     /// @notice mapping from eoa wallet address to scwAddress of the applicant, per grant program
     mapping(bytes32 => mapping(address => address)) public eoaToScw;
+
+    IUtilityRegistry public utilityReg;
 
     // --- Events ---
     /// @notice Emitted when a new application is submitted
@@ -142,6 +145,14 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     /**
+     * @notice sets utility registry contract interface
+     * @param _utilityReg UtilityRegistry interface
+     */
+    function setUtilityRegistry(IUtilityRegistry _utilityReg) external onlyOwner {
+        utilityReg = _utilityReg;
+    }
+
+    /**
      * @notice Migrate the user's wallet to a new address
      *
      * @param fromWallet Current wallet address of the user
@@ -195,7 +206,8 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
     ) external {
         require(!applicantGrant[msg.sender][_grant], "ApplicationSubmit: Already applied to grant once");
         require(
-            eoaToScw[_applicantAddress][_grant] == address(0),
+            _applicantAddress == bytes32(0) ||
+                (_applicantAddress != bytes32(0) && eoaToScw[_applicantAddress][_grant] == address(0)),
             "ApplicationSubmit: Cannot receive funds to the same address"
         );
         IGrant grantRef = IGrant(_grant);
@@ -216,8 +228,9 @@ contract ApplicationRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeab
         applicantGrant[msg.sender][_grant] = true;
         emit ApplicationSubmitted(_id, _grant, msg.sender, _metadataHash, _milestoneCount, block.timestamp);
 
-        updateWalletAddress(_id, _applicantAddress);
+        utilityReg.createProfile(" ");
         grantRef.incrementApplicant();
+        updateWalletAddress(_id, _applicantAddress);
     }
 
     /**

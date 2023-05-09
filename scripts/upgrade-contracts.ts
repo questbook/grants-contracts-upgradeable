@@ -59,6 +59,7 @@ const CONTRACT_MAP: { [_: string]: string } = {
   reviews: "ApplicationReviewRegistry",
   applications: "ApplicationRegistry",
   communication: "Communication",
+  utility: "UtilityRegistry",
 };
 
 const execPromise = promisify(exec);

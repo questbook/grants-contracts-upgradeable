@@ -8,6 +8,7 @@ async function main() {
     "Grant",
     "WorkspaceRegistry",
     "Communication",
+    "UtilityRegistry",
   ];
 
   for (const path of list) {

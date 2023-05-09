@@ -11,6 +11,7 @@ import { expect } from "chai";
 import { GrantFactory } from "../../src/types/GrantFactory";
 import { Artifact } from "hardhat/types";
 import { creatingWorkpsace } from "../utils";
+import { UtilityRegistry } from "../../src/types";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -28,6 +29,9 @@ describe("Unit tests", function () {
 
   describe("ApplicationReviewRegistry", function () {
     beforeEach(async function () {
+      this.utilityRegistryFactory = await ethers.getContractFactory("UtilityRegistry");
+      this.utilityRegistry = <UtilityRegistry>await upgrades.deployProxy(this.utilityRegistryFactory, { kind: "uups" });
+
       this.workspaceRegistryFactory = await ethers.getContractFactory("WorkspaceRegistry");
       this.workspaceRegistry = <WorkspaceRegistry>(
         await upgrades.deployProxy(this.workspaceRegistryFactory, { kind: "uups" })
@@ -49,6 +53,7 @@ describe("Unit tests", function () {
       await this.applicationRegistry
         .connect(this.signers.admin)
         .setApplicationReviewReg(this.applicationReviewRegistry.address);
+      await this.applicationRegistry.connect(this.signers.admin).setUtilityRegistry(this.utilityRegistry.address);
 
       this.grantFactory = await ethers.getContractFactory("Grant");
       this.grant = <Grant>(
